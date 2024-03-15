@@ -1,9 +1,9 @@
 {
-  "name": "undexer",
-  "version": "0.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "@hackbg/undexer",
   "type": "module",
+  "main": "index.js",
+  "version": "0.0.0",
+  "description": "Namada indexer to file.",
   "dependencies": {
     "@fadroma/namada": "^1.0.0-rc.5"
   }
