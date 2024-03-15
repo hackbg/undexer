@@ -6,3 +6,14 @@ services:
       - .:/app
     working_dir: /app
     command: tx.js
+  server:
+    image: hackbg/undexer-lighttpd
+    build:
+      context: ./docker
+      dockerfile: lighttpd.Dockerfile
+    volumes:
+      - ./data:/data:ro
+      - ./lighttpd.conf:/lighttpd.conf:ro
+    command: lighttpd -D -f /lighttpd.conf
+    ports:
+      - 8080

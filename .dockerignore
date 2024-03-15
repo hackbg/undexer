@@ -1,0 +1,8 @@
+.git
+data
+docker
+.dockerignore
+.drone.yml
+.gitignore
+docker-compose.yml
+lighttpd.conf
