@@ -13,18 +13,22 @@ let latest = await connection.height
 let current = 1
 let average = 0
 do {
-  const blockPath = `data/block/${current}.json`
+  const blockPath = `block/${current}.json`
   if (!existsSync(blockPath)) {
     const t0 = performance.now()
     console.log('\nIndexing block:', current, 'of', latest, `(${((current/latest)*100).toFixed(3)}%)`)
     const {txs, ...block} = await connection.getBlock(current)
     await Promise.all(block.txsDecoded.map(tx=>{
-      const txPath = `data/tx/${tx.dataHash}.json`
-      console.log('Writing',     txPath)
-      return writeFile(txPath, JSON.stringify({
-        block: current,
-        tx
-      }, (_, v) => typeof v === 'bigint' ? v.toString() : v))
+      if (tx.dataHash) {
+        const txPath = `tx/${tx.dataHash}.json`
+        console.log('Writing',     txPath)
+        return writeFile(txPath, JSON.stringify({
+          block: current,
+          tx
+        }, (_, v) => typeof v === 'bigint' ? v.toString() : v))
+      } else {
+        console.warn('Failed to decode TX')
+      }
     }))
     console.log('Writing',       blockPath)
     await writeFile(blockPath, JSON.stringify(block, (_, v) => typeof v === 'bigint' ? v.toString() : v))
