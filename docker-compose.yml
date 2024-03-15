@@ -1,0 +1,8 @@
+version: "3"
+services:
+  indexer:
+    image: node:21-alpine
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: tx.js
