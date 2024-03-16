@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
-import { writeFile } from 'node:fs/promises'
+import { writeFile, readdir } from 'node:fs/promises'
 import * as Namada from '@fadroma/namada'
 import { Core } from '@fadroma/agent'
 import { mkdirp, mkdirpSync } from 'mkdirp'
@@ -44,7 +44,11 @@ async function main () {
 
 export async function ingestBlock (current, latest) {
 
-  const blockDir  = `block/${paginated(current)}/${current}`
+  const blockRoot = `block`
+  const pageList  = `${blockRoot}/index.json`
+  const blockPage = `${blockRoot}/${paginated(current)}`
+  const pageIndex = `${blockPage}/index.json`
+  const blockDir  = `${blockPage}/${current}`
   const blockPath = `${blockDir}/block.json`
   const txsPath   = `${blockDir}/txs.json`
   const txsDir    = `${blockDir}/txs`
@@ -65,6 +69,8 @@ export async function ingestBlock (current, latest) {
       ...block
     } = await connection.getBlock(current)
 
+    console.log(txs.length, 'txs in block')
+
     await mkdirp(blockDir)
 
     const txids = txsDecoded.map(tx=>{
@@ -76,21 +82,21 @@ export async function ingestBlock (current, latest) {
       }
     }).filter(Boolean)
 
-    if (txids.length > 0) {
-      await mkdirp(txsDir)
-    }
-
     await Promise.all([
       save(txsPath, { block: current, txs }),
-      ...txsDecoded.map(tx=>{
+      ...txsDecoded.map((tx, i)=>{
         if (tx.dataHash) {
-          const txPath = `${txsDir}/${tx.dataHash}.json`
+          const txPath = `${blockDir}/tx-${i}.json`
           return save(txPath, { block: current, tx })
         }
       })
     ])
 
-    await save(blockPath, {...block, txids})
+    await Promise.all([
+      save(blockPath, {...block, txids}),
+      readdir(blockPage).then(listing=>save(pageIndex, listing)),
+      readdir(blockRoot).then(listing=>save(pageList,  listing)),
+    ])
 
     const t = performance.now() - t0
     averageTime = (averageTime + t) / 2
