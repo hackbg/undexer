@@ -95,9 +95,14 @@ export async function ingestBlock (current, latest) {
     await Promise.all([
       save(blockPath, {...block, txids}),
       readdir(blockPage).then(listing=>save(pageIndex, {
-        pages: listing.filter(x=>x!=='index.json')
+        blocks: listing.filter(x=>x!=='index.json')
+          .map(x=>Number(x))
+          .filter(x=>!isNaN(x))
+          .sort((a, b) => (b - a))
       })),
       readdir(blockRoot).then(listing=>save(pageList, {
+        latestBlock:   latest,
+        latestIndexed: current,
         pages: listing.filter(x=>x!=='index.json')
       })),
     ])
