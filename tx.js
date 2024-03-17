@@ -94,8 +94,12 @@ export async function ingestBlock (current, latest) {
 
     await Promise.all([
       save(blockPath, {...block, txids}),
-      readdir(blockPage).then(listing=>save(pageIndex, listing)),
-      readdir(blockRoot).then(listing=>save(pageList,  listing)),
+      readdir(blockPage).then(listing=>save(pageIndex, {
+        pages: listing.filter(x=>x!=='index.json')
+      })),
+      readdir(blockRoot).then(listing=>save(pageList, {
+        pages: listing.filter(x=>x!=='index.json')
+      })),
     ])
 
     const t = performance.now() - t0
