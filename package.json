@@ -5,7 +5,13 @@
   "version": "0.0.0",
   "description": "Namada indexer to file.",
   "dependencies": {
-    "@fadroma/namada": "^1.0.0-rc.9",
+    "@cosmjs/encoding": "^0.32.3",
+    "@dao-xyz/borsh": "^5.2.1",
+    "@fadroma/namada": "^1.0.0-rc.17",
+    "@namada/shared": "file:://shared",
+    "bech32": "^2.0.0",
+    "bignumber.js": "^9.1.2",
+    "borsh": "^2.0.0",
     "mkdirp": "^3.0.1"
   }
 }
