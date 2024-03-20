@@ -21,25 +21,55 @@ let averageTime = 0
 
 main()
 
-async function main () {
-  let latest = await connection.height
+export default async function main () {
+  let latest = await getBlockHeight()
   let current = 1
   mkdirpSync('block')
   mkdirpSync('tx')
   while (true) {
-    await ingestBlock(current, latest)
+
+    // Ingest current block
+    await retryForever(
+      'ingest block', 5000, ingestBlock, current, latest
+    )
+
+    // Proceed to next block
     current++
     if (current === latest) {
       console.log('Reached latest block', current)
-      let newLatest = await connection.height
+      let newLatest = await getBlockHeight()
       while (newLatest === latest) {
         console.log('Waiting for new block', current)
         await new Promise(resolve=>setTimeout(resolve, 2000))
-        newLatest = await connection.height
+        newLatest = await getBlockHeight()
       }
       latest = newLatest
     }
+
   }
+}
+
+export async function retryForever (operation, interval, callback, ...args) {
+  while (true) {
+    try {
+      return await callback(...args)
+    } catch (e) {
+      console.error(`Failed to ${operation}, waiting ${interval}ms and retrying`)
+      await new Promise(resolve=>setTimeout(resolve, interval))
+    }
+  }
+}
+
+export async function getBlockHeight () {
+  return retryForever(
+    'get block height', 5000, async () => {
+      const height = Number(await connection.height)
+      if (isNaN(height)) {
+        throw new Error(`returned height ${height}`)
+      }
+      return height
+    }
+  )
 }
 
 export async function ingestBlock (current, latest) {
@@ -63,11 +93,21 @@ export async function ingestBlock (current, latest) {
       `(${((current/latest)*100).toFixed(3)}%)`
     )
 
-    const {
-      txs,
-      txsDecoded,
-      ...block
-    } = await connection.getBlock(current)
+    let blockData
+
+    while (true) {
+      try {
+        blockData = await connection.getBlock(current)
+        break
+      } catch (e) {
+        console.error(`Failed to get block ${current}, waiting 5s and retrying`)
+        await new Promise(resolve=>setTimeout(resolve, 5000))
+      }
+    }
+
+    const { txs, txsDecoded, ...block } = await retryForever(
+      `get block ${current}`, 5000, () => connection.getBlock(current)
+    )
 
     console.log(txs.length, 'txs in block')
 
