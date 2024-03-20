@@ -22,31 +22,36 @@ let averageTime = 0
 main()
 
 export default async function main () {
-  let latest = await getBlockHeight()
-  let current = 1
   mkdirpSync('block')
   mkdirpSync('tx')
-  while (true) {
 
-    // Ingest current block
-    await retryForever(
-      'ingest block', 5000, ingestBlock, current, latest
-    )
+  let latest = await getBlockHeight()
+  let current = 1
 
-    // Proceed to next block
-    current++
-    if (current === latest) {
-      console.log('Reached latest block', current)
-      let newLatest = await getBlockHeight()
-      while (newLatest === latest) {
-        console.log('Waiting for new block', current)
-        await new Promise(resolve=>setTimeout(resolve, 2000))
-        newLatest = await getBlockHeight()
-      }
-      latest = newLatest
-    }
+  pollCurrentBlock()
+  ingestBlocks()
 
+  async function pollCurrentBlock() {
+    latest = await getBlockHeight()
+    console.log('Latest block:', latest)
+    setTimeout(5000, pollCurrentBlock)
   }
+
+  async function ingestBlocks () {
+    while (true) {
+      if (current <= latest) {
+        await retryForever('ingest block', 5000, ingestBlock, current, latest)
+        current++
+      } else {
+        console.log('Reached latest block, waiting for next')
+        await waitFor(5000)
+      }
+    }
+  }
+}
+
+export function waitFor (msec) {
+  return new Promise(resolve=>setTimeout(resolve, msec))
 }
 
 export async function retryForever (operation, interval, callback, ...args) {
@@ -55,7 +60,7 @@ export async function retryForever (operation, interval, callback, ...args) {
       return await callback(...args)
     } catch (e) {
       console.error(`Failed to ${operation}, waiting ${interval}ms and retrying`)
-      await new Promise(resolve=>setTimeout(resolve, interval))
+      await waitFor(interval)
     }
   }
 }
@@ -92,18 +97,6 @@ export async function ingestBlock (current, latest) {
       'of', latest,
       `(${((current/latest)*100).toFixed(3)}%)`
     )
-
-    let blockData
-
-    while (true) {
-      try {
-        blockData = await connection.getBlock(current)
-        break
-      } catch (e) {
-        console.error(`Failed to get block ${current}, waiting 5s and retrying`)
-        await new Promise(resolve=>setTimeout(resolve, 5000))
-      }
-    }
 
     const { txs, txsDecoded, ...block } = await retryForever(
       `get block ${current}`, 5000, () => connection.getBlock(current)
