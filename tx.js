@@ -26,15 +26,16 @@ export default async function main () {
   mkdirpSync('tx')
 
   let latest = await getBlockHeight()
-  let current = 1
+  setTimeout(pollCurrentBlock, 5000)
 
+  let current = 1
   pollCurrentBlock()
+
   ingestBlocks()
 
   async function pollCurrentBlock() {
     latest = await getBlockHeight()
     console.log('Latest block:', latest)
-    setTimeout(pollCurrentBlock, 5000)
   }
 
   async function ingestBlocks () {
