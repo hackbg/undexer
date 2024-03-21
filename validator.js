@@ -20,17 +20,14 @@ const q = new Query(
     process.env.UNDEXER_RPC_URL || "https://namada-testnet-rpc.itrocket.net"
 );
 
+
 if (process.env.UNDEXER_DATA_DIR) {
-    process.chdir(process.env.UNDEXER_DATA_DIR);
+    await mkdirSync(process.env.UNDEXER_DATA_DIR+'/validators', {recursive: true});
+    process.chdir(process.env.UNDEXER_DATA_DIR+'/validators');
 } else {
     throw new Error("set UNDEXER_DATA_DIR");
 }
 
-try {
-    mkdirSync("validators");
-} catch (ex) {
-    console.log("Validators already exists");
-}
 
 await saveAllValidatorsToJSON();
 

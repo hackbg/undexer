@@ -19,3 +19,12 @@ export async function save(path, data) {
     console.log("Writing", path);
     return await writeFile(path, serialize(data));
 }
+
+export function makeDirIfItDoesntExist(path) {
+    try {
+        mkdirSync(path);
+    }
+    catch (ex) {
+        console.log("Directory already exists");
+    }
+}
