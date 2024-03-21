@@ -1,4 +1,6 @@
 node_modules
-.DS_Store
 data/*
 !data/.gitkeep
+*.json
+.env
+.DS_Store
