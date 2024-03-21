@@ -5,6 +5,7 @@ import { mkdirSync, readFileSync } from "node:fs";
 import init, { Query } from "./shared/pkg/shared.js";
 import { save } from "./utils.js";
 import { StakeSchema, ValidatorSchema } from "./borsher-schema.js";
+import 'dotenv/config';
 
 await init(readFileSync("shared/pkg/shared_bg.wasm"));
 await Namada.initDecoder(

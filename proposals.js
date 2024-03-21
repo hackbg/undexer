@@ -3,6 +3,7 @@ import { deserialize } from "borsh";
 import { mkdirSync, readFileSync } from "node:fs";
 import { makeDirIfItDoesntExist, save } from "./utils.js";
 import { ProposalsSchema } from "./borsher-schema.js";
+import 'dotenv/config';
 
 await init(readFileSync("shared/pkg/shared_bg.wasm"));
 const q = new Query(

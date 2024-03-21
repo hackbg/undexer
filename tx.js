@@ -4,6 +4,7 @@ import { writeFile, readdir } from 'node:fs/promises'
 import * as Namada from '@fadroma/namada'
 import { Core } from '@fadroma/agent'
 import { mkdirp, mkdirpSync } from 'mkdirp'
+import 'dotenv/config'
 
 await Namada.initDecoder(readFileSync('./node_modules/@fadroma/namada/pkg/fadroma_namada_bg.wasm'))
 
