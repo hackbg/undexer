@@ -39,13 +39,17 @@ async function saveValidatorPerJSON() {
       'get validator list', 5000, getValidatorsFromNode
     );
 
+    let index = 0
     for (const validatorBinary of validatorsDeserialized) {
+        index++
+        console.log(index, '/', validatorsDeserialized.size)
         const validator = await q.get_address_from_u8(validatorBinary)
         const file = `${validator}.json`
         if (existsSync(file)) {
             console.log(file, 'exists, skipping')
             continue
         }
+        const t0 = performance.now()
         const [
           validatorMetadata,
           stakeBinary,
@@ -81,6 +85,7 @@ async function saveValidatorPerJSON() {
         };
 
         await save(file, validatorObj);
+        console.log('took', performance.now() - t0, 'msec')
     }
 }
 
