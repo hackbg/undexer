@@ -9,6 +9,13 @@ const q = new Query(
     process.env.UNDEXER_RPC_URL || "https://namada-testnet-rpc.itrocket.net"
 );
 
+if(process.env.UNDEXER_DATA_DIR){
+    process.chdir(process.env.UNDEXER_DATA_DIR);
+}
+else{
+    throw new Error('set UNDEXER_DATA_DIR');
+}
+
 try {
     await mkdirSync("governance");
 } catch (ex) {

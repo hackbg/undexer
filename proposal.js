@@ -7,6 +7,14 @@ import { ProposalSchema } from "./borsher-schema.js";
 await init(readFileSync('shared/pkg/shared_bg.wasm'));
 const q = new Query(process.env.UNDEXER_RPC_URL || 'https://namada-testnet-rpc.itrocket.net');
 
+
+if(process.env.UNDEXER_DATA_DIR){
+    process.chdir(process.env.UNDEXER_DATA_DIR);
+}
+else{
+    throw new Error('set UNDEXER_DATA_DIR');
+}
+
 try{
     await mkdirSync("governance");
 }
@@ -14,6 +22,7 @@ catch(ex){
     console.log("Governance already exists");
 }
 process.chdir("governance");
+
 try{
     await mkdirSync("proposal");
 }
