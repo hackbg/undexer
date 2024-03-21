@@ -24,6 +24,6 @@ try {
 process.chdir("governance");
 
 const proposals = await q.query_proposals();
-
 const propoDeserialized = deserialize(ProposalsSchema, proposals);
-save("proposals.json", propoDeserialized);
+
+await save("proposals.json", propoDeserialized);

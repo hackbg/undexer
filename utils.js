@@ -1,11 +1,11 @@
 import { Core } from "@fadroma/agent";
 import { writeFile } from "node:fs/promises";
 
-export async function serialize(data) {
+export function serialize(data) {
     return JSON.stringify(data, stringifier);
 }
 
-export async function stringifier(key, value) {
+export function stringifier(key, value) {
     if (typeof value === "bigint") {
         return value.toString();
     }
@@ -15,7 +15,7 @@ export async function stringifier(key, value) {
     return value;
 }
 
-export function save(path, data) {
+export async function save(path, data) {
     console.log("Writing", path);
-    return writeFile(path, serialize(data));
+    return await writeFile(path, serialize(data));
 }

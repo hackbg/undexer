@@ -38,6 +38,6 @@ const proposalsDeserialized = deserialize(ProposalsSchema, proposals);
 for (let i = 0; i < proposalsDeserialized.length-1; i++) {
     const proposalBinary = await q.query_proposal(BigInt(i));
     const proposalDeserialized = deserialize(ProposalSchema, proposalBinary);
-    save(`${i}.json`, proposalDeserialized);
+    await save(`${i}.json`, proposalDeserialized);
 }
 
