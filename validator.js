@@ -3,7 +3,7 @@ import * as Namada from "@fadroma/namada";
 import { deserialize } from "borsh";
 import { mkdirSync, readFileSync } from "node:fs";
 import init, { Query } from "./shared/pkg/shared.js";
-import {save} from "./utils.js";
+import { save } from "./utils.js";
 import { StakeSchema, ValidatorSchema } from "./borsher-schema.js";
 
 await init(readFileSync("shared/pkg/shared_bg.wasm"));
@@ -29,58 +29,77 @@ else{
 }
 
 try {
-    mkdirSync("governance");
+    mkdirSync("validators");
 } catch (ex) {
-    console.log("Governance already exists");
+    console.log("Validators already exists");
 }
-process.chdir("validators");
 
-const validatorsQuery = await connection.abciQuery("/vp/pos/validator/addresses");
-const validatorsDeserialized = deserialize(ValidatorSchema, validatorsQuery);
+await saveAllValidatorsToJSON();
 
-const validatorsObjects = [];
-let i = 0;
+await saveValidatorPerJSON();
 
-for (const validatorBinary of validatorsDeserialized) {
-    const validator = await q.get_address_from_u8(validatorBinary);
-    const validatorMetadata = await connection.abciQuery(
-        `/vp/pos/validator/metadata/${validator}`
-    );
-    const stakeBinary = await connection.abciQuery(
-        `/vp/pos/validator/stake/${validator}`
-    );
-    const comissionBinary = await connection.abciQuery(
-        `/vp/pos/validator/commission/${validator}`
-    );
-    const stateBinary = await connection.abciQuery(
-        `/vp/pos/validator/state/${validator}`
-    );
+async function saveValidatorPerJSON() {
+    const validatorsDeserialized = await getValidatorsFromNode();
 
-    const metadata = await connection.decode.pos_validator_metadata(
-        validatorMetadata.slice(1)
-    );
-    const stake = deserialize(StakeSchema, stakeBinary);
-    const comission = await connection.decode.pos_commission_pair(
-        comissionBinary.slice(1)
-    );
-    const state = await connection.decode.pos_validator_state(
-        stateBinary.slice(1)
-    );
-    const publicKey = await q.query_public_key(validator);
+    for (const validatorBinary of validatorsDeserialized) {
+        const validator = await q.get_address_from_u8(validatorBinary);
+        const validatorMetadata = await connection.abciQuery(
+            `/vp/pos/validator/metadata/${validator}`
+        );
+        const stakeBinary = await connection.abciQuery(
+            `/vp/pos/validator/stake/${validator}`
+        );
+        const comissionBinary = await connection.abciQuery(
+            `/vp/pos/validator/commission/${validator}`
+        );
+        const stateBinary = await connection.abciQuery(
+            `/vp/pos/validator/state/${validator}`
+        );
 
-    const validatorObj = {
-        validator,
-        metadata,
-        stake,
-        comission,
-        state,
-        publicKey,
-    };
-    validatorsObjects.push(validatorObj);
+        const metadata = await connection.decode.pos_validator_metadata(
+            validatorMetadata.slice(1)
+        );
+        const stake = deserialize(StakeSchema, stakeBinary);
+        const comission = await connection.decode.pos_commission_pair(
+            comissionBinary.slice(1)
+        );
+        const state = await connection.decode.pos_validator_state(
+            stateBinary.slice(1)
+        );
+        const publicKey = await q.query_public_key(validator);
 
-    i++;
-    if (i == 200) {
-        break;
+        const validatorObj = {
+            validator,
+            metadata,
+            stake,
+            comission,
+            state,
+            publicKey,
+        };
+        await save(`${validator}.json`, validatorObj);
     }
 }
-await save("validators.json", validatorsObjects);
+
+async function getValidatorsFromNode() {
+    const validatorsQuery = await connection.abciQuery(
+        "/vp/pos/validator/addresses"
+    );
+    const validatorsDeserialized = deserialize(
+        ValidatorSchema,
+        validatorsQuery
+    );
+    return validatorsDeserialized;
+}
+
+async function saveAllValidatorsToJSON() {
+    const validatorsDeserialized = await getValidatorsFromNode();
+    const validatorsString = [];
+
+    for (const validatorBinary of validatorsDeserialized) {
+        const validatorString = await q.get_address_from_u8(validatorBinary);
+        validatorsString.push(validatorString);
+    }
+
+    await save("all_validators.json", validatorsString);
+    return validatorsDeserialized;
+}
