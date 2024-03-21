@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import * as Namada from "@fadroma/namada";
 import { deserialize } from "borsh";
-import { mkdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, existsSync } from "node:fs";
 import init, { Query } from "./shared/pkg/shared.js";
-import { save } from "./utils.js";
+import { save, retryForever } from "./utils.js";
 import { StakeSchema, ValidatorSchema } from "./borsher-schema.js";
 import 'dotenv/config';
 
@@ -35,44 +35,52 @@ await saveAllValidatorsToJSON();
 await saveValidatorPerJSON();
 
 async function saveValidatorPerJSON() {
-    const validatorsDeserialized = await getValidatorsFromNode();
+    const validatorsDeserialized = await retryForever(
+      'get validator list', 5000, getValidatorsFromNode
+    );
 
     for (const validatorBinary of validatorsDeserialized) {
-        const validator = await q.get_address_from_u8(validatorBinary);
-        const validatorMetadata = await connection.abciQuery(
-            `/vp/pos/validator/metadata/${validator}`
-        );
-        const stakeBinary = await connection.abciQuery(
-            `/vp/pos/validator/stake/${validator}`
-        );
-        const comissionBinary = await connection.abciQuery(
-            `/vp/pos/validator/commission/${validator}`
-        );
-        const stateBinary = await connection.abciQuery(
-            `/vp/pos/validator/state/${validator}`
-        );
-
-        const metadata = await connection.decode.pos_validator_metadata(
-            validatorMetadata.slice(1)
-        );
-        const stake = deserialize(StakeSchema, stakeBinary);
-        const comission = await connection.decode.pos_commission_pair(
-            comissionBinary.slice(1)
-        );
-        const state = await connection.decode.pos_validator_state(
-            stateBinary.slice(1)
-        );
-        const publicKey = await q.query_public_key(validator);
+        const validator = await q.get_address_from_u8(validatorBinary)
+        const file = `${validator}.json`
+        if (existsSync(file)) {
+            console.log(file, 'exists, skipping')
+            continue
+        }
+        const [
+          validatorMetadata,
+          stakeBinary,
+          commissionBinary,
+          stateBinary,
+          publicKey,
+        ] = await Promise.all([
+          retryForever(
+            'get metadata',   5000, x=>connection.abciQuery(x), `/vp/pos/validator/metadata/${validator}`
+          ),
+          retryForever(
+            'get stake',      5000, x=>connection.abciQuery(x), `/vp/pos/validator/stake/${validator}`
+          ),
+          retryForever(
+            'get commission', 5000, x=>connection.abciQuery(x), `/vp/pos/validator/commission/${validator}`
+          ),
+          retryForever(
+            'get state',      5000, x=>connection.abciQuery(x), `/vp/pos/validator/state/${validator}`
+          ),
+          retryForever(
+            'get pk',         5000, x=>q.query_public_key(x),   validator
+          )
+        ])
 
         const validatorObj = {
+            timestamp:  + new Date(),
             validator,
-            metadata,
-            stake,
-            comission,
-            state,
             publicKey,
+            metadata:   connection.decode.pos_validator_metadata(validatorMetadata.slice(1)),
+            stake:      deserialize(StakeSchema, stakeBinary),
+            commission: connection.decode.pos_commission_pair(commissionBinary.slice(1)),
+            state:      connection.decode.pos_validator_state(stateBinary.slice(1)),
         };
-        await save(`${validator}.json`, validatorObj);
+
+        await save(file, validatorObj);
     }
 }
 
