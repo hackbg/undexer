@@ -4,6 +4,8 @@ import { save } from "./utils.js";
 import { mkdirSync, readFileSync } from "node:fs";
 import { ProposalSchema, ProposalsSchema } from "./borsher-schema.js";
 import fs from "fs";
+import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { writeFile, readdir } from 'node:fs/promises'
 import "dotenv/config";
 
 await init(readFileSync("shared/pkg/shared_bg.wasm"));
@@ -20,25 +22,112 @@ if (process.env.UNDEXER_DATA_DIR) {
   throw new Error("set UNDEXER_DATA_DIR");
 }
 
-while (true) {
-  const allProposals = JSON.parse(
-    fs.readFileSync(`all_proposals.json`, "utf8")
-  );
+let averageTime = 0
 
-  const lastProposalId = await q.last_proposal_id();
-  console.log(`Last proposal ID: ${lastProposalId}`);
+main()
 
-  if (allProposals.length < lastProposalId) {
-    console.log(
-      `Last indexed proposal: ${allProposals.length}/${lastProposalId}. Indexing...`
-    );
-    for (let i = allProposals.length; i < lastProposalId; i++) {
-      console.log(`Indexing proposal #${i}`);
-      const proposalBinary = await q.query_proposal(BigInt(i));
-      const proposalDeserialized = deserialize(ProposalSchema, proposalBinary);
-      await save(`${i}.json`, proposalDeserialized);
-      allProposals.push(proposalDeserialized);
-      await save(`all_proposals.json`, allProposals);
+export default async function main () {
+
+  let latest = await getLatestProposal()
+  setTimeout(pollCurrentBlock, 5000)
+
+  let current = 1
+  pollCurrentProposalId()
+
+  ingestProposals()
+
+  async function pollCurrentProposalId() {
+    latest = await q.last_proposal_id()
+    console.log('Latest proposal:', latest)
+  }
+
+  async function ingestProposals () {
+    while (true) {
+      if (current <= latest) {
+        await retryForever('ingest proposal', 5000, ingestProposal, current, latest)
+        current++
+      } else {
+        console.log('Reached latest proposal, waiting for next')
+        await waitFor(5000)
+      }
     }
   }
+}
+
+export async function getLatestProposal () {
+  return retryForever(
+    'get latest proposal id', 5000, async () => {
+      const proposalId = Number(await q.last_proposal_id())
+      if (isNaN(proposalId)) {
+        throw new Error(`returned proposal id ${proposalId}`)
+      }
+      return proposalId
+    }
+  )
+}
+
+export async function ingestProposal (current, latest) {
+
+  const proposalsRoot = `proposals`
+  // const pageIndex  = `${proposalsRoot}/index.json`
+  const proposalDir  = `${proposalsRoot}/${current}`
+
+  if (!existsSync(proposalDir)) {
+
+    const t0 = performance.now()
+
+    console.log(
+      '\nIndexing proposal:', current,
+      'of', latest,
+      `(${((current/latest)*100).toFixed(3)}%)`
+    )
+
+    const proposalBinary = await retryForever(
+      `get proposal ${current}`, 5000, () => q.query_proposal(BigInt(current))
+    )
+
+    const proposalDeserialized = deserialize(ProposalSchema, proposalBinary);
+
+    //Fetch all proposals
+    const allProposals = JSON.parse(
+      fs.readFileSync(`all_proposals.json`, "utf8")
+    );
+    allProposals.push(proposalDeserialized);
+    
+    await Promise.all([
+      save(`${i}.json`, proposalDeserialized),
+      save(`all_proposals.json`, allProposals),
+    ]);
+
+    // await Promise.all([
+    //   save(blockPath, {...block, txids}),
+    //   readdir(blockPage).then(listing=>save(pageIndex, {
+    //     blocks: listing.filter(x=>x!=='index.json')
+    //       .map(x=>Number(x))
+    //       .filter(x=>!isNaN(x))
+    //       .sort((a, b) => (b - a))
+    //   })),
+    //   readdir(blockRoot).then(listing=>save(pageList, {
+    //     latestBlock:   latest,
+    //     latestIndexed: current,
+    //     pages: listing.filter(x=>x!=='index.json')
+    //   })),
+    // ])
+
+    const t = performance.now() - t0
+    averageTime = (averageTime + t) / 2
+
+    console.log(
+      '\nAverage:', 
+      averageTime.toFixed(0),
+      'msec'
+    )
+
+    console.log(
+      'ETA: in',
+      ((latest - current) * averageTime / 1000).toFixed(0),
+      'sec'
+    )
+  }
+
 }
