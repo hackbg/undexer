@@ -8,6 +8,8 @@
     "@cosmjs/encoding": "^0.32.3",
     "@dao-xyz/borsh":   "^5.2.1",
     "@fadroma/namada":  "^1.0.0-rc.18",
+    "@ganesha/esbuild": "workspace:^",
+    "@hackbg/cmds":     "workspace:*",
     "@namada/shared":   "./shared",
     "borsh":            "^2.0.0",
     "dotenv":           "^16.4.5",
