@@ -1,6 +1,8 @@
+target**
 node_modules
 data/*
 !data/.gitkeep
 *.json
 .env
 .DS_Store
+rust/target/*

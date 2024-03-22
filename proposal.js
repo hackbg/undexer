@@ -7,16 +7,16 @@ import "dotenv/config";
 
 await init(readFileSync("shared/pkg/shared_bg.wasm"));
 const q = new Query(
-  process.env.UNDEXER_RPC_URL || "https://namada-testnet-rpc.itrocket.net"
+    process.env.UNDEXER_RPC_URL || "https://namada-testnet-rpc.itrocket.net"
 );
 
 if (process.env.UNDEXER_DATA_DIR) {
-  await mkdirSync(process.env.UNDEXER_DATA_DIR + "/proposals", {
-    recursive: true,
-  });
-  process.chdir(process.env.UNDEXER_DATA_DIR + "/proposals/");
+    await mkdirSync(process.env.UNDEXER_DATA_DIR + "/proposals", {
+        recursive: true,
+    });
+    process.chdir(process.env.UNDEXER_DATA_DIR + "/proposals/");
 } else {
-  throw new Error("set UNDEXER_DATA_DIR");
+    throw new Error("set UNDEXER_DATA_DIR");
 }
 
 const proposals = await q.query_proposals();

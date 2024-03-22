@@ -30,7 +30,7 @@ export function makeDirIfItDoesntExist(path) {
 }
 
 export function waitFor (msec) {
-  return new Promise(resolve=>setTimeout(resolve, msec))
+    return new Promise(resolve=>setTimeout(resolve, msec))
 }
 
 export async function retryForever (operation, interval, callback, ...args) {
