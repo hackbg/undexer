@@ -197,6 +197,10 @@ export class Query {
 */
   query_signed_bridge_pool(owner_addresses: any[]): Promise<any>;
 /**
+* @returns {Promise<any>}
+*/
+  last_proposal_id(): Promise<any>;
+/**
 * Returns a list of all proposals
 * @returns {Promise<Uint8Array>}
 */
@@ -238,10 +242,9 @@ export class Query {
   query_native_token(): Promise<any>;
 /**
 * @param {bigint} proposal_id
-* @param {bigint} epoch
 * @returns {Promise<any>}
 */
-  get_voters_power_by_proposal_id(proposal_id: bigint, epoch: bigint): Promise<any>;
+  query_voters_power_by_proposal_id(proposal_id: bigint): Promise<any>;
 /**
 * @param {Uint8Array} validator
 * @returns {Promise<any>}
@@ -419,13 +422,14 @@ export interface InitOutput {
   readonly query_query_balance: (a: number, b: number, c: number, d: number, e: number) => number;
   readonly query_query_public_key: (a: number, b: number, c: number) => number;
   readonly query_query_signed_bridge_pool: (a: number, b: number, c: number) => number;
+  readonly query_last_proposal_id: (a: number) => number;
   readonly query_query_proposals: (a: number) => number;
   readonly query_query_proposal: (a: number, b: number) => number;
   readonly query_get_total_delegations: (a: number, b: number, c: number, d: number, e: number) => number;
   readonly query_delegators_votes: (a: number, b: number) => number;
   readonly query_query_gas_costs: (a: number) => number;
   readonly query_query_native_token: (a: number) => number;
-  readonly query_get_voters_power_by_proposal_id: (a: number, b: number, c: number) => number;
+  readonly query_query_voters_power_by_proposal_id: (a: number, b: number) => number;
   readonly query_get_address_from_u8: (a: number, b: number, c: number) => number;
   readonly public_key_to_bech32: (a: number, b: number, c: number) => void;
   readonly __wbg_address_free: (a: number) => void;

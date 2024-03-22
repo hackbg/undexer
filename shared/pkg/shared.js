@@ -356,7 +356,7 @@ export function initThreadPool(_threads) {
     return takeObject(ret);
 }
 
-function __wbg_adapter_209(arg0, arg1, arg2, arg3) {
+function __wbg_adapter_210(arg0, arg1, arg2, arg3) {
     _assertNum(arg0);
     _assertNum(arg1);
     wasm.wasm_bindgen__convert__closures__invoke2_mut__h2b1ef91d99b81830(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
@@ -925,6 +925,15 @@ export class Query {
         return takeObject(ret);
     }
     /**
+    * @returns {Promise<any>}
+    */
+    last_proposal_id() {
+        if (this.__wbg_ptr == 0) throw new Error('Attempt to use a moved value');
+        _assertNum(this.__wbg_ptr);
+        const ret = wasm.query_last_proposal_id(this.__wbg_ptr);
+        return takeObject(ret);
+    }
+    /**
     * Returns a list of all proposals
     * @returns {Promise<Uint8Array>}
     */
@@ -1003,15 +1012,13 @@ export class Query {
     }
     /**
     * @param {bigint} proposal_id
-    * @param {bigint} epoch
     * @returns {Promise<any>}
     */
-    get_voters_power_by_proposal_id(proposal_id, epoch) {
+    query_voters_power_by_proposal_id(proposal_id) {
         if (this.__wbg_ptr == 0) throw new Error('Attempt to use a moved value');
         _assertNum(this.__wbg_ptr);
         _assertBigInt(proposal_id);
-        _assertBigInt(epoch);
-        const ret = wasm.query_get_voters_power_by_proposal_id(this.__wbg_ptr, proposal_id, epoch);
+        const ret = wasm.query_query_voters_power_by_proposal_id(this.__wbg_ptr, proposal_id);
         return takeObject(ret);
     }
     /**
@@ -1770,7 +1777,7 @@ function __wbg_get_imports() {
                 const a = state0.a;
                 state0.a = 0;
                 try {
-                    return __wbg_adapter_209(a, state0.b, arg0, arg1);
+                    return __wbg_adapter_210(a, state0.b, arg0, arg1);
                 } finally {
                     state0.a = a;
                 }
@@ -1848,16 +1855,16 @@ function __wbg_get_imports() {
         const ret = wasm.memory;
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper2728 = function() { return logError(function (arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 565, __wbg_adapter_30);
+    imports.wbg.__wbindgen_closure_wrapper2748 = function() { return logError(function (arg0, arg1, arg2) {
+        const ret = makeMutClosure(arg0, arg1, 569, __wbg_adapter_30);
         return addHeapObject(ret);
     }, arguments) };
-    imports.wbg.__wbindgen_closure_wrapper3154 = function() { return logError(function (arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 690, __wbg_adapter_33);
+    imports.wbg.__wbindgen_closure_wrapper3174 = function() { return logError(function (arg0, arg1, arg2) {
+        const ret = makeMutClosure(arg0, arg1, 694, __wbg_adapter_33);
         return addHeapObject(ret);
     }, arguments) };
-    imports.wbg.__wbindgen_closure_wrapper5594 = function() { return logError(function (arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 1575, __wbg_adapter_36);
+    imports.wbg.__wbindgen_closure_wrapper5641 = function() { return logError(function (arg0, arg1, arg2) {
+        const ret = makeMutClosure(arg0, arg1, 1578, __wbg_adapter_36);
         return addHeapObject(ret);
     }, arguments) };
 
