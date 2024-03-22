@@ -34,6 +34,8 @@ await saveAllValidatorsToJSON();
 
 await saveValidatorPerJSON();
 
+await saveConsensusValidatorsToJSON();
+
 async function saveValidatorPerJSON() {
     const validatorsDeserialized = await retryForever(
       'get validator list', 5000, getValidatorsFromNode
@@ -111,4 +113,12 @@ async function saveAllValidatorsToJSON() {
 
     await save("all_validators.json", validatorsString);
     return validatorsDeserialized;
+}
+
+async function saveConsensusValidatorsToJSON() {
+  const consensusValidators = await connection.getValidatorsConsensus();
+  await save(
+    'consensus_validators.json',
+    consensusValidators.sort((a, b) => b.bondedStake - a.bondedStake)
+  );
 }
