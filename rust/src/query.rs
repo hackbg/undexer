@@ -21,8 +21,10 @@ use namada::sdk::rpc::{
     query_epoch, query_native_token, query_proposal_by_id, query_proposal_votes,
     query_storage_value,
 };
+use namada::tendermint::crypto::default;
 use namada::token;
 use namada::uint::I256;
+use serde::Serialize;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
@@ -36,7 +38,13 @@ use crate::utils::{set_panic_hook, to_js_result};
 /// Represents an API for querying the ledger
 pub struct Query {
     client: HttpClient,
-} 
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Serialize)] // Derive traits necessary for using as HashMap key
+struct VoteCasted {
+    vote: String,
+    power: VotePower,
+}
 
 #[wasm_bindgen]
 impl Query {
@@ -456,10 +464,10 @@ impl Query {
                 grace_epoch: proposal.grace_epoch.0,
                 content,
                 status: status.to_string(),
-                result: "abc".to_string(),
+                result: result.result.to_string(),
                 total_voting_power: total_voting_power.to_string_native(),
-                total_yay_power: total_yay_power.to_string(),
-                total_nay_power: total_nay_power.to_string(),
+                total_yay_power: total_yay_power.to_string_native(),
+                total_nay_power: total_nay_power.to_string_native(),
             };
 
             proposals.push(proposal_info);
@@ -604,9 +612,11 @@ impl Query {
         to_js_result(address)
     }
 
+
+
     pub async fn query_voters_power_by_proposal_id(&self, proposal_id: u64)->Result<JsValue, JsError>{
-        let votes = query_proposal_votes(&self.client, proposal_id).await.unwrap_or_default();
-        let mut voting_power: HashMap<Address, VotePower> = HashMap::default();
+        let votes = query_proposal_votes(&self.client, proposal_id).await.unwrap();
+        let mut voting_power: HashMap<Address, VoteCasted> = HashMap::default();
 
         let proposal = query_proposal_by_id(&self.client, proposal_id).await.unwrap().unwrap();
         let epoch = proposal.voting_end_epoch;
@@ -621,7 +631,17 @@ impl Query {
                     .await
                     .expect("Validator stake should be present")
                     .unwrap_or_default();
-                voting_power.insert(vote.validator, validator_stake);
+
+
+                let casted: String = match vote.data {
+                        ProposalVote::Yay => "yay".to_string(),
+                        ProposalVote::Nay => "nay".to_string(),
+                        ProposalVote::Abstain => "abstain".to_string(),
+                    };
+
+                let vote_casted: VoteCasted = VoteCasted{ vote: casted, power: validator_stake };
+
+                voting_power.insert(vote.validator, vote_casted);
             } else {
                 let delegator_stake = RPC
                     .vp()
@@ -629,7 +649,16 @@ impl Query {
                     .bond_with_slashing(&self.client, &vote.delegator, &vote.validator, &Some(epoch))
                     .await
                     .expect("Delegator stake should be present");
-                voting_power.insert(vote.delegator, delegator_stake);
+
+                let casted: String = match vote.data {
+                        ProposalVote::Yay => "yay".to_string(),
+                        ProposalVote::Nay => "nay".to_string(),
+                        ProposalVote::Abstain => "abstain".to_string(),
+                    };
+
+                let vote_casted: VoteCasted = VoteCasted{ vote: casted, power: delegator_stake };
+
+                voting_power.insert(vote.delegator, vote_casted);
             }
             
         }

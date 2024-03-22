@@ -1,16 +1,16 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
+* @param {number} _threads
+* @returns {Promise<void>}
+*/
+export function initThreadPool(_threads: number): Promise<void>;
+/**
 * Helper function to bech32 encode a public key from bytes
 * @param {Uint8Array} bytes
 * @returns {string}
 */
 export function public_key_to_bech32(bytes: Uint8Array): string;
-/**
-* @param {number} _threads
-* @returns {Promise<void>}
-*/
-export function initThreadPool(_threads: number): Promise<void>;
 /**
 */
 export enum TxType {
@@ -411,6 +411,18 @@ export interface InitOutput {
   readonly sdk_reveal_pk: (a: number, b: number, c: number, d: number, e: number) => number;
   readonly sdk_sign_arbitrary: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
   readonly sdk_verify_arbitrary: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+  readonly __wbg_extendedviewingkey_free: (a: number) => void;
+  readonly extendedviewingkey_new: (a: number, b: number, c: number) => void;
+  readonly extendedviewingkey_encode: (a: number, b: number) => void;
+  readonly __wbg_extendedspendingkey_free: (a: number) => void;
+  readonly extendedspendingkey_new: (a: number, b: number, c: number) => void;
+  readonly extendedspendingkey_encode: (a: number, b: number) => void;
+  readonly __wbg_paymentaddress_free: (a: number) => void;
+  readonly paymentaddress_new: (a: number, b: number, c: number) => void;
+  readonly paymentaddress_pinned: (a: number, b: number) => number;
+  readonly paymentaddress_is_pinned: (a: number) => number;
+  readonly paymentaddress_hash: (a: number, b: number) => void;
+  readonly paymentaddress_encode: (a: number, b: number) => void;
   readonly __wbg_query_free: (a: number) => void;
   readonly query_new: (a: number, b: number) => number;
   readonly query_query_epoch: (a: number) => number;
@@ -431,35 +443,23 @@ export interface InitOutput {
   readonly query_query_native_token: (a: number) => number;
   readonly query_query_voters_power_by_proposal_id: (a: number, b: number) => number;
   readonly query_get_address_from_u8: (a: number, b: number, c: number) => number;
+  readonly initThreadPool: (a: number) => number;
   readonly public_key_to_bech32: (a: number, b: number, c: number) => void;
   readonly __wbg_address_free: (a: number) => void;
   readonly address_new: (a: number, b: number) => number;
   readonly address_implicit: (a: number, b: number) => void;
   readonly address_public: (a: number, b: number) => void;
   readonly address_hash: (a: number, b: number) => void;
-  readonly __wbg_extendedviewingkey_free: (a: number) => void;
-  readonly extendedviewingkey_new: (a: number, b: number, c: number) => void;
-  readonly extendedviewingkey_encode: (a: number, b: number) => void;
-  readonly __wbg_extendedspendingkey_free: (a: number) => void;
-  readonly extendedspendingkey_new: (a: number, b: number, c: number) => void;
-  readonly extendedspendingkey_encode: (a: number, b: number) => void;
-  readonly __wbg_paymentaddress_free: (a: number) => void;
-  readonly paymentaddress_new: (a: number, b: number, c: number) => void;
-  readonly paymentaddress_pinned: (a: number, b: number) => number;
-  readonly paymentaddress_is_pinned: (a: number) => number;
-  readonly paymentaddress_hash: (a: number, b: number) => void;
-  readonly paymentaddress_encode: (a: number, b: number) => void;
-  readonly initThreadPool: (a: number) => number;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
   readonly __wbindgen_export_2: WebAssembly.Table;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
-  readonly _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__ha1c0281b2ba1428f: (a: number, b: number, c: number, d: number) => void;
-  readonly _dyn_core__ops__function__FnMut_____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hfcfba052df9d30fc: (a: number, b: number) => void;
-  readonly _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hd45f52679804a87b: (a: number, b: number, c: number) => void;
+  readonly _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h9db04429abdb16be: (a: number, b: number, c: number, d: number) => void;
+  readonly _dyn_core__ops__function__FnMut_____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h3cebbbc5e316119b: (a: number, b: number) => void;
+  readonly _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h935a492d58223c4e: (a: number, b: number, c: number) => void;
   readonly __wbindgen_free: (a: number, b: number, c: number) => void;
   readonly __wbindgen_exn_store: (a: number) => void;
-  readonly wasm_bindgen__convert__closures__invoke2_mut__h2b1ef91d99b81830: (a: number, b: number, c: number, d: number) => void;
+  readonly wasm_bindgen__convert__closures__invoke2_mut__h35656ed1617f92da: (a: number, b: number, c: number, d: number) => void;
 }
 
 export type SyncInitInput = BufferSource | WebAssembly.Module;
