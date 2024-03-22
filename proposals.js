@@ -1,8 +1,9 @@
 import init, { Query } from "./shared/pkg/shared.js";
 import { deserialize } from "borsh";
+import { save } from "./utils.js";
 import { mkdirSync, readFileSync } from "node:fs";
-import { makeDirIfItDoesntExist, save } from "./utils.js";
-import { ProposalsSchema } from "./borsher-schema.js";
+import { ProposalSchema, ProposalsSchema } from "./borsher-schema.js";
+import fs from "fs";
 import "dotenv/config";
 
 await init(readFileSync("shared/pkg/shared_bg.wasm"));
@@ -19,7 +20,25 @@ if (process.env.UNDEXER_DATA_DIR) {
   throw new Error("set UNDEXER_DATA_DIR");
 }
 
-const proposals = await q.query_proposals();
-const propoDeserialized = deserialize(ProposalsSchema, proposals);
+while (true) {
+  const allProposals = JSON.parse(
+    fs.readFileSync(`all_proposals.json`, "utf8")
+  );
 
-await save("all_proposals.json", propoDeserialized);
+  const lastProposalId = await q.last_proposal_id();
+  console.log(`Last proposal ID: ${lastProposalId}`);
+
+  if (allProposals.length < lastProposalId) {
+    console.log(
+      `Last indexed proposal: ${allProposals.length}/${lastProposalId}. Indexing...`
+    );
+    for (let i = allProposals.length; i < lastProposalId; i++) {
+      console.log(`Indexing proposal #${i}`);
+      const proposalBinary = await q.query_proposal(BigInt(i));
+      const proposalDeserialized = deserialize(ProposalSchema, proposalBinary);
+      await save(`${i}.json`, proposalDeserialized);
+      allProposals.push(proposalDeserialized);
+      await save(`all_proposals.json`, allProposals);
+    }
+  }
+}
