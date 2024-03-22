@@ -7,11 +7,12 @@
   "dependencies": {
     "@cosmjs/encoding": "^0.32.3",
     "@dao-xyz/borsh": "^5.2.1",
-    "@fadroma/namada": "^1.0.0-rc.17",
+    "@fadroma/namada": "^1.0.0-rc.18",
     "@namada/shared": "file:://shared",
     "bech32": "^2.0.0",
     "bignumber.js": "^9.1.2",
     "borsh": "^2.0.0",
+    "dotenv": "^16.4.5",
     "mkdirp": "^3.0.1"
   }
 }

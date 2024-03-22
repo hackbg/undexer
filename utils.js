@@ -28,3 +28,18 @@ export function makeDirIfItDoesntExist(path) {
         console.log("Directory already exists");
     }
 }
+
+export function waitFor (msec) {
+    return new Promise(resolve=>setTimeout(resolve, msec))
+}
+
+export async function retryForever (operation, interval, callback, ...args) {
+  while (true) {
+    try {
+      return await callback(...args)
+    } catch (e) {
+      console.error(`Failed to ${operation}, waiting ${interval}ms and retrying`)
+      await waitFor(interval)
+    }
+  }
+}

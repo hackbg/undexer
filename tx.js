@@ -4,6 +4,8 @@ import { writeFile, readdir } from 'node:fs/promises'
 import * as Namada from '@fadroma/namada'
 import { Core } from '@fadroma/agent'
 import { mkdirp, mkdirpSync } from 'mkdirp'
+import { waitFor, retryForever } from './utils.js'
+import 'dotenv/config'
 
 await Namada.initDecoder(readFileSync('./node_modules/@fadroma/namada/pkg/fadroma_namada_bg.wasm'))
 
@@ -47,21 +49,6 @@ export default async function main () {
         console.log('Reached latest block, waiting for next')
         await waitFor(5000)
       }
-    }
-  }
-}
-
-export function waitFor (msec) {
-  return new Promise(resolve=>setTimeout(resolve, msec))
-}
-
-export async function retryForever (operation, interval, callback, ...args) {
-  while (true) {
-    try {
-      return await callback(...args)
-    } catch (e) {
-      console.error(`Failed to ${operation}, waiting ${interval}ms and retrying`)
-      await waitFor(interval)
     }
   }
 }

@@ -19,13 +19,11 @@ if (process.env.UNDEXER_DATA_DIR) {
     throw new Error("set UNDEXER_DATA_DIR");
 }
 
-// const proposals = await q.query_proposals();
-// const proposalsDeserialized = deserialize(ProposalsSchema, proposals);
+const proposals = await q.query_proposals();
+const proposalsDeserialized = deserialize(ProposalsSchema, proposals);
 
-// let i = 1;
-for (let i = 350; i < 385; i++) {
-    console.log(`${i}/385`);
-    const proposalBinary = await q.query_proposal(BigInt(i));
-    const proposalDeserialized = deserialize(ProposalSchema, proposalBinary);
-    await save(`${i}.json`, proposalDeserialized);
+for (let i = 0; i < proposalsDeserialized.length - 1; i++) {
+  const proposalBinary = await q.query_proposal(BigInt(i));
+  const proposalDeserialized = deserialize(ProposalSchema, proposalBinary);
+  await save(`${i}.json`, proposalDeserialized);
 }
