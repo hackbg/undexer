@@ -1,4 +1,4 @@
-use namada::core::borsh::BorshSerialize;
+use namada::{core::borsh::BorshSerialize, governance::utils::TallyType};
 
 #[derive(BorshSerialize)]
 #[borsh(crate = "namada::core::borsh")]
@@ -15,4 +15,6 @@ pub struct ProposalInfo {
     pub total_voting_power: String,
     pub total_yay_power: String,
     pub total_nay_power: String,
+    pub total_abstain_power: String,
+    pub tally_type: String,
 }

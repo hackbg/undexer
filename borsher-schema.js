@@ -22,6 +22,8 @@ export const ProposalSchema = {
         totalVotingPower: "string",
         totalYayPower: "string",
         totalNayPower: "string",
+        totalAbstainPower: "string",
+        tallyType: "string",
     },
 };
 

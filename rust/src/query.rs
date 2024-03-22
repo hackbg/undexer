@@ -21,11 +21,11 @@ use namada::sdk::rpc::{
     query_epoch, query_native_token, query_proposal_by_id, query_proposal_votes,
     query_storage_value,
 };
-use namada::tendermint::crypto::default;
 use namada::token;
 use namada::uint::I256;
 use serde::Serialize;
 use std::collections::{BTreeMap, HashMap, HashSet};
+use std::fmt::Debug;
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
 
@@ -452,7 +452,7 @@ impl Query {
             let result = compute_proposal_result(votes, total_voting_power, tally_type);
             let total_yay_power = result.total_yay_power.to_string_native();
             let total_nay_power = result.total_nay_power.to_string_native();
-
+            let total_abstain_power = result.total_abstain_power.to_string_native();
 
             let content = serde_json::to_string(&proposal.content)?;
             let proposal_info = ProposalInfo {
@@ -466,8 +466,10 @@ impl Query {
                 status: status.to_string(),
                 result: result.result.to_string(),
                 total_voting_power: total_voting_power.to_string_native(),
-                total_yay_power: total_yay_power.to_string_native(),
-                total_nay_power: total_nay_power.to_string_native(),
+                total_yay_power,
+                total_nay_power,
+                total_abstain_power,
+                tally_type: format!("{:?}", &tally_type),
             };
 
             proposals.push(proposal_info);
@@ -505,8 +507,18 @@ impl Query {
                 "upcoming"
             };
 
-        let content = serde_json::to_string(&proposal.content)?;
+        //TODO: for now we assume that interface does not support steward accounts
 
+        let votes = compute_proposal_votes(&self.client, proposal.id, epoch).await;
+        let tally_type = proposal.get_tally_type(false);
+        let result = compute_proposal_result(votes, total_voting_power, tally_type);
+        let total_yay_power = result.total_yay_power.to_string_native();
+        let total_nay_power = result.total_nay_power.to_string_native();
+        let total_abstain_power: String = result.total_abstain_power.to_string_native();
+
+        let total_vp = result.total_yay_power + result.total_nay_power + result.total_abstain_power;
+
+        let content = serde_json::to_string(&proposal.content)?;
         let proposal_info = ProposalInfo {
             id: proposal.id.to_string(),
             proposal_type: proposal_type.to_string(),
@@ -514,13 +526,14 @@ impl Query {
             start_epoch: proposal.voting_start_epoch.0,
             end_epoch: proposal.voting_end_epoch.0,
             grace_epoch: proposal.grace_epoch.0,
-            content: content,
+            content,
             status: status.to_string(),
-            result: proposal_type.to_string(),
-            total_voting_power: total_voting_power.to_string_native(),
-            total_yay_power: proposal_type.to_string(),
-            total_nay_power: proposal_type.to_string(),
-
+            result: result.result.to_string(),
+            total_voting_power: total_vp.to_string_native(),
+            total_yay_power,
+            total_nay_power,
+            total_abstain_power,
+            tally_type: format!("{:?}", &tally_type),
         };
 
         let mut writer = vec![];
