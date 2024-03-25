@@ -6,13 +6,17 @@
   "description": "Namada indexer to file.",
   "dependencies": {
     "@cosmjs/encoding": "^0.32.3",
-    "@dao-xyz/borsh":   "^5.2.1",
-    "@fadroma/namada":  "^1.0.0-rc.18",
+    "@dao-xyz/borsh": "^5.2.1",
+    "@fadroma/namada": "^1.0.0-rc.18",
     "@ganesha/esbuild": "^1.0.0-rc.3",
-    "@hackbg/cmds":     "^4.0.0-rc.5",
-    "@namada/shared":   "./shared",
-    "borsh":            "^2.0.0",
-    "dotenv":           "^16.4.5",
-    "mkdirp":           "^3.0.1"
+    "@hackbg/cmds": "^4.0.0-rc.5",
+    "@namada/shared": "./shared",
+    "borsh": "^2.0.0",
+    "dotenv": "^16.4.5",
+    "mkdirp": "^3.0.1",
+    "pg": "^8.11.3",
+    "pg-hstore": "^2.3.4",
+    "postgresql": "^0.0.1",
+    "sequelize": "^6.37.1"
   }
 }
