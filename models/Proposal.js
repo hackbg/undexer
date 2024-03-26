@@ -1,10 +1,12 @@
 import { DataTypes } from "sequelize";
+import sequelizer from "../db/index.js";
 
-const Proposal = {
+const Proposal = sequelizer.define('proposal', {
     id: {
         type: DataTypes.INTEGER,
         allowNull: false,
         unique: true,
+        primaryKey: true,
     },
     proposalType: {
         type: DataTypes.ENUM("pgf_steward", "pgf_funding", "pgf_governance"),
@@ -15,15 +17,15 @@ const Proposal = {
         allowNull: false,
     },
     startEpoch: {
-        type: DataTypes.TINYINT,
+        type: DataTypes.INTEGER,
         allowNull: false,
     },
     endEpoch: {
-        type: DataTypes.TINYINT,
+        type: DataTypes.INTEGER,
         allowNull: false,
     },
     graceEpoch: {
-        type: DataTypes.TINYINT,
+        type: DataTypes.INTEGER,
         allowNull: false,
     },
     contentJSON: {
@@ -62,6 +64,6 @@ const Proposal = {
         ),
         allowNull: false,
     },
-};
+});
 
 export default Proposal;

@@ -1,6 +1,7 @@
 import { DataTypes } from "sequelize";
+import sequelizer from "../db/index.js";
 
-const Transaction = {
+const Transaction = sequelizer.define('transaction', {
     chainId: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -13,15 +14,15 @@ const Transaction = {
         type: DataTypes.DATE,
         allowNull: false,
     },
-    codehash: {
+    codeHash: {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    datahash: {
+    dataHash: {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    memohash: {
+    memoHash: {
         type: DataTypes.STRING,
         allowNull: false,
     },
@@ -58,6 +59,6 @@ const Transaction = {
         type: DataTypes.JSON,
         allowNull: false,
     },
-};
+});
 
 export default Transaction;
