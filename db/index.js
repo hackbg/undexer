@@ -1,29 +1,26 @@
 // db/index.js
-const { Sequelize } = require('sequelize');
+import { Sequelize } from "sequelize";
 
 import "dotenv/config";
+const { DATABASE_URL } = process.env;
 
 class SequelizeSingleton {
     constructor() {
-        if(!process.env.DATABASE_URL) {
+        if (!DATABASE_URL) {
             throw new Error("DATABASE_URL is not set");
         }
 
         if (!SequelizeSingleton.instance) {
-            SequelizeSingleton.instance = new Sequelize(
-                process.env.DATABASE_URL
-            );
+            SequelizeSingleton.instance = new Sequelize(DATABASE_URL, {
+                dialect: "postgres",
+                logging: () => console.log,
+            });
         }
     }
 
     getInstance() {
         return SequelizeSingleton.instance;
     }
-
-    async test(){
-        await SeuqalizeSingleton.instance.authenticate();
-        console.log("test");
-    }
 }
-const sequencer = new SequelizeSingleton().getInstance()
-export default sequencer;
+const sequelizer = new SequelizeSingleton().getInstance();
+export default sequelizer;

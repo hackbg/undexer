@@ -1,11 +1,12 @@
 import { DataTypes } from "sequelize";
+import sequelizer from "../db/index.js";
 
-const Validator = {
+const Validator = sequelizer.define('validator', {
     timestamp: {
         type: DataTypes.DATE,
-        allowNull: false,
+        allowNull: true,
     },
-    address: {
+    validator: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true,
@@ -23,6 +24,6 @@ const Validator = {
         allowNull: false,
     },
     state: DataTypes.ENUM("BelowThreshold", "Jailed", "Consensus"),
-};
+});
 
 export default Validator;
