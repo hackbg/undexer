@@ -9,12 +9,11 @@ const Proposal = sequelizer.define('proposal', {
         primaryKey: true,
     },
     proposalType: {
-        type: DataTypes.ENUM("pgf_steward", "pgf_funding", "pgf_governance"),
+        type: DataTypes.ENUM("pgf_steward", "pgf_funding", "pgf_governance", "default", "pgf_payment"),
         allowNull: false,
     },
     author: {
         type: DataTypes.STRING,
-        allowNull: false,
     },
     startEpoch: {
         type: DataTypes.INTEGER,
@@ -33,28 +32,22 @@ const Proposal = sequelizer.define('proposal', {
         allowNull: false,
     },
     status: {
-        type: DataTypes.ENUM("active", "finished", "rejected"),
-        allowNull: false,
+        type: DataTypes.ENUM("ongoing", "finished", "rejected"),
     },
     result: {
         type: DataTypes.ENUM("passed", "rejected"),
-        allowNull: false,
     },
     totalVotingPower: {
         type: DataTypes.STRING,
-        allowNull: false,
     },
     totalYayPower: {
         type: DataTypes.STRING,
-        allowNull: false,
     },
     totalNayPower: {
         type: DataTypes.STRING,
-        allowNull: false,
     },
     totalAbstainPower: {
         type: DataTypes.STRING,
-        allowNull: false,
     },
     tallyType: {
         type: DataTypes.ENUM(
@@ -62,7 +55,6 @@ const Proposal = sequelizer.define('proposal', {
             "TwoThirds",
             "LessOneHalfOverOneThirdNay"
         ),
-        allowNull: false,
     },
 });
 
