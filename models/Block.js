@@ -1,6 +1,7 @@
 
 import { DataTypes } from 'sequelize';
 import sequelizer from "../db/index.js";
+import Transaction from './Transaction.js';
 
 const Block = sequelizer.define('block', {
     id: {
@@ -14,5 +15,7 @@ const Block = sequelizer.define('block', {
         allowNull: false,
     },
 });
+
+Block.hasMany(Transaction);
 
 export default Block;
