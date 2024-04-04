@@ -174,13 +174,14 @@ impl Sdk {
         to_js_result(borsh::to_vec(&tx)?)
     }
 
-    pub async fn process_tx(&mut self, tx_bytes: &[u8], tx_msg: &[u8]) -> Result<(), JsError> {
+    pub async fn process_tx(&mut self, tx_bytes: &[u8], tx_msg: &[u8]) -> Result<JsValue, JsError> {
         let args = tx::tx_args_from_slice(tx_msg)?;
 
         let tx = Tx::try_from_slice(tx_bytes)?;
+        let inner_tx_hash = tx.raw_header_hash().to_string();
         process_tx(&self.namada, &args, tx).await?;
 
-        Ok(())
+        to_js_result(inner_tx_hash)
     }
 
     /// Build transaction for specified type, return bytes to client
@@ -190,47 +191,40 @@ impl Sdk {
         specific_msg: &[u8],
         tx_msg: &[u8],
         gas_payer: String,
-    ) -> Result<JsValue, JsError> {
+    ) -> Result<BuiltTx, JsError> {
         let tx = match tx_type {
             TxType::Bond => {
                 self.build_bond(specific_msg, tx_msg, Some(gas_payer))
                     .await?
-                    .tx
             }
             TxType::Unbond => {
                 self.build_unbond(specific_msg, tx_msg, Some(gas_payer))
                     .await?
-                    .tx
             }
             TxType::Withdraw => {
                 self.build_withdraw(specific_msg, tx_msg, Some(gas_payer))
                     .await?
-                    .tx
             }
             TxType::Transfer => {
                 self.build_transfer(specific_msg, tx_msg, None, Some(gas_payer))
                     .await?
-                    .tx
             }
             TxType::IBCTransfer => {
                 self.build_ibc_transfer(specific_msg, tx_msg, Some(gas_payer))
                     .await?
-                    .tx
             }
             TxType::EthBridgeTransfer => {
                 self.build_eth_bridge_transfer(specific_msg, tx_msg, Some(gas_payer))
                     .await?
-                    .tx
             }
-            TxType::RevealPK => self.build_reveal_pk(tx_msg, gas_payer).await?.tx,
+            TxType::RevealPK => self.build_reveal_pk(tx_msg, gas_payer).await?,
             TxType::VoteProposal => {
                 self.build_vote_proposal(specific_msg, tx_msg, Some(gas_payer))
                     .await?
-                    .tx
             }
         };
 
-        to_js_result(borsh::to_vec(&tx)?)
+        Ok(tx)
     }
 
     // Append signatures and return tx bytes
@@ -284,6 +278,7 @@ impl Sdk {
                     .fetch(
                         self.namada.client(),
                         &DefaultLogger::new(&WebIo),
+                        None,
                         None,
                         1,
                         &[xsk.into()],
