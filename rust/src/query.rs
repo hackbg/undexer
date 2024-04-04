@@ -104,7 +104,8 @@ impl Query {
     }
 
     /// Gets all delegations for every provided address.
-    /// Returns a tuple of (owner_address, validator_address, total_bonds)
+    /// Returns a tuple of:
+    /// (owner_address, validator_address, total_bonds, total_unbonds, withdrawable)
     ///
     /// # Arguments
     ///
@@ -295,6 +296,7 @@ impl Query {
             .fetch(
                 &self.client,
                 &DefaultLogger::new(&WebIo),
+                None,
                 None,
                 1,
                 &[],
@@ -490,12 +492,13 @@ impl Query {
                 .await
                 .unwrap()
                 .expect("Proposal should be written to storage.");
+            let votes = compute_proposal_votes(&self.client, id, proposal.voting_end_epoch).await;
             let total_voting_power =
                 get_total_staked_tokens(&self.client, proposal.voting_end_epoch)
                     .await
                     .unwrap();
             //TODO: for now we assume that interface does not support steward accounts
-
+            
             let proposal_type = match proposal.r#type {
                 ProposalType::PGFSteward(_) => "pgf_steward",
                 ProposalType::PGFPayment(_) => "pgf_payment",
@@ -510,14 +513,12 @@ impl Query {
                     "upcoming"
                 };
 
-            let votes = compute_proposal_votes(&self.client, proposal.id, epoch).await;
-            let tally_type = proposal.get_tally_type(false);
-            let result = compute_proposal_result(votes, total_voting_power, tally_type);
-            let total_yay_power = result.total_yay_power.to_string_native();
-            let total_nay_power = result.total_nay_power.to_string_native();
-            let total_abstain_power = result.total_abstain_power.to_string_native();
-
             let content = serde_json::to_string(&proposal.content)?;
+
+            let proposal_result = compute_proposal_result(votes, total_voting_power, tally_type);
+            let total_abstain_power: String = proposal_result.total_abstain_power.to_string_native();
+            let tally_type=proposal.get_tally_type(false);
+
             let proposal_info = ProposalInfo {
                 id: proposal.id.to_string(),
                 proposal_type: proposal_type.to_string(),
@@ -527,10 +528,10 @@ impl Query {
                 grace_epoch: proposal.grace_epoch.0,
                 content,
                 status: status.to_string(),
-                result: result.result.to_string(),
-                total_voting_power: total_voting_power.to_string_native(),
-                total_yay_power,
-                total_nay_power,
+                result: proposal_result.result.to_string(),
+                total_voting_power: proposal_result.total_voting_power.to_string_native(),
+                total_yay_power: proposal_result.total_yay_power.to_string_native(),
+                total_nay_power: proposal_result.total_nay_power.to_string_native(),
                 total_abstain_power,
                 tally_type: format!("{:?}", &tally_type),
             };
