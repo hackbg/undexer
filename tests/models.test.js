@@ -1,13 +1,15 @@
 import assert from 'node:assert';
 import { describe, it, before } from 'node:test';
+
+import Block from '../models/relations/Block.js';
+import Transaction from '../models/relations/Transaction.js';
+import Proposal from '../models/Proposal.js'
+import Validator from '../models/Validator.js'
+
 import test_block from '../data/block/1/block.json' with {type: "json"}
 import transaction_json from '../data/block/1/tx-1.json' with {type: "json"}
 import validator_json from '../data/validators/validator.json' with {type: "json"}
 import proposal_json from '../data/proposal/1.json' with {type: "json"}
-import Block from '../models/Block.js';
-import Transaction from '../models/Transaction.js';
-import Proposal from '../models/Proposal.js'
-import Validator from '../models/Validator.js'
 
 describe('upload', ()=>{
     before(async ()=>{
@@ -25,8 +27,7 @@ describe('upload', ()=>{
         assert.strictEqual(blocks.length, 1)
     });
 
-    it.only("should upload transactions", async ()=>{
-        console.log(transaction_json.tx);
+    it("should upload transactions", async ()=>{
         const tx = await Transaction.build(transaction_json.tx);
         await tx.save();
 
