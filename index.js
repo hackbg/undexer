@@ -1,15 +1,15 @@
 import EventEmitter from "node:events";
-import { initialize, serialize } from "./utils";
+import { initialize, serialize } from "./utils.js";
 import { getValidator, getValidatorsFromNode } from "./scripts/validator.js";
-import { Query } from "./shared/pkg/shared";
+import { Query } from "./shared/pkg/shared.js";
 import * as Namada from "@fadroma/namada";
-import Block from "./models/Block";
-import Proposal from "./models/Proposal";
+import Block from "./models/Block.js";
+import Proposal from "./models/Proposal.js";
 import { UNDEXER_RPC_URL } from "./constants.js";
 import { deserialize } from "borsh";
-import { ProposalsSchema } from "./borsher-schema";
-import Validator from "./models/Validator";
-import sequelizer from "./db";
+import { ProposalsSchema } from "./borsher-schema.js";
+import Validator from "./models/Validator.js";
+import sequelizer from "./db/index.js";
 import TransactionManager from "./TransactionManager.js";
 
 let isProcessingNewBlock = false;
@@ -17,7 +17,8 @@ let isProcessingUpdatePropoasls = false;
 let isProcessingNewValidator = false;
 
 await initialize();
-sequelizer.init();
+console.log(sequelizer)
+sequelizer.sync();
 
 const eventEmitter = new EventEmitter();
 const conn = Namada.testnet({ url: UNDEXER_RPC_URL });
@@ -34,7 +35,7 @@ async function checkForNewBlock() {
     let blockHeightDb = latestBlockInDb?.header.height;
     const chainHeight = await conn.height;
     if(blockHeightDb === undefined){
-        eventEmitter.emit("updateBlocks", 237007, 237100);
+        eventEmitter.emit("updateBlocks", 237907, chainHeight);
     }
     else if (chainHeight > blockHeightDb) {
         console.log
@@ -73,7 +74,7 @@ eventEmitter.on("updateBlocks", async (blockHeightDb, chainHeight) => {
     console.log('=====================================');
 
     for(let i=blockHeightDb; i<=chainHeight; i++){
-        const block = (await conn.getBlock(i)) as any;
+        const block = (await conn.getBlock(i));
         const { txsDecoded } = block;
 
         await Block.create(block);
@@ -93,7 +94,7 @@ eventEmitter.on("updateProposals", async () => {
     console.log('=====================================');
 
     const proposalsBinary = await q.query_proposals();
-    const proposals = deserialize(ProposalsSchema, proposalsBinary) as any;
+    const proposals = deserialize(ProposalsSchema, proposalsBinary);
     for (const proposal of proposals) {
         await Proposal.create(proposal);
     }
@@ -108,7 +109,7 @@ eventEmitter.on("updateValidators", async () => {
     console.log('Processing new validator')
     console.log('=====================================')
 
-    const validatorsBinary = await getValidatorsFromNode(conn) as any;
+    const validatorsBinary = await getValidatorsFromNode(conn);
     for (const validatorBinary of validatorsBinary) {
         const validator = await getValidator(q, conn, validatorBinary);
         await Validator.create(JSON.parse(serialize(validator)));        

@@ -1,11 +1,11 @@
-import Cipher from "./models/Sections/Cipher";
-import Code from "./models/Sections/Code";
-import Data from "./models/Sections/Data";
-import ExtraData from "./models/Sections/ExtraData";
-import MaspBuilder from "./models/Sections/MaspBuilder";
-import Signature from "./models/Sections/Signature";
-import Transaction from "./models/Transaction";
-import { SectionTypeToModel, format } from "./utils";
+import Cipher from "./models/Sections/Cipher.js";
+import Code from "./models/Sections/Code.js";
+import Data from "./models/Sections/Data.js";
+import ExtraData from "./models/Sections/ExtraData.js";
+import MaspBuilder from "./models/Sections/MaspBuilder.js";
+import Signature from "./models/Sections/Signature.js";
+import Transaction from "./models/Transaction.js";
+import { SectionTypeToModel, format } from "./utils.js";
 
 export default class TransactionManager {
     static async handleTransaction(tx, eventEmitter) {
