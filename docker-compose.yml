@@ -5,7 +5,7 @@ services:
     volumes:
       - .:/app
     working_dir: /app
-    command: tx.js
+    command: index.js
   server:
     image: hackbg/undexer-lighttpd
     build:
@@ -17,3 +17,13 @@ services:
     command: lighttpd -D -f /lighttpd.conf
     ports:
       - 8080
+  postgres:
+    image: postgres:16.2-alpine
+    ports:
+      - 5432:5432
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=random_password
+      - POSTGRES_USER=random_user
+      - POSTGRES_DB=random_db
