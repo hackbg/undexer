@@ -9,6 +9,7 @@ use namada::ledger::eth_bridge::bridge_pool::query_signed_bridge_pool;
 use namada::ledger::parameters::storage;
 use namada::ledger::queries::RPC;
 use namada::masp::ExtendedViewingKey;
+use namada::parameters::EpochDuration;
 use namada::proof_of_stake::Epoch;
 use namada::sdk::borsh::BorshDeserialize;
 use namada::sdk::masp::{DefaultLogger, ShieldedContext};
@@ -21,6 +22,7 @@ use namada::sdk::rpc::{
     query_epoch, query_native_token, query_proposal_by_id, query_proposal_votes,
     query_storage_value,
 };
+
 use namada::token;
 use namada::uint::I256;
 use serde::Serialize;
@@ -31,8 +33,11 @@ use wasm_bindgen::prelude::*;
 
 use crate::rpc_client::HttpClient;
 use crate::sdk::{io::WebIo, masp};
-use crate::types::query::ProposalInfo;
+use crate::types::query::{ProposalInfo, ProtocolParameters};
 use crate::utils::{set_panic_hook, to_js_result};
+
+use namada::ledger::parameters::storage as param_storage;
+
 
 #[wasm_bindgen]
 /// Represents an API for querying the ledger
@@ -398,6 +403,65 @@ impl Query {
         to_js_result(result)
     }
 
+    /// Query protocol parameters that are not exposed on other rpc endpoints
+    pub async fn query_protocol_parameters(&self) -> Result<JsValue, JsError>  {
+        let mut key = param_storage::get_epoch_duration_storage_key();
+        let epoch_duration: EpochDuration = query_storage_value(&self.client, &key)
+            .await
+            .expect("Parameter should be defined.");
+
+        key = param_storage::get_max_expected_time_per_block_key();
+        let max_block_duration: u64 = query_storage_value(&self.client, &key)
+            .await
+            .expect("Parameter should be defined.");
+
+        key = param_storage::get_tx_allowlist_storage_key();
+        let vp_allowlist: Vec<String> = query_storage_value(&self.client, &key)
+            .await
+            .expect("Parameter should be defined.");
+
+        key = param_storage::get_tx_allowlist_storage_key();
+        let tx_allowlist: Vec<String> = query_storage_value(&self.client, &key)
+            .await
+            .expect("Parameter should be defined.");
+
+        key = param_storage::get_max_block_gas_key();
+        let max_block_gas: u64 = query_storage_value(&self.client, &key)
+            .await
+            .expect("Parameter should be defined.");
+
+        key = param_storage::get_fee_unshielding_gas_limit_key();
+        let fee_unshielding_gas_limit: u64 = query_storage_value(&self.client, &key)
+            .await
+            .expect("Parameter should be defined.");
+
+        key = param_storage::get_fee_unshielding_descriptions_limit_key();
+        let fee_unshielding_descriptions_limit: u64 = query_storage_value(&self.client, &key)
+            .await
+            .expect("Parameter should be defined.");
+
+
+        let protocol_parameters = ProtocolParameters {
+            min_duration: format!("{:?}", &epoch_duration.min_duration),
+            min_num_of_blocks: format!(
+                "{:?}",
+                &epoch_duration.min_num_of_blocks
+            ),
+            max_block_duration: format!("{:?}", &max_block_duration.to_string()),
+            vp_allowlist: format!("{:?}", &vp_allowlist),
+            tx_allowlist: format!("{:?}", &tx_allowlist),
+            max_block_gas: format!("{:?}", &max_block_gas),
+            fee_unshielding_gas_limit: format!("{:?}", &fee_unshielding_gas_limit),
+            fee_unshielding_descriptions_limit: format!(
+                "{:?}",
+                &fee_unshielding_descriptions_limit
+            ),
+        };
+
+        to_js_result(protocol_parameters)
+
+    }
+
     pub async fn last_proposal_id(&self) -> Result<JsValue, JsError> {
         let last_proposal_id_key = governance_storage::get_counter_key();
         let last_proposal_id =
@@ -431,7 +495,6 @@ impl Query {
                     .await
                     .unwrap();
             //TODO: for now we assume that interface does not support steward accounts
-            
 
             let proposal_type = match proposal.r#type {
                 ProposalType::PGFSteward(_) => "pgf_steward",
@@ -488,24 +551,22 @@ impl Query {
             .await
             .unwrap()
             .expect("Proposal should be written to storage.");
-        let total_voting_power =
-            get_total_staked_tokens(&self.client, proposal.voting_end_epoch)
-                .await
-                .unwrap();
+        let total_voting_power = get_total_staked_tokens(&self.client, proposal.voting_end_epoch)
+            .await
+            .unwrap();
 
         let proposal_type = match proposal.r#type {
             ProposalType::PGFSteward(_) => "pgf_steward",
             ProposalType::PGFPayment(_) => "pgf_payment",
             ProposalType::Default(_) => "default",
         };
-        let status =
-            if proposal.voting_start_epoch <= epoch && proposal.voting_end_epoch >= epoch {
-                "ongoing"
-            } else if proposal.voting_end_epoch < epoch {
-                "finished"
-            } else {
-                "upcoming"
-            };
+        let status = if proposal.voting_start_epoch <= epoch && proposal.voting_end_epoch >= epoch {
+            "ongoing"
+        } else if proposal.voting_end_epoch < epoch {
+            "finished"
+        } else {
+            "upcoming"
+        };
 
         //TODO: for now we assume that interface does not support steward accounts
 
@@ -541,7 +602,6 @@ impl Query {
 
         Ok(Uint8Array::from(writer.as_slice()))
     }
-
 
     /// Returns a list of all delegations for given addresses and epoch
     ///
@@ -625,15 +685,20 @@ impl Query {
         to_js_result(address)
     }
 
-
-
-    pub async fn query_voters_power_by_proposal_id(&self, proposal_id: u64)->Result<JsValue, JsError>{
-        let votes = query_proposal_votes(&self.client, proposal_id).await.unwrap();
+    pub async fn query_voters_power_by_proposal_id(
+        &self,
+        proposal_id: u64,
+    ) -> Result<JsValue, JsError> {
+        let votes = query_proposal_votes(&self.client, proposal_id)
+            .await
+            .unwrap();
         let mut voting_power: HashMap<Address, VoteCasted> = HashMap::default();
 
-        let proposal = query_proposal_by_id(&self.client, proposal_id).await.unwrap().unwrap();
+        let proposal = query_proposal_by_id(&self.client, proposal_id)
+            .await
+            .unwrap()
+            .unwrap();
         let epoch = proposal.voting_end_epoch;
-        
 
         for vote in votes {
             if vote.is_validator() {
@@ -645,45 +710,50 @@ impl Query {
                     .expect("Validator stake should be present")
                     .unwrap_or_default();
 
-
                 let casted: String = match vote.data {
-                        ProposalVote::Yay => "yay".to_string(),
-                        ProposalVote::Nay => "nay".to_string(),
-                        ProposalVote::Abstain => "abstain".to_string(),
-                    };
+                    ProposalVote::Yay => "yay".to_string(),
+                    ProposalVote::Nay => "nay".to_string(),
+                    ProposalVote::Abstain => "abstain".to_string(),
+                };
 
-                let vote_casted: VoteCasted = VoteCasted{ vote: casted, power: validator_stake };
+                let vote_casted: VoteCasted = VoteCasted {
+                    vote: casted,
+                    power: validator_stake,
+                };
 
                 voting_power.insert(vote.validator, vote_casted);
             } else {
                 let delegator_stake = RPC
                     .vp()
                     .pos()
-                    .bond_with_slashing(&self.client, &vote.delegator, &vote.validator, &Some(epoch))
+                    .bond_with_slashing(
+                        &self.client,
+                        &vote.delegator,
+                        &vote.validator,
+                        &Some(epoch),
+                    )
                     .await
                     .expect("Delegator stake should be present");
 
                 let casted: String = match vote.data {
-                        ProposalVote::Yay => "yay".to_string(),
-                        ProposalVote::Nay => "nay".to_string(),
-                        ProposalVote::Abstain => "abstain".to_string(),
-                    };
+                    ProposalVote::Yay => "yay".to_string(),
+                    ProposalVote::Nay => "nay".to_string(),
+                    ProposalVote::Abstain => "abstain".to_string(),
+                };
 
-                let vote_casted: VoteCasted = VoteCasted{ vote: casted, power: delegator_stake };
+                let vote_casted: VoteCasted = VoteCasted {
+                    vote: casted,
+                    power: delegator_stake,
+                };
 
                 voting_power.insert(vote.delegator, vote_casted);
             }
-            
         }
         to_js_result(voting_power)
     }
 
-    pub async fn get_address_from_u8(
-        &self,
-        validator: &[u8],
-    ) -> Result<JsValue, JsError>
-    where
-    {
+    pub async fn get_address_from_u8(&self, validator: &[u8]) -> Result<JsValue, JsError>
+where {
         let address = Address::try_from_slice(validator).ok();
         to_js_result(address)
     }
@@ -737,4 +807,3 @@ pub async fn compute_proposal_votes(
         delegator_voting_power,
     }
 }
-
