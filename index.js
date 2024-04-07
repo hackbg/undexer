@@ -17,16 +17,15 @@ let isProcessingUpdatePropoasls = false;
 let isProcessingNewValidator = false;
 
 await initialize();
-console.log(sequelizer)
-sequelizer.sync();
+sequelizer.sync({ force: true });
 
 const eventEmitter = new EventEmitter();
 const conn = Namada.testnet({ url: UNDEXER_RPC_URL });
 const q = new Query(UNDEXER_RPC_URL);
 
 setInterval(async () => {
-        await checkForNewBlock();
-        await checkForNewProposal();    
+    await checkForNewBlock();
+    await checkForNewProposal();
 }, 5000);
 
 async function checkForNewBlock() {
@@ -34,86 +33,84 @@ async function checkForNewBlock() {
     const latestBlockInDb = blocks[blocks.length - 1];
     let blockHeightDb = latestBlockInDb?.header.height;
     const chainHeight = await conn.height;
-    if(blockHeightDb === undefined){
+    if (blockHeightDb === undefined) {
         eventEmitter.emit("updateBlocks", 237907, chainHeight);
-    }
-    else if (chainHeight > blockHeightDb) {
-        console.log
+    } else if (chainHeight > blockHeightDb) {
+        console.log;
         eventEmitter.emit("updateBlocks", blockHeightDb, chainHeight);
-    }
-    
-    else {
-        console.log('=====================================');
-        console.log('No new blocks');
-        console.log('=====================================');
+    } else {
+        console.log("=====================================");
+        console.log("No new blocks");
+        console.log("=====================================");
     }
 }
 
 async function checkForNewProposal() {
     const proposalChainId = await q.last_proposal_id();
-    const latestProposalDb = await Proposal.findOne({ raw:true, order: [["id", "DESC"]] })
+    const latestProposalDb = await Proposal.findOne({
+        raw: true,
+        order: [["id", "DESC"]],
+    });
     if (latestProposalDb === null) {
         eventEmitter.emit("updateProposals");
-    }
-    else if(latestProposalDb.id < proposalChainId) {
+    } else if (latestProposalDb.id < proposalChainId) {
         eventEmitter.emit("updateProposals");
-    }
-    else {
-        console.log('=====================================');
-        console.log('No new proposals');
-        console.log('=====================================');
+    } else {
+        console.log("=====================================");
+        console.log("No new proposals");
+        console.log("=====================================");
     }
 }
 
 eventEmitter.on("updateBlocks", async (blockHeightDb, chainHeight) => {
-    if(isProcessingNewBlock) return;
+    if (isProcessingNewBlock) return;
     isProcessingNewBlock = true;
 
-    console.log('=====================================');
-    console.log('Processing new block');
-    console.log('=====================================');
+    console.log("=====================================");
+    console.log("Processing new block");
+    console.log("=====================================");
 
-    for(let i=blockHeightDb; i<=chainHeight; i++){
-        const block = (await conn.getBlock(i));
+    for (let i = blockHeightDb; i <= chainHeight; i++) {
+        const block = await conn.getBlock(i);
         const { txsDecoded } = block;
 
         await Block.create(block);
-        for(let tx of txsDecoded) {
+        for (let tx of txsDecoded) {
             await TransactionManager.handleTransaction(tx, eventEmitter);
         }
     }
-    isProcessingNewBlock=false;
+    isProcessingNewBlock = false;
 });
 
 eventEmitter.on("updateProposals", async () => {
-    if(isProcessingUpdatePropoasls) return;
+    if (isProcessingUpdatePropoasls) return;
     isProcessingUpdatePropoasls = true;
 
-    console.log('=====================================');
-    console.log('Processing update proposals');
-    console.log('=====================================');
+    console.log("=====================================");
+    console.log("Processing update proposals");
+    console.log("=====================================");
 
     const proposalsBinary = await q.query_proposals();
     const proposals = deserialize(ProposalsSchema, proposalsBinary);
     for (const proposal of proposals) {
         await Proposal.create(proposal);
     }
-    isProcessingUpdatePropoasls=false;
-})
+    isProcessingUpdatePropoasls = false;
+});
 
 eventEmitter.on("updateValidators", async () => {
-    if(isProcessingNewValidator) return;
-    isProcessingNewValidator=true;
+    if (isProcessingNewValidator) return;
+    isProcessingNewValidator = true;
 
-    console.log('=====================================')
-    console.log('Processing new validator')
-    console.log('=====================================')
+    console.log("=====================================");
+    console.log("Processing new validator");
+    console.log("=====================================");
 
     const validatorsBinary = await getValidatorsFromNode(conn);
     for (const validatorBinary of validatorsBinary) {
         const validator = await getValidator(q, conn, validatorBinary);
-        await Validator.create(JSON.parse(serialize(validator)));        
+        await Validator.create(JSON.parse(serialize(validator)));
     }
 
-    isProcessingNewValidator=false;
+    isProcessingNewValidator = false;
 });
