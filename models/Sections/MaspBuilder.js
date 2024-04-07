@@ -1,7 +1,7 @@
 import sequelizer from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const MaspBuilder = sequelizer.define("maspBuilder", {
+const MaspBuilder = sequelizer.define("sct_masp_builder", {
     type: {
         type: DataTypes.STRING,
         

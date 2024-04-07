@@ -1,7 +1,7 @@
 import sequelizer from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const Unbond = sequelizer.define("unbond", {
+const Unbond = sequelizer.define("cntunbond", {
     validator: {
         type: DataTypes.STRING,
     },

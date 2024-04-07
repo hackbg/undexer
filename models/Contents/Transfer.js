@@ -1,7 +1,7 @@
 import sequelizer from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const Transfer = sequelizer.define("transfer", {
+const Transfer = sequelizer.define("cnttransfer", {
     source: {
         type: DataTypes.STRING,
     },

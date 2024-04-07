@@ -1,7 +1,7 @@
 import sequelizer from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const InitProposal = sequelizer.define("initProposal", {
+const InitProposal = sequelizer.define("cntinit_proposal", {
     content: {
         type: DataTypes.STRING,
     },
