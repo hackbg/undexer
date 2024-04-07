@@ -498,7 +498,8 @@ impl Query {
                     .await
                     .unwrap();
             //TODO: for now we assume that interface does not support steward accounts
-            
+            let tally_type = proposal.get_tally_type(false);
+
             let proposal_type = match proposal.r#type {
                 ProposalType::PGFSteward(_) => "pgf_steward",
                 ProposalType::PGFPayment(_) => "pgf_payment",

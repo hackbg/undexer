@@ -1,7 +1,7 @@
 import sequelizer from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const VoteProposal = sequelizer.define("voteProposal", {
+const VoteProposal = sequelizer.define("cntvote_proposal", {
     id:{
         type: DataTypes.INTEGER,
         primaryKey: true,

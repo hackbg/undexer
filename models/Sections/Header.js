@@ -1,7 +1,7 @@
 import sequelizer from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const Header = sequelizer.define("header", {
+const Header = sequelizer.define("sct_header", {
     type: {
         type: DataTypes.STRING,
         

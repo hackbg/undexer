@@ -1,7 +1,7 @@
 import sequelizer from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const Signature = sequelizer.define("signature", {
+const Signature = sequelizer.define("sct_signature", {
     targets: {
         type: DataTypes.ARRAY(DataTypes.STRING),
     },
