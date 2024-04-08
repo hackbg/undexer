@@ -93,7 +93,7 @@ eventEmitter.on("updateProposal", async (proposalId, blockHeight) => {
     await Proposal.destroy({ where: { id: proposalId } });
     const { q } = getUndexerRPCUrl(blockHeight);
 
-    const proposal = await q.query_proposal(proposalId);
+    const proposal = await q.query_proposal(BigInt(proposalId));
     await VoteProposal.create(proposal);
 });
 
