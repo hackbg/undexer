@@ -3,16 +3,16 @@ import { DataTypes } from "sequelize";
 
 const UpdateAccount = sequelizer.define("cntupdate_account", {
     address: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     vpCodeHash: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     publicKeys: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+        type: DataTypes.ARRAY(DataTypes.TEXT),
     },
     threshold: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
 });
 

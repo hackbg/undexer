@@ -6,7 +6,7 @@ const Validator = sequelizer.define('validator', {
         type: DataTypes.DATE,
     },
     validator: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     metadata: {
         type: DataTypes.JSON,

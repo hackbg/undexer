@@ -3,7 +3,7 @@ import { DataTypes } from "sequelize";
 
 const DeactivateValidator = sequelizer.define('cntdeactivate_validator', {
     address: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
 });

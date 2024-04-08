@@ -3,10 +3,10 @@ import { DataTypes } from "sequelize";
 
 const InitAccount = sequelizer.define("cntinit_account", {
     publicKeys: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+        type: DataTypes.ARRAY(DataTypes.TEXT),
     },
     vpCodeHash: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     threshold: {
         type: DataTypes.INTEGER,

@@ -3,11 +3,11 @@ import { DataTypes } from "sequelize";
 
 const ClaimRewards = sequelizer.define('cntclaim_rewards', {
     validator: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
     source: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
 });

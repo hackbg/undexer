@@ -3,22 +3,22 @@ import { DataTypes } from "sequelize";
 
 const Transfer = sequelizer.define("cnttransfer", {
     source: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     target: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     token: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     amount: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     key: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     shielded: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
 });
 

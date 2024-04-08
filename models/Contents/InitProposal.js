@@ -3,13 +3,13 @@ import { DataTypes } from "sequelize";
 
 const InitProposal = sequelizer.define("cntinit_proposal", {
     content: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     author: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     type: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     votingStartEpoch: {
         type: DataTypes.INTEGER,

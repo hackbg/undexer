@@ -3,7 +3,7 @@ import { DataTypes } from "sequelize";
 
 const UpdateStewardCommission = sequelizer.define("cntupdate_steward_commission", {
     steward: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     commission: {
         type: DataTypes.JSON,

@@ -3,13 +3,13 @@ import { DataTypes } from "sequelize";
 
 const Bond = sequelizer.define("cntbond", {
     validator: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     amount: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     source: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
 });
 

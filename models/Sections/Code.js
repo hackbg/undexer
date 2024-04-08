@@ -9,7 +9,7 @@ const Code = sequelizer.define('sct_code', {
         type: DataTypes.TEXT,
     },
     tag: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
 
     },
 })

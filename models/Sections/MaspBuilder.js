@@ -3,23 +3,23 @@ import { DataTypes } from "sequelize";
 
 const MaspBuilder = sequelizer.define("sct_masp_builder", {
     type: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
     target: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
     token: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
     denom: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
     position: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
 });

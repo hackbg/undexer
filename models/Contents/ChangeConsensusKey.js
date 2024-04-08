@@ -3,10 +3,10 @@ import { DataTypes } from "sequelize";
 
 const ChangeConsensusKey = sequelizer.define("cntchange_consensusKey", {
     consensusKey: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     validator: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
 });
 

@@ -11,13 +11,13 @@ const VoteProposal = sequelizer.define("cntvote_proposal", {
         type: DataTypes.INTEGER,
     },
     vote: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     voter: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     delegations: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+        type: DataTypes.ARRAY(DataTypes.TEXT),
     },
 });
 

@@ -3,35 +3,35 @@ import { DataTypes } from "sequelize";
 
 const Header = sequelizer.define("sct_header", {
     type: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
     chainId: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
     expiration: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
     timestamp: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
     codeHash: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
     dataHash: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
     memoHash: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
     txType: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
 });

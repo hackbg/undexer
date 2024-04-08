@@ -11,7 +11,7 @@ const ExtraData = sequelizer.define('sct_extra_data', {
         
     },
     tag: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
 });

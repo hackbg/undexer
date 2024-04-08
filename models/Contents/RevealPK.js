@@ -3,7 +3,7 @@ import { DataTypes } from "sequelize";
 
 const RevealPK = sequelizer.define("cntreveal_PK", {
     pk: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
 });
 
