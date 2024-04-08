@@ -8,7 +8,7 @@ import Transaction from "./models/Transaction.js";
 import { SectionTypeToModel, format } from "./utils.js";
 
 export default class TransactionManager {
-    static async handleTransaction(tx, eventEmitter) {
+    static async handleTransaction(blockHeight, tx, eventEmitter) {
         try {
             const uploadData = format(Object.assign(tx.content));
             await SectionTypeToModel[tx.content.type].create(uploadData.data);
@@ -39,13 +39,13 @@ export default class TransactionManager {
                 }
             }
             await Transaction.create(tx);
-            await TransactionManager.sideEffects(tx, eventEmitter)
+            await TransactionManager.sideEffects(blockHeight, tx, eventEmitter)
         } catch (e) {
             console.error(e);
         }
     }
 
-    static async sideEffects(tx, eventEmitter) {
+    static async sideEffects(blockHeight, tx, eventEmitter) {
         if (
             tx.content.type === "tx_become_validator.wasm" ||
             tx.content.type === "tx_change_validator_commission.wasm" ||
@@ -61,12 +61,14 @@ export default class TransactionManager {
             tx.content.type == "tx_unjail_validator.wasm" ||
             tx.content.type === "tx_bond.wasm"
         ) {
-            eventEmitter.emit("updateValidators");
+            eventEmitter.emit("updateValidators", blockHeight);
         }
 
         if(tx.content.type === "tx_vote_proposal.wasm") {
             eventEmitter.emit("updateProposal", blockHeight, tx.content.data.proposalId);
         }
-            eventEmitter.emit("createProposal", tx.content.data);
+        if(tx.content.type === "tx_init_proposal.wasm"){
+            //eventEmitter.emit("createProposal", tx.content.data);
+        }
     }
 }

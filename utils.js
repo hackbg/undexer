@@ -24,6 +24,8 @@ import VoteProposal from './models/Contents/VoteProposal.js';
 import Withdraw from './models/Contents/Withdraw.js';
 
 
+export const NODE_LOWEST_BLOCK_HEIGHT = 237907;
+
 export function serialize(data) {
     return JSON.stringify(data, stringifier);
 }
