@@ -4,31 +4,31 @@ import { DataTypes } from "sequelize";
 
 const ChangeValidatorMetadata = sequelizer.define('cntchange_validator_metadata', {
     validator: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
     commissionRate: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
     website: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
     email: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
     discordHandle: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
     avatar: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
     description: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         
     },
 });

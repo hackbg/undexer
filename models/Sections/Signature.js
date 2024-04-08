@@ -3,7 +3,7 @@ import { DataTypes } from "sequelize";
 
 const Signature = sequelizer.define("sct_signature", {
     targets: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+        type: DataTypes.ARRAY(DataTypes.TEXT),
     },
     signer: {
         type: DataTypes.TEXT,

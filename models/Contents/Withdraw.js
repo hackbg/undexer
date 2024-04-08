@@ -3,10 +3,10 @@ import { DataTypes } from "sequelize";
 
 const Withdraw = sequelizer.define("cntwithdraw", {
     validator: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     source: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
 });
 

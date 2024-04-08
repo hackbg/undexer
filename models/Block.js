@@ -5,7 +5,7 @@ import Transaction from './Transaction.js';
 
 const Block = sequelizer.define('block', {
     id: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         allowNull: false,
         unique: true,
         primaryKey: true,

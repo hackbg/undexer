@@ -5,7 +5,7 @@ import Content from "./Content.js";
 
 const Transaction = sequelizer.define('transaction', {
     chainId: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     expiration: {
         type: DataTypes.DATE,
@@ -14,13 +14,13 @@ const Transaction = sequelizer.define('transaction', {
         type: DataTypes.DATE,
     },
     codeHash: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     dataHash: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     memoHash: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
 });
 

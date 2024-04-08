@@ -3,10 +3,10 @@ import { DataTypes } from "sequelize";
 
 const ChangeValidatorComission = sequelizer.define("cntchange_validator_comission", {
     validator: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     newRate: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
 });
 

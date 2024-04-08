@@ -3,7 +3,7 @@ import { DataTypes } from "sequelize";
 
 const ResignSteward = sequelizer.define("cntresign_steward", {
     address: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
 });
 

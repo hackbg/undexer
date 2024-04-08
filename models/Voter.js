@@ -6,13 +6,13 @@ const Voter = sequelizer.define("voter", {
         type: DataTypes.ENUM("yay", "nay", "abstain"),
     },
     power: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     voter: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     id: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
 });
 

@@ -13,7 +13,7 @@ const Proposal = sequelizer.define('proposal', {
         allowNull: false,
     },
     author: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     startEpoch: {
         type: DataTypes.INTEGER,
@@ -38,16 +38,16 @@ const Proposal = sequelizer.define('proposal', {
         type: DataTypes.ENUM("passed", "rejected"),
     },
     totalVotingPower: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     totalYayPower: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     totalNayPower: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     totalAbstainPower: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
     },
     tallyType: {
         type: DataTypes.ENUM(
