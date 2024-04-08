@@ -7,6 +7,9 @@ const VoteProposal = sequelizer.define("cntvote_proposal", {
         primaryKey: true,
         autoIncrement: true,
     },
+    proposalId: {
+        type: DataTypes.INTEGER,
+    },
     vote: {
         type: DataTypes.STRING,
     },
