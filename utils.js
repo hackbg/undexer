@@ -88,7 +88,7 @@ export async function initialize() {
 export function format(txContent){
   const result = Object.assign(txContent);
 
-  if(result.type=="tx_vote_proposal.wasm"){
+  if(result.type==="tx_vote_proposal.wasm" || result.type==="tx_init_proposal.wasm"){
     result.data.proposalId = result.data.id;
     delete result.data.id;
   }
