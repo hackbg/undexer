@@ -11,15 +11,18 @@ const InitProposal = sequelizer.define("cntinit_proposal", {
     type: {
         type: DataTypes.STRING,
     },
-    startEpoch: {
-        type: DataTypes.STRING,
+    votingStartEpoch: {
+        type: DataTypes.INTEGER,
     },
-    endEpoch: {
-        type: DataTypes.STRING,
+    votingEndEpoch: {
+        type: DataTypes.INTEGER,
     },
     graceEpoch: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
     },
+    proposalId: {
+        type:DataTypes.INTEGER,
+    }
 });
 
 export default InitProposal;
