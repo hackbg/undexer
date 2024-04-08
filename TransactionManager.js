@@ -65,7 +65,8 @@ export default class TransactionManager {
         }
 
         if(tx.content.type === "tx_vote_proposal.wasm") {
-            console.log(tx);
+            eventEmitter.emit("updateProposal", blockHeight, tx.content.data.proposalId);
         }
+            eventEmitter.emit("createProposal", tx.content.data);
     }
 }

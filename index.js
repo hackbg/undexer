@@ -6,8 +6,6 @@ import * as Namada from "@fadroma/namada";
 import Block from "./models/Block.js";
 import Proposal from "./models/Proposal.js";
 import { UNDEXER_RPC_URL } from "./constants.js";
-import { deserialize } from "borsh";
-import { ProposalsSchema } from "./borsher-schema.js";
 import Validator from "./models/Validator.js";
 import sequelizer from "./db/index.js";
 import TransactionManager from "./TransactionManager.js";
@@ -45,23 +43,6 @@ async function checkForNewBlock() {
     }
 }
 
-async function checkForNewProposal() {
-    const proposalChainId = await q.last_proposal_id();
-    const latestProposalDb = await Proposal.findOne({
-        raw: true,
-        order: [["id", "DESC"]],
-    });
-    if (latestProposalDb === null) {
-        eventEmitter.emit("updateProposals");
-    } else if (latestProposalDb.id < proposalChainId) {
-        eventEmitter.emit("updateProposals");
-    } else {
-        console.log("=====================================");
-        console.log("No new proposals");
-        console.log("=====================================");
-    }
-}
-
 eventEmitter.on("updateBlocks", async (blockHeightDb, chainHeight) => {
     if (isProcessingNewBlock) return;
     isProcessingNewBlock = true;
@@ -82,21 +63,6 @@ eventEmitter.on("updateBlocks", async (blockHeightDb, chainHeight) => {
     isProcessingNewBlock = false;
 });
 
-eventEmitter.on("updateProposals", async () => {
-    if (isProcessingUpdatePropoasls) return;
-    isProcessingUpdatePropoasls = true;
-
-    console.log("=====================================");
-    console.log("Processing update proposals");
-    console.log("=====================================");
-
-    const proposalsBinary = await q.query_proposals();
-    const proposals = deserialize(ProposalsSchema, proposalsBinary);
-    for (const proposal of proposals) {
-        await Proposal.create(proposal);
-    }
-    isProcessingUpdatePropoasls = false;
-});
 
 eventEmitter.on("updateValidators", async () => {
     if (isProcessingNewValidator) return;
@@ -113,4 +79,16 @@ eventEmitter.on("updateValidators", async () => {
     }
 
     isProcessingNewValidator = false;
+});
+
+eventEmitter.on("createProposal", async (txData) => {
+    await Proposal.create(txData);
+});
+
+eventEmitter.on("updateProposal", async (proposalId, blockHeight) => {
+    await Proposal.destroy({ where: { id: proposalId } });
+    const q = getUndexerRPCUrl(blockHeight);
+
+    const proposal = await q.query_proposal(proposalId);
+    await VoteProposal.create(proposal);
 });
