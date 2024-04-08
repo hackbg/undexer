@@ -17,18 +17,27 @@ let belowCapacity = [];
 let jailed = [];
 let inactive = [];
 let consensus = [];
+
 for (let i = 0; i < allValidators.length; i++) {
+    
   const validator = JSON.parse(readFileSync(`${allValidators[i]}.json`));
+  const validatorInfo = {
+    address: validator.validator,
+    stake: validator.stake,
+    state: validator.state,
+    commission: validator.commission,
+  };
+
   if (validator.state === 'BelowThreshold') {
-    belowThreshold.push(validator.validator);
+    belowThreshold.push(validatorInfo);
   } else if (validator.state === 'Jailed') {
-    jailed.push(validator.validator);
+    jailed.push(validatorInfo);
   } else if (validator.state === 'Inactive') {
-    inactive.push(validator.validator);
+    inactive.push(validatorInfo);
   } else if (validator.state === 'BelowCapacity') {
-    belowCapacity.push(validator.validator);
+    belowCapacity.push(validatorInfo);
   } else if (validator.state === 'Consensus') {
-    consensus.push(validator.validator);
+    consensus.push(validatorInfo);
   } else {
     console.log('Unknown state:', validator.state);
   }
