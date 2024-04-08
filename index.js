@@ -1,41 +1,42 @@
 import EventEmitter from "node:events";
-import { initialize, serialize } from "./utils.js";
+import { NODE_LOWEST_BLOCK_HEIGHT, initialize, serialize } from "./utils.js";
 import { getValidator, getValidatorsFromNode } from "./scripts/validator.js";
 import { Query } from "./shared/pkg/shared.js";
 import * as Namada from "@fadroma/namada";
 import Block from "./models/Block.js";
 import Proposal from "./models/Proposal.js";
-import { UNDEXER_RPC_URL } from "./constants.js";
+import { POST_UNDEXER_RPC_URL, PRE_UNDEXER_RPC_URL } from "./constants.js";
 import Validator from "./models/Validator.js";
+import VoteProposal from "./models/Contents/VoteProposal.js";
 import sequelizer from "./db/index.js";
 import TransactionManager from "./TransactionManager.js";
 
 let isProcessingNewBlock = false;
-let isProcessingUpdatePropoasls = false;
 let isProcessingNewValidator = false;
 
 await initialize();
 sequelizer.sync({ force: true });
 
 const eventEmitter = new EventEmitter();
-const conn = Namada.testnet({ url: UNDEXER_RPC_URL });
-const q = new Query(UNDEXER_RPC_URL);
 
 setInterval(async () => {
     await checkForNewBlock();
-    await checkForNewProposal();
 }, 5000);
 
 async function checkForNewBlock() {
     const blocks = await Block.findAll({ raw: true });
     const latestBlockInDb = blocks[blocks.length - 1];
+    // should use newer node for the blockchain height
+    const { conn } = getUndexerRPCUrl(NODE_LOWEST_BLOCK_HEIGHT+1)
     let blockHeightDb = latestBlockInDb?.header.height;
-    const chainHeight = await conn.height;
-    if (blockHeightDb === undefined) {
-        eventEmitter.emit("updateBlocks", 237907, chainHeight);
-    } else if (chainHeight > blockHeightDb) {
-        console.log;
-        eventEmitter.emit("updateBlocks", blockHeightDb, chainHeight);
+    const currentBlockOnChain = await conn.height;
+    const isDatabaseEmpty = blocks.length === 0;
+    const isCurrentBlockInDbOld = blockHeightDb < (await conn.height);
+    
+    if (isDatabaseEmpty) {
+        eventEmitter.emit("updateBlocks", 1, currentBlockOnChain);
+    } else if (isCurrentBlockInDbOld) {
+        eventEmitter.emit("updateBlocks", blockHeightDb, currentBlockOnChain);
     } else {
         console.log("=====================================");
         console.log("No new blocks");
@@ -48,16 +49,17 @@ eventEmitter.on("updateBlocks", async (blockHeightDb, chainHeight) => {
     isProcessingNewBlock = true;
 
     console.log("=====================================");
-    console.log("Processing new block");
+    console.log("Processing new blocks");
     console.log("=====================================");
 
     for (let i = blockHeightDb; i <= chainHeight; i++) {
+        const { conn } = getUndexerRPCUrl(i);
         const block = await conn.getBlock(i);
         const { txsDecoded } = block;
 
         await Block.create(block);
         for (let tx of txsDecoded) {
-            await TransactionManager.handleTransaction(tx, eventEmitter);
+            await TransactionManager.handleTransaction(i, tx, eventEmitter);
         }
     }
     isProcessingNewBlock = false;
@@ -67,6 +69,8 @@ eventEmitter.on("updateBlocks", async (blockHeightDb, chainHeight) => {
 eventEmitter.on("updateValidators", async () => {
     if (isProcessingNewValidator) return;
     isProcessingNewValidator = true;
+
+    const { q, conn } = getUndexerRPCUrl(NODE_LOWEST_BLOCK_HEIGHT+1);
 
     console.log("=====================================");
     console.log("Processing new validator");
@@ -87,8 +91,23 @@ eventEmitter.on("createProposal", async (txData) => {
 
 eventEmitter.on("updateProposal", async (proposalId, blockHeight) => {
     await Proposal.destroy({ where: { id: proposalId } });
-    const q = getUndexerRPCUrl(blockHeight);
+    const { q } = getUndexerRPCUrl(blockHeight);
 
     const proposal = await q.query_proposal(proposalId);
     await VoteProposal.create(proposal);
 });
+
+function getUndexerRPCUrl(blockHeight) {
+    if(blockHeight > NODE_LOWEST_BLOCK_HEIGHT) {
+        return {
+            q: new Query(POST_UNDEXER_RPC_URL),
+            conn: Namada.testnet({ url: POST_UNDEXER_RPC_URL })
+        }
+    }
+    else {
+        return {
+            q: new Query(PRE_UNDEXER_RPC_URL),
+            conn: Namada.testnet({ url: PRE_UNDEXER_RPC_URL })
+        }
+    }
+}

@@ -7,7 +7,7 @@ import { retryForever } from "../utils.js";
 import { StakeSchema, ValidatorSchema } from "../borsher-schema.js";
 import "dotenv/config";
 import Validator from "../models/Validator.js";
-import { UNDEXER_RPC_URL } from "../constants.js";
+import { POST_UNDEXER_RPC_URL } from "../constants.js";
 
 await init(readFileSync("shared/pkg/shared_bg.wasm"));
 await Namada.initDecoder(
@@ -22,7 +22,7 @@ export async function saveValidatorToDb() {
     );
 
     const q = new Query(UNDEXER_RPC_URL);
-    const conn = Namada.testnet({ url: UNDEXER_RPC_URL });
+    const conn = Namada.testnet({ url: POST_UNDEXER_RPC_URL });
 
     for (const validatorBinary of validatorsDeserialized) {
         const validatorObj = await getValidator(q, conn, validatorBinary);
