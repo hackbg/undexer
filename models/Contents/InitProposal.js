@@ -9,7 +9,7 @@ const InitProposal = sequelizer.define("content_init_proposal", {
         type: DataTypes.TEXT,
     },
     type: {
-        type: DataTypes.TEXT,
+        type: DataTypes.JSON,
     },
     votingStartEpoch: {
         type: DataTypes.INTEGER,
