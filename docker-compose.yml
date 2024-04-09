@@ -5,7 +5,7 @@ services:
     volumes:
       - .:/app
     working_dir: /app
-    command: index.js
+    command: --import @ganesha/esbuild index.js
   server:
     image: hackbg/undexer-lighttpd
     build:
