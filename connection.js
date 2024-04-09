@@ -50,7 +50,7 @@ function toSortedRPCs (rpcs) {
 
 /** Iterate over list of (first block number, RPC)
   * and return the RPC corresponding to a given height */
-export default function getRPCForHeight (height) {
+export default function getRPC (height = Infinity) {
   for (const [limit, connection] of rpcs) {
     if (height >= limit) {
       return connection

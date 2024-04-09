@@ -1,7 +1,7 @@
 #!/usr/bin/env -S node --import=@ganesha/esbuild
 
 import * as assert from 'node:assert'
-import getRPCForHeight from './connection.js'
+import getRPC from './connection.js'
 import {
   POST_UNDEXER_RPC_URL,
   PRE_UNDEXER_RPC_URL,
@@ -9,25 +9,25 @@ import {
 } from "./constants.js";
 
 assert.throws(
-  ()=>getRPCForHeight(0)
+  ()=>getRPC(0)
 )
 
 assert.equal(
-  getRPCForHeight(1).conn.url,
+  getRPC(1).conn.url,
   POST_UNDEXER_RPC_URL
 )
 
 assert.equal(
-  getRPCForHeight(100).conn.url,
+  getRPC(100).conn.url,
   POST_UNDEXER_RPC_URL
 )
 
 assert.equal(
-  getRPCForHeight(NODE_LOWEST_BLOCK_HEIGHT).conn.url,
+  getRPC(NODE_LOWEST_BLOCK_HEIGHT).conn.url,
   PRE_UNDEXER_RPC_URL
 )
 
 assert.equal(
-  getRPCForHeight(NODE_LOWEST_BLOCK_HEIGHT + 100).conn.url,
+  getRPC(NODE_LOWEST_BLOCK_HEIGHT + 100).conn.url,
   PRE_UNDEXER_RPC_URL
 )
