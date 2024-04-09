@@ -1,3 +1,5 @@
+#!/usr/bin/env -S node --import=@ganesha/esbuild
+
 import EventEmitter from "node:events";
 import { initialize, serialize } from "./utils.js";
 import { getValidator, getValidatorsFromNode } from "./scripts/validator.js";

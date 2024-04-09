@@ -5,13 +5,14 @@ import ExtraData from "./models/Sections/ExtraData.js";
 import MaspBuilder from "./models/Sections/MaspBuilder.js";
 import Signature from "./models/Sections/Signature.js";
 import Transaction from "./models/Transaction.js";
-import { SectionTypeToModel, format } from "./utils.js";
+import Contents from './models/Contents/index.js';
+import { format } from "./utils.js";
 
 export default class TransactionManager {
     static async handleTransaction(blockHeight, tx, eventEmitter) {
         try {
             const uploadData = format(Object.assign(tx.content));
-            await SectionTypeToModel[tx.content.type].create(uploadData.data);
+            await Contents[tx.content.type].create(uploadData.data);
 
             const { sections } = tx;
             for (let i = 0; i < sections.length; i++) {

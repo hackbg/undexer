@@ -5,7 +5,9 @@ import "dotenv/config";
 
 import Block from "../models/Block.js";
 import Transaction from "../models/Transaction.js";
-import { SectionTypeToModel, format, initialize } from "../utils.js";
+import Contents from '../models/Contents/index.js';
+
+import { format, initialize } from "../utils.js";
 
 initialize()
 
@@ -48,7 +50,7 @@ export async function ingestBlock(connection, blockDbHeight, blockchainHeight) {
     for (let txDecoded of txsDecoded) {
         try{
             const { type } = txDecoded.content;
-            const txContentDb = await SectionTypeToModel[type].create(format(txDecoded.content));
+            const txContentDb = await Contents[type].create(format(txDecoded.content));
             await txContentDb.save();
         }
         catch(e){
