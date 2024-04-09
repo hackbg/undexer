@@ -32,7 +32,7 @@ const Proposal = sequelizer.define('proposal', {
         allowNull: false,
     },
     status: {
-        type: DataTypes.ENUM("ongoing", "finished", "rejected"),
+        type: DataTypes.ENUM("ongoing", "finished", "upcoming"),
     },
     result: {
         type: DataTypes.ENUM("passed", "rejected"),
