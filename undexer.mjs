@@ -18,4 +18,3 @@ const CLI = await import("./cli.dist.js").catch(async e=>{
   return module
 }).then(module=>module.default)
 new CLI().run(process.argv.slice(2))
-

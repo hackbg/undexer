@@ -5,7 +5,7 @@ services:
     volumes:
       - .:/app
     working_dir: /app
-    command: --import @ganesha/esbuild index.js
+    command: --import @ganesha/esbuild-wasm index.js
   server:
     image: hackbg/undexer-lighttpd
     build:
@@ -24,6 +24,6 @@ services:
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     environment:
-      - POSTGRES_PASSWORD=random_password
-      - POSTGRES_USER=random_user
-      - POSTGRES_DB=random_db
+      - POSTGRES_PASSWORD=insecure
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres

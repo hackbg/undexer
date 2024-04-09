@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs";
-import init from "./shared/pkg/shared.js";
-import * as Namada from "@fadroma/namada";
+import { readFile } from "node:fs/promises";
+import initShared from "./shared/pkg/shared.js";
+import { Core, initDecoder } from "@fadroma/namada";
 import { Core } from "@fadroma/agent";
 import BecomeValidator from './models/Contents/BecomeValidator.js';
 import Bond from './models/Contents/Bond.js';
@@ -88,12 +88,13 @@ export const SectionTypeToModel = {
     'tx_withdraw.wasm': Withdraw,
 }
 
-
 export async function initialize() {
-    await init(readFileSync("shared/pkg/shared_bg.wasm"));
-    await Namada.initDecoder(
-        readFileSync("./node_modules/@fadroma/namada/pkg/fadroma_namada_bg.wasm")
-    );
+  await Promise.all([
+    readFile("shared/pkg/shared_bg.wasm")
+      .then(wasm=>initShared(wasm))
+    readFile("./node_modules/@fadroma/namada/pkg/fadroma_namada_bg.wasm")
+      .then(wasm=>initShared(wasm))
+  ])
 }
 
 export function format(txContent){

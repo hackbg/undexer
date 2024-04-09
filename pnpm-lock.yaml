@@ -17,6 +17,9 @@ dependencies:
   '@ganesha/esbuild':
     specifier: ^1.0.0-rc.3
     version: 1.0.0-rc.3
+  '@ganesha/esbuild-wasm':
+    specifier: ^1.0.0-rc.1
+    version: 1.0.0-rc.1
   '@hackbg/cmds':
     specifier: ^4.0.0-rc.5
     version: 4.0.0-rc.5
@@ -292,6 +295,14 @@ packages:
       cacache: 18.0.2
       hash-wasm: 4.11.0
       mkdirp: 3.0.1
+    dev: false
+
+  /@ganesha/esbuild-wasm@1.0.0-rc.1:
+    resolution: {integrity: sha512-ZX9q+FoMUnOu5hdcDUpY8xDGIkk/msuO55j57TrMgv2eaFcckkd6nxK1y0g1HyXzin+sLz1uAo4B5v9hrbtEaw==}
+    dependencies:
+      '@ganesha/caching': 1.0.0-rc.1
+      esbuild-wasm: 0.19.12
+      get-tsconfig: 4.7.3
     dev: false
 
   /@ganesha/esbuild@1.0.0-rc.3:
@@ -663,6 +674,12 @@ packages:
   /es-errors@1.3.0:
     resolution: {integrity: sha512-Zf5H2Kxt2xjTvbJvP2ZWLEICxA6j+hAmMzIlypy4xcBg1vKVnx89Wy0GbS+kf5cwCVFFzdCFh2XSCFNULS6csw==}
     engines: {node: '>= 0.4'}
+    dev: false
+
+  /esbuild-wasm@0.19.12:
+    resolution: {integrity: sha512-Zmc4hk6FibJZBcTx5/8K/4jT3/oG1vkGTEeKJUQFCUQKimD6Q7+adp/bdVQyYJFolMKaXkQnVZdV4O5ZaTYmyQ==}
+    engines: {node: '>=12'}
+    hasBin: true
     dev: false
 
   /esbuild@0.19.12:
