@@ -1,3 +1,4 @@
+import * as Namada from '@fadroma/namada';
 import Commands from "@hackbg/cmds";
 
 export default class UndexerCommands extends Commands {
@@ -30,4 +31,15 @@ export default class UndexerCommands extends Commands {
     const { default: uploadVotersToDb } = await import('./scripts/voters.js')
     uploadVotersToDb(url);
   });
+
+  blockResults = this.command({
+    name: 'block',
+    info: 'fetch block results',
+    args: 'BLOCK_HEIGHT [RPC_URL]'
+  }, async (url: string, height: number) => {
+    height = Number(height)
+    const connection = Namada.testnet()
+    console.log({connection})
+  })
+
 }
