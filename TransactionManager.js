@@ -5,15 +5,17 @@ import ExtraData from "./models/Sections/ExtraData.js";
 import MaspBuilder from "./models/Sections/MaspBuilder.js";
 import Signature from "./models/Sections/Signature.js";
 import Transaction from "./models/Transaction.js";
-import Contents from './models/Contents/index.js';
+import { WASM_TO_MODEL } from './models/Contents/index.js';
 import { format } from "./utils.js";
 
 export default class TransactionManager {
     static async handleTransaction(blockHeight, tx, eventEmitter) {
         try {
-            const uploadData = format(Object.assign(tx.content));
-            await Contents[tx.content.type].create(uploadData.data);
-
+            if (tx.content !== undefined) {
+                const uploadData = format(Object.assign(tx.content));
+                await WASM_TO_MODEL[tx.content.type].create(uploadData.data);
+                await TransactionManager.sideEffects(blockHeight, tx, eventEmitter);
+            }
             const { sections } = tx;
             for (let i = 0; i < sections.length; i++) {
                 const section = sections[i];
@@ -47,6 +49,7 @@ export default class TransactionManager {
     }
 
     static async sideEffects(blockHeight, tx, eventEmitter) {
+
         if (
             tx.content.type === "tx_become_validator.wasm" ||
             tx.content.type === "tx_change_validator_commission.wasm" ||
@@ -65,11 +68,17 @@ export default class TransactionManager {
             eventEmitter.emit("updateValidators", blockHeight);
         }
 
-        if(tx.content.type === "tx_vote_proposal.wasm") {
-            eventEmitter.emit("updateProposal", blockHeight, tx.content.data.proposalId);
+        if (tx.content.type === "tx_vote_proposal.wasm") {
+            eventEmitter.emit(
+                "updateProposal",
+                tx.content.data.proposalId,
+                blockHeight
+            );
         }
-        if(tx.content.type === "tx_init_proposal.wasm"){
-            //eventEmitter.emit("createProposal", tx.content.data);
+
+        if (tx.content.type === "tx_init_proposal.wasm") {
+            eventEmitter.emit("createProposal", tx.content.data);
         }
+
     }
 }

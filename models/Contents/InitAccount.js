@@ -1,7 +1,7 @@
 import sequelizer from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const InitAccount = sequelizer.define("cntinit_account", {
+const InitAccount = sequelizer.define("content_init_account", {
     publicKeys: {
         type: DataTypes.ARRAY(DataTypes.TEXT),
     },

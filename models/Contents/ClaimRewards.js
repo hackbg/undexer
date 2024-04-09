@@ -1,7 +1,7 @@
 import sequelizer from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const ClaimRewards = sequelizer.define('cntclaim_rewards', {
+const ClaimRewards = sequelizer.define('content_claim_rewards', {
     validator: {
         type: DataTypes.TEXT,
         

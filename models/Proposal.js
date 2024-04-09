@@ -9,17 +9,17 @@ const Proposal = sequelizer.define('proposal', {
         primaryKey: true,
     },
     proposalType: {
-        type: DataTypes.ENUM("pgf_steward", "pgf_funding", "pgf_governance", "default", "pgf_payment"),
+        type: DataTypes.ENUM("PGFSteward", "PGFFunding", "PGFGovernance", "Default", "PGFPayment"),
         allowNull: false,
     },
     author: {
         type: DataTypes.TEXT,
     },
-    startEpoch: {
+    votingStartEpoch: {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
-    endEpoch: {
+    votingEndEpoch: {
         type: DataTypes.INTEGER,
         allowNull: false,
     },

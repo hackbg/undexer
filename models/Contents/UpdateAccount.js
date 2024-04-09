@@ -1,7 +1,7 @@
 import sequelizer from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const UpdateAccount = sequelizer.define("cntupdate_account", {
+const UpdateAccount = sequelizer.define("content_update_account", {
     address: {
         type: DataTypes.TEXT,
     },

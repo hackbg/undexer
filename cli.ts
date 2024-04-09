@@ -3,6 +3,9 @@ import Commands from "@hackbg/cmds";
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { resolve, dirname } from 'node:path';
 import { readFileSync } from 'node:fs';
+import uploadProposals from "./scripts/proposal.js";
+import uploadVotersToDb from "./scripts/voters.js";
+import uploadBlocksAndTxs from "./scripts/block.js";
 
 export default class UndexerCommands extends Commands {
   // see https://github.com/hackbg/fadroma/blob/v2/packages/namada/namada.ts

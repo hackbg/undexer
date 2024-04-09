@@ -1,12 +1,11 @@
 #!/usr/bin/env node
-import { readFileSync } from "node:fs";
-import * as Namada from "@fadroma/namada";
 import "dotenv/config";
 
+import { readFileSync } from "node:fs";
+import * as Namada from "@fadroma/namada";
 import Block from "../models/Block.js";
 import Transaction from "../models/Transaction.js";
-import Contents from '../models/Contents/index.js';
-
+import WASM_TO_MODEL from '../models/Contents/index.js';
 import { format, initialize } from "../utils.js";
 
 initialize()
@@ -50,7 +49,7 @@ export async function ingestBlock(connection, blockDbHeight, blockchainHeight) {
     for (let txDecoded of txsDecoded) {
         try{
             const { type } = txDecoded.content;
-            const txContentDb = await Contents[type].create(format(txDecoded.content));
+            const txContentDb = await WASM_TO_MODEL[type].create(format(txDecoded.content));
             await txContentDb.save();
         }
         catch(e){

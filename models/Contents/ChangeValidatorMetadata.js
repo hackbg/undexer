@@ -1,8 +1,7 @@
 import sequelizer from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-
-const ChangeValidatorMetadata = sequelizer.define('cntchange_validator_metadata', {
+const ChangeValidatorMetadata = sequelizer.define('content_change_validator_metadata', {
     validator: {
         type: DataTypes.TEXT,
         

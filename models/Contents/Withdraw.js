@@ -1,7 +1,7 @@
 import sequelizer from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const Withdraw = sequelizer.define("cntwithdraw", {
+const Withdraw = sequelizer.define("content_withdraw", {
     validator: {
         type: DataTypes.TEXT,
     },

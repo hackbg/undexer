@@ -93,6 +93,13 @@ eventEmitter.on("updateValidators", async () => {
 
 eventEmitter.on("createProposal", async (txData) => {
     await Proposal.create(txData);
+=======
+    // const latestProposal = await Proposal.findOne({ order: [["id", "DESC"]] });
+    /*
+    const { q } = getUndexerRPCUrl(NODE_LOWEST_BLOCK_HEIGHT+1)
+    const proposalChain = await q.query_proposal(BigInt(txData.proposalId));
+    await Proposal.create(proposalChain);
+    */
 });
 
 eventEmitter.on("updateProposal", async (proposalId, blockHeight) => {

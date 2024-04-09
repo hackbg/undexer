@@ -1,7 +1,7 @@
 import sequelizer from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const Bond = sequelizer.define("cntbond", {
+const Bond = sequelizer.define("content_bond", {
     validator: {
         type: DataTypes.TEXT,
     },

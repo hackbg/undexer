@@ -21,6 +21,30 @@ import VoteProposal from './VoteProposal.js';
 import Withdraw from './Withdraw.js';
 
 export default {
+    BecomeValidator,
+    Bond,
+    ChangeConsensusKey,
+    ChangeValidatorComission,
+    ChangeValidatorMetadata,
+    ClaimRewards,
+    DeactivateValidator,
+    IBC,
+    InitAccount,
+    InitProposal,
+    ReactivateValidator,
+    Redelegate,
+    ResignSteward,
+    RevealPK,
+    Transfer,
+    Unbond,
+    UnjailValidator,
+    UpdateAccount,
+    UpdateStewardCommission,
+    VoteProposal,
+    Withdraw,
+};
+
+export const WASM_TO_MODEL = {
   'tx_become_validator.wasm': BecomeValidator,
   'tx_bond.wasm': Bond,
   'tx_change_consensus_key.wasm': ChangeConsensusKey,
