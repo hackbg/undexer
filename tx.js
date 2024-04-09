@@ -38,6 +38,7 @@ export default async function main () {
   async function pollCurrentBlock() {
     latest = await getBlockHeight()
     console.log('Latest block:', latest)
+    setTimeout(pollCurrentBlock, 5000)
   }
 
   async function ingestBlocks () {
