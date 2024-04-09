@@ -36,10 +36,29 @@ export default class UndexerCommands extends Commands {
     name: 'block',
     info: 'fetch block results',
     args: 'BLOCK_HEIGHT [RPC_URL]'
-  }, async (url: string, height: number) => {
+  }, async (height: number, url: string) => {
     height = Number(height)
     const connection = Namada.testnet()
-    console.log({connection})
+    const [
+      blockResponse,
+      blockResultsResponse
+    ] = await Promise.all([
+      fetch(`${connection.url}/block?height=${height}`)
+        .then(response=>response.json()),
+      fetch(`${connection.url}/block_results?height=${height}`)
+        .then(response=>response.json()),
+    ])
+    console.log({
+      url,
+      height,
+      connection,
+      blockResponse,
+      blockResultsResponse
+    })
+    connection.decode.decoded_block(
+      blockResponse,
+      blockResultsResponse
+    )
   })
 
 }
