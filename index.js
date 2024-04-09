@@ -5,7 +5,7 @@ import { initialize, serialize } from "./utils.js";
 import { getValidator, getValidatorsFromNode } from "./scripts/validator.js";
 import { Query } from "./shared/pkg/shared.js";
 import * as Namada from "@fadroma/namada";
-import Block from "./models/Block.js";
+import Block, { getLatestBlockInDB } from "./models/Block.js";
 import Proposal from "./models/Proposal.js";
 import {
   NODE_LOWEST_BLOCK_HEIGHT,
@@ -15,6 +15,7 @@ import {
 import Validator from "./models/Validator.js";
 import VoteProposal from "./models/Contents/VoteProposal.js";
 import sequelizer from "./db/index.js";
+import { Sequelize } from "sequelize";
 import TransactionManager from "./TransactionManager.js";
 
 let isProcessingNewBlock = false;
@@ -23,29 +24,31 @@ let isProcessingNewValidator = false;
 await initialize();
 sequelizer.sync({ force: Boolean(process.env.START_FROM_SCRATCH) });
 
+const console = new Namada.Core.Console('Index')
 const eventEmitter = new EventEmitter();
 
 checkForNewBlock();
 async function checkForNewBlock() {
-    const blocks = await Block.findAll({ raw: true });
-    const latestBlockInDb = blocks[blocks.length - 1];
-    // should use newer node for the blockchain height
-    const { conn } = getUndexerRPCUrl(NODE_LOWEST_BLOCK_HEIGHT+1)
-    let blockHeightDb = latestBlockInDb?.header.height;
-    const currentBlockOnChain = await conn.height;
-    const isDatabaseEmpty = blocks.length === 0;
-    const isCurrentBlockInDbOld = blockHeightDb < (await conn.height);
-    
-    if (isDatabaseEmpty) {
-        await updateBlocks(1, currentBlockOnChain)
-    } else if (isCurrentBlockInDbOld) {
-        await updateBlocks(blockHeightDb, currentBlockOnChain)
+  // should use newer node for the blockchain height
+  const currentBlockOnChain =
+    await getUndexerRPCUrl(NODE_LOWEST_BLOCK_HEIGHT+1).conn.height;
+  const isDatabaseEmpty =
+    (await Block.count()) === 0
+  if (isDatabaseEmpty) {
+    await updateBlocks(1, currentBlockOnChain)
+  } else {
+    const latestBlockInDb =
+      await getLatestBlockInDB();
+    if (currentBlockOnChain > latestBlockInDb) {
+      console.br().log('Starting from block', latestBlockInDb + 1)
+      await updateBlocks(latestBlockInDb + 1, currentBlockOnChain)
     } else {
-        console.log("=====================================");
-        console.log("No new blocks");
-        console.log("=====================================");
+      console.log("=====================================");
+      console.info("No new blocks");
+      console.log("=====================================");
     }
-    setTimeout(checkForNewBlock, 5000)
+  }
+  setTimeout(checkForNewBlock, 5000)
 }
 
 async function updateBlocks (blockHeightDb, chainHeight) {
@@ -65,6 +68,7 @@ async function updateBlocks (blockHeightDb, chainHeight) {
         for (let tx of txsDecoded) {
             await TransactionManager.handleTransaction(i, tx, eventEmitter);
         }
+        console.log('Added block', i)
     }
     isProcessingNewBlock = false;
 }
