@@ -14,6 +14,18 @@ import TransactionManager from "./TransactionManager.js";
 let isProcessingNewBlock = false;
 let isProcessingNewValidator = false;
 
+let queries = {
+    PRE_UNDEXER_RPC_URL: {
+        q: new Query(PRE_UNDEXER_RPC_URL),
+        conn: Namada.testnet({ url: PRE_UNDEXER_RPC_URL })
+    },
+    POST_UNDEXER_RPC_URL: {
+        q: new Query(POST_UNDEXER_RPC_URL),
+        conn: Namada.testnet({ url: POST_UNDEXER_RPC_URL })
+    
+    }
+};
+
 await initialize();
 sequelizer.sync({ force: true });
 
@@ -86,7 +98,12 @@ eventEmitter.on("updateValidators", async () => {
 });
 
 eventEmitter.on("createProposal", async (txData) => {
-    await Proposal.create(txData);
+    // const latestProposal = await Proposal.findOne({ order: [["id", "DESC"]] });
+    /*
+    const { q } = getUndexerRPCUrl(NODE_LOWEST_BLOCK_HEIGHT+1)
+    const proposalChain = await q.query_proposal(BigInt(txData.proposalId));
+    await Proposal.create(proposalChain);
+    */
 });
 
 eventEmitter.on("updateProposal", async (proposalId, blockHeight) => {
@@ -99,15 +116,9 @@ eventEmitter.on("updateProposal", async (proposalId, blockHeight) => {
 
 function getUndexerRPCUrl(blockHeight) {
     if(blockHeight > NODE_LOWEST_BLOCK_HEIGHT) {
-        return {
-            q: new Query(POST_UNDEXER_RPC_URL),
-            conn: Namada.testnet({ url: POST_UNDEXER_RPC_URL })
-        }
+        return queries["POST_UNDEXER_RPC_URL"];
     }
     else {
-        return {
-            q: new Query(PRE_UNDEXER_RPC_URL),
-            conn: Namada.testnet({ url: PRE_UNDEXER_RPC_URL })
-        }
+        return queries["PRE_UNDEXER_RPC_URL"];
     }
 }
