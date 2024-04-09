@@ -9,7 +9,7 @@ const Proposal = sequelizer.define('proposal', {
         primaryKey: true,
     },
     type: {
-        type: DataTypes.ENUM("PGFSteward", "PGFFunding", "PGFGovernance", "Default", "PGFPayment"),
+        type: DataTypes.JSON,
         allowNull: false,
     },
     author: {
