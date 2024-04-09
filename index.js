@@ -25,10 +25,7 @@ sequelizer.sync({ force: Boolean(process.env.START_FROM_SCRATCH) });
 
 const eventEmitter = new EventEmitter();
 
-setInterval(async () => {
-    await checkForNewBlock();
-}, 5000);
-
+checkForNewBlock();
 async function checkForNewBlock() {
     const blocks = await Block.findAll({ raw: true });
     const latestBlockInDb = blocks[blocks.length - 1];
@@ -40,17 +37,18 @@ async function checkForNewBlock() {
     const isCurrentBlockInDbOld = blockHeightDb < (await conn.height);
     
     if (isDatabaseEmpty) {
-        eventEmitter.emit("updateBlocks", 1, currentBlockOnChain);
+        await updateBlocks(1, currentBlockOnChain)
     } else if (isCurrentBlockInDbOld) {
-        eventEmitter.emit("updateBlocks", blockHeightDb, currentBlockOnChain);
+        await updateBlocks(blockHeightDb, currentBlockOnChain)
     } else {
         console.log("=====================================");
         console.log("No new blocks");
         console.log("=====================================");
     }
+    setTimeout(checkForNewBlock, 5000)
 }
 
-eventEmitter.on("updateBlocks", async (blockHeightDb, chainHeight) => {
+async function updateBlocks (blockHeightDb, chainHeight) {
     if (isProcessingNewBlock) return;
     isProcessingNewBlock = true;
 
@@ -69,8 +67,7 @@ eventEmitter.on("updateBlocks", async (blockHeightDb, chainHeight) => {
         }
     }
     isProcessingNewBlock = false;
-});
-
+}
 
 eventEmitter.on("updateValidators", async () => {
     if (isProcessingNewValidator) return;
