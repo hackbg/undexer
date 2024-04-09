@@ -42,7 +42,6 @@ export default class TransactionManager {
                 }
             }
             await Transaction.create(tx);
-            await TransactionManager.sideEffects(blockHeight, tx, eventEmitter)
         } catch (e) {
             console.error(e);
         }
