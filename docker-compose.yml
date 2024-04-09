@@ -4,7 +4,7 @@ services:
     image: node:21-alpine
     depends_on:
       - postgres
-    restart: always
+    restart: unless-stopped
     volumes:
       - .:/app
     working_dir: /app
