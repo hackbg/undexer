@@ -17,7 +17,7 @@ const Validator = sequelizer.define('validator', {
     commission: {
         type: DataTypes.JSON,
     },
-    state: DataTypes.ENUM("BelowThreshold", "Jailed", "Consensus", "Inactive"),
+    state: DataTypes.ENUM("BelowThreshold", "BelowCapacity", "Jailed", "Consensus", "Inactive"),
 });
 
 export default Validator;
