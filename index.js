@@ -23,12 +23,12 @@ let isProcessingNewBlock = false;
 let isProcessingNewValidator = false;
 
 await initialize();
-sequelizer.sync({ force: Boolean(process.env.START_FROM_SCRATCH) });
+await sequelizer.sync({ force: Boolean(process.env.START_FROM_SCRATCH) });
 
 const console = new Namada.Core.Console('Index')
 const eventEmitter = new EventEmitter();
 
-checkForNewBlock();
+setTimeout(checkForNewBlock, 5000);
 async function checkForNewBlock() {
   // should use newer node for the blockchain height
   const currentBlockOnChain =
