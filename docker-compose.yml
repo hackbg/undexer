@@ -2,10 +2,13 @@ version: "3"
 services:
   indexer:
     image: node:21-alpine
+    depends_on:
+      - postgres
+    restart: always
     volumes:
       - .:/app
     working_dir: /app
-    command: --import @ganesha/esbuild-wasm index.js
+    command: index.js
   server:
     image: hackbg/undexer-lighttpd
     build:
@@ -27,3 +30,8 @@ services:
       - POSTGRES_PASSWORD=insecure
       - POSTGRES_USER=postgres
       - POSTGRES_DB=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U postgres -d postgres'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
