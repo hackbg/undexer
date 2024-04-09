@@ -6,6 +6,7 @@ import {
   NODE_LOWEST_BLOCK_HEIGHT,
 } from "./constants.js";
 import { initialize } from "./utils.js";
+
 await initialize();
 
 /** Map of first block number that uses a certain RPC URL

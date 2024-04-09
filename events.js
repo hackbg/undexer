@@ -15,6 +15,7 @@ export class Events extends EventEmitter {
   rpc = getRPC()
 
   async poll () {
+    // TODO
   }
 }
 

@@ -48,7 +48,7 @@ export async function initialize() {
     readFile("shared/pkg/shared_bg.wasm")
       .then(wasm=>initShared(wasm)),
     readFile("./node_modules/@fadroma/namada/pkg/fadroma_namada_bg.wasm")
-      .then(wasm=>initShared(wasm)),
+      .then(wasm=>initDecoder(wasm)),
   ])
 }
 
