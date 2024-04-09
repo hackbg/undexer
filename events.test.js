@@ -2,6 +2,10 @@
 
 import { Events, BlockQueue, ProposalQueue } from './events.js'
 
-const events = new Events()
+const events = await new Events()
+  .on('block', onBlock)
+  .poll()
 
-await events.poll()
+async function onBlock () {
+  console.log({onBlock: arguments})
+}

@@ -1,6 +1,7 @@
 import EventEmitter from 'node:events'
 import { Core } from '@fadroma/namada'
 import getRPC from './connection.js'
+import { retryForever } from './utils.js'
 
 const console = new Core.Console('Events')
 
@@ -11,12 +12,34 @@ export class Events extends EventEmitter {
     return emitter
   }
 
-  latest = 0
-  rpc = getRPC()
+  constructor () {
+    super()
+    this.rpc = getRPC()
+    this.latest = 0
+    this.pollInterval = 5000
+  }
 
   async poll () {
-    // TODO
+    const { conn, query } = getRPC(this.latest + 1)
+    const latest = await getBlockHeight(conn)
+    if (latest !== this.latest) {
+      console.log('Latest block:', latest)
+      this.latest = latest
+      this.emit('block', latest)
+    }
+    setTimeout(pollCurrentBlock, this.pollInterval)
+    return this
   }
+}
+
+export async function getBlockHeight (connection, retryInterval = 5000) {
+  return retryForever('get block height', retryInterval, async () => {
+    const height = Number(await connection.height)
+    if (isNaN(height)) {
+      throw new Error(`returned height ${height}`)
+    }
+    return height
+  })
 }
 
 export async function pollCurrentBlock (emitter, interval = 5000) {

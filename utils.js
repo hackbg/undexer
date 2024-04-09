@@ -25,22 +25,10 @@ export async function retryForever (operation, interval, callback, ...args) {
     try {
       return await callback(...args)
     } catch (e) {
-      console.error(`Failed to ${operation}, waiting ${interval}ms and retrying`)
+      console.error(`Failed to ${operation}, waiting ${interval}ms and retrying:`, e)
       await waitFor(interval)
     }
   }
-}
-
-export async function getBlockHeight () {
-  return retryForever(
-    'get block height', 5000, async () => {
-      const height = Number(await connection.height)
-      if (isNaN(height)) {
-        throw new Error(`returned height ${height}`)
-      }
-      return height
-    }
-  )
 }
 
 export async function initialize() {
