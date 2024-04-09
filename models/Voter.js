@@ -13,6 +13,7 @@ const Voter = sequelizer.define("voter", {
     },
     id: {
         type: DataTypes.TEXT,
+        primaryKey: true
     },
 });
 

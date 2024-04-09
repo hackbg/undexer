@@ -9,11 +9,11 @@ console.log(`Starting ${bold(name)} ${version}...`)
 console.log(colors.green('@hackbg/undexer'))
 import * as Dotenv from 'dotenv'
 Dotenv.config()
-const CLI = await import("./index.dist.js").catch(async e=>{
+const CLI = await import("./cli.dist.js").catch(async e=>{
   new Console().debug('Compiling TypeScript...')
   await import("@ganesha/esbuild")
   const t0 = performance.now()
-  const module = await import("./index.ts")
+  const module = await import("./cli.ts")
   new Console().debug('Compiled TypeScript in', ((performance.now() - t0)/1000).toFixed(3)+'s')
   return module
 }).then(module=>module.default)

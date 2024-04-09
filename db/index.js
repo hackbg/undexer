@@ -1,26 +1,15 @@
 // db/index.js
-import { Sequelize } from "sequelize";
-
 import "dotenv/config";
-const { DATABASE_URL } = process.env;
-
-class SequelizeSingleton {
-    constructor() {
-        if (!DATABASE_URL) {
-            throw new Error("DATABASE_URL is not set");
-        }
-
-        if (!SequelizeSingleton.instance) {
-            SequelizeSingleton.instance = new Sequelize(DATABASE_URL, {
-                dialect: "postgres",
-                logging: () => console.log,
-            });
-        }
-    }
-
-    getInstance() {
-        return SequelizeSingleton.instance;
-    }
+import { Sequelize } from "sequelize";
+import { Console } from '@hackbg/logs';
+import { DEFAULT_DATABASE_URL } from '../constants.js'
+const console = new Console('DB')
+export let { DATABASE_URL } = process.env;
+if (!DATABASE_URL) {
+  console.warn(`DATABASE_URL unset. Defaulting to ${DEFAULT_DATABASE_URL}`)
+  DATABASE_URL = DEFAULT_DATABASE_URL
 }
-const sequelizer = new SequelizeSingleton().getInstance();
-export default sequelizer;
+export default new Sequelize(DATABASE_URL, {
+  dialect: "postgres",
+  logging: () => console.log,
+});
