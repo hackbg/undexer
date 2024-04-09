@@ -5,6 +5,9 @@
   "version": "0.0.0",
   "description": "Namada indexer to file.",
   "packageManager": "pnpm@8.15.6+sha256.01c01eeb990e379b31ef19c03e9d06a14afa5250b82e81303f88721c99ff2e6f",
+  "scripts": {
+    "api": "node api/index.js"
+  },
   "dependencies": {
     "@cosmjs/encoding": "^0.32.3",
     "@dao-xyz/borsh": "^5.2.1",
@@ -15,6 +18,7 @@
     "@namada/shared": "./shared",
     "borsh": "^2.0.0",
     "dotenv": "^16.4.5",
+    "express": "^4.19.2",
     "mkdirp": "^3.0.1",
     "pg": "^8.11.3",
     "pg-hstore": "^2.3.4",
