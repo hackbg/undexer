@@ -1,10 +1,9 @@
 import sequelizer from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const Header = sequelizer.define("sct_header", {
+const Header = sequelizer.define("section_header", {
     type: {
         type: DataTypes.TEXT,
-        
     },
     chainId: {
         type: DataTypes.TEXT,

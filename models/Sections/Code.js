@@ -1,7 +1,7 @@
 import sequelizer from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const Code = sequelizer.define('sct_code', {
+const Code = sequelizer.define('section_code', {
     salt: {
         type: DataTypes.TEXT,
     },
