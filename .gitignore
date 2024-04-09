@@ -3,6 +3,8 @@ node_modules
 data/*
 !data/.gitkeep
 *.json
+!package.json
+!tsconfig.json
 .env
 .DS_Store
 rust/target/*
