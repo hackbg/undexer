@@ -1,7 +1,7 @@
 import sequelizer from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const InitProposal = sequelizer.define("cntinit_proposal", {
+const InitProposal = sequelizer.define("cnt_init_proposal", {
     content: {
         type: DataTypes.TEXT,
     },

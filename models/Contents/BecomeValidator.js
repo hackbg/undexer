@@ -1,7 +1,7 @@
 import sequelizer from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const BecomeValidator = sequelizer.define("cnt_become_validator", {
+const BecomeValidator = sequelizer.define("cnt__become_validator", {
     address: {
         type: DataTypes.TEXT,
     },
