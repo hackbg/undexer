@@ -8,7 +8,7 @@ const Proposal = sequelizer.define('proposal', {
         unique: true,
         primaryKey: true,
     },
-    proposalType: {
+    type: {
         type: DataTypes.ENUM("PGFSteward", "PGFFunding", "PGFGovernance", "Default", "PGFPayment"),
         allowNull: false,
     },
@@ -29,7 +29,6 @@ const Proposal = sequelizer.define('proposal', {
     },
     contentJSON: {
         type: DataTypes.JSON,
-        allowNull: false,
     },
     status: {
         type: DataTypes.ENUM("ongoing", "finished", "upcoming"),
