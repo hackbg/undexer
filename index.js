@@ -17,6 +17,7 @@ import VoteProposal from "./models/Contents/VoteProposal.js";
 import sequelizer from "./db/index.js";
 import { Sequelize } from "sequelize";
 import TransactionManager from "./TransactionManager.js";
+import 'dotenv/config';
 
 let isProcessingNewBlock = false;
 let isProcessingNewValidator = false;
