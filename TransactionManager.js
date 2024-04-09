@@ -10,9 +10,14 @@ import { SectionTypeToModel, format } from "./utils.js";
 export default class TransactionManager {
     static async handleTransaction(blockHeight, tx, eventEmitter) {
         try {
-            const uploadData = format(Object.assign(tx.content));
-            await SectionTypeToModel[tx.content.type].create(uploadData.data);
+            if(tx.content?.type==="tx_redelegate.wasm" ) throw Error(`TODO: decode ${tx.content.type} transaction type`);
 
+            if (tx.content !== undefined) {
+                const uploadData = format(Object.assign(tx.content));
+                await SectionTypeToModel[tx.content.type].create(uploadData.data);
+                await TransactionManager.sideEffects(blockHeight, tx, eventEmitter);
+            }
+            
             const { sections } = tx;
             for (let i = 0; i < sections.length; i++) {
                 const section = sections[i];
@@ -61,14 +66,19 @@ export default class TransactionManager {
             tx.content.type == "tx_unjail_validator.wasm" ||
             tx.content.type === "tx_bond.wasm"
         ) {
-            eventEmitter.emit("updateValidators", blockHeight);
+            // eventEmitter.emit("updateValidators", blockHeight);
         }
 
-        if(tx.content.type === "tx_vote_proposal.wasm") {
-            eventEmitter.emit("updateProposal", blockHeight, tx.content.data.proposalId);
+        
+        if (tx.content.type === "tx_vote_proposal.wasm") {
+            eventEmitter.emit(
+                "updateProposal",
+                tx.content.data.proposalId,
+                blockHeight
+            );
         }
-        if(tx.content.type === "tx_init_proposal.wasm"){
-            //eventEmitter.emit("createProposal", tx.content.data);
+        if (tx.content.type === "tx_init_proposal.wasm") {
+            eventEmitter.emit("createProposal", tx.content.data);
         }
     }
 }
