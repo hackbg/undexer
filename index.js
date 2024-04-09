@@ -1,11 +1,15 @@
 import EventEmitter from "node:events";
-import { NODE_LOWEST_BLOCK_HEIGHT, initialize, serialize } from "./utils.js";
+import { initialize, serialize } from "./utils.js";
 import { getValidator, getValidatorsFromNode } from "./scripts/validator.js";
 import { Query } from "./shared/pkg/shared.js";
 import * as Namada from "@fadroma/namada";
 import Block from "./models/Block.js";
 import Proposal from "./models/Proposal.js";
-import { POST_UNDEXER_RPC_URL, PRE_UNDEXER_RPC_URL } from "./constants.js";
+import {
+  NODE_LOWEST_BLOCK_HEIGHT,
+  POST_UNDEXER_RPC_URL,
+  PRE_UNDEXER_RPC_URL
+} from "./constants.js";
 import Validator from "./models/Validator.js";
 import VoteProposal from "./models/Contents/VoteProposal.js";
 import sequelizer from "./db/index.js";

@@ -23,9 +23,6 @@ import UpdateStewardCommission from './models/Contents/UpdateStewardComission.js
 import VoteProposal from './models/Contents/VoteProposal.js';
 import Withdraw from './models/Contents/Withdraw.js';
 
-
-export const NODE_LOWEST_BLOCK_HEIGHT = 237907;
-
 export function serialize(data) {
     return JSON.stringify(data, stringifier);
 }
@@ -53,6 +50,18 @@ export async function retryForever (operation, interval, callback, ...args) {
       await waitFor(interval)
     }
   }
+}
+
+export async function getBlockHeight () {
+  return retryForever(
+    'get block height', 5000, async () => {
+      const height = Number(await connection.height)
+      if (isNaN(height)) {
+        throw new Error(`returned height ${height}`)
+      }
+      return height
+    }
+  )
 }
 
 // TYPE TO MODEL 
