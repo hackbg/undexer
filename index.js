@@ -21,7 +21,7 @@ let isProcessingNewBlock = false;
 let isProcessingNewValidator = false;
 
 await initialize();
-sequelizer.sync({ force: true });
+sequelizer.sync({ force: Boolean(process.env.START_FROM_SCRATCH) });
 
 const eventEmitter = new EventEmitter();
 
