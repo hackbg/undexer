@@ -59,25 +59,39 @@ export default async function indexBlock(height, events) {
           id: undefined,
           txId: tx.id,
           blockId: block.id,
+          sections: JSON.parse(
+            JSON.stringify(
+              tx.sections,
+              (key, value) =>
+                typeof value === 'bigint' ? value.toString() : value, // return everything else unchanged
+            ),
+          ),
+          content: JSON.parse(
+            JSON.stringify(
+              tx.content,
+              (key, value) =>
+                typeof value === 'bigint' ? value.toString() : value, // return everything else unchanged
+            ),
+          ),
         }),
 
         // The transaction's content
-        WASM_TO_CONTENT[tx.content.type].create(
-          format(Object.assign(tx.content)).data,
-        ),
+        // WASM_TO_CONTENT[tx.content.type].create(
+        //   format(Object.assign(tx.content)).data,
+        // ),
 
-        // The transaction's sections
-        // TODO: MaspTx section is not implemented in schema
-        ...tx.sections
-          .map((section) => {
-            const Section = NAME_TO_SECTION[section.type];
-            if (!Section) {
-              console.warn('Unknown section type', section.type);
-              return false;
-            }
-            return Section.create(section);
-          })
-          .filter(Boolean),
+        // // The transaction's sections
+        // // TODO: MaspTx section is not implemented in schema
+        // ...tx.sections
+        //   .map((section) => {
+        //     const Section = NAME_TO_SECTION[section.type];
+        //     if (!Section) {
+        //       console.warn('Unknown section type', section.type);
+        //       return false;
+        //     }
+        //     return Section.create({ ...section, txId });
+        //   })
+        //   .filter(Boolean),
       ]),
     ),
   ]);

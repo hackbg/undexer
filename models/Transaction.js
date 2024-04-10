@@ -26,9 +26,30 @@ const Transaction = sequelize.define('transaction', {
   memoHash: {
     type: DataTypes.TEXT,
   },
+  type: {
+    type: DataTypes.TEXT,
+  },
+  feeAmountPerGasUnit: {
+    type: DataTypes.TEXT,
+  },
+  feeToken: {
+    type: DataTypes.TEXT,
+  },
+  multiplier: {
+    type: DataTypes.TEXT,
+  },
+  gasLimitMultiplier: {
+    type: DataTypes.TEXT,
+  },
+  sections: {
+    type: DataTypes.JSONB
+  },
+  content: {
+    type: DataTypes.JSONB
+  }
 });
 
-Transaction.hasOne(Content);
-Transaction.hasMany(Section);
+// Transaction.hasOne(Content);
+// Transaction.hasMany(Section);
 
 export default Transaction;

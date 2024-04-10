@@ -3,8 +3,8 @@ import sequelize from '../db/index.js';
 import Block from '../models/Block.js';
 import Transaction from '../models/Transaction.js';
 import Validator from '../models/Validator.js';
-import Section from '../models/Section.js';
-import Content from '../models/Content.js';
+// import Section from '../models/Section.js';
+// import Content from '../models/Content.js';
 import Proposal from '../models/Proposal.js';
 import Voter from '../models/Voter.js';
 
@@ -73,10 +73,6 @@ app.get('/tx/:txHash', async (req, res) => {
           model: Block,
           attributes: { include: ['height'] },
         },
-        {
-          model: Section,
-        },
-        { model: Content },
       ],
     },
     {
