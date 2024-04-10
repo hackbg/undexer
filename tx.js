@@ -33,7 +33,7 @@ export default async function main() {
   let latest = await getBlockHeight();
   setTimeout(pollCurrentBlock, 5000);
 
-  let current = 346324;
+  let current = 1;
   pollCurrentBlock();
 
   ingestBlocks();
