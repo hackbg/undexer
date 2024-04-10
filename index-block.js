@@ -53,7 +53,8 @@ export default async function indexBlock (height, events) {
       Transaction.create({
         ...tx,
         id:   undefined,
-        txId: tx.id
+        txId: tx.id,
+        blockId: block.id
       }),
 
       // The transaction's content
