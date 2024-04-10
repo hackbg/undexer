@@ -9,6 +9,17 @@ services:
       - .:/app
     working_dir: /app
     command: --import @ganesha/esbuild-wasm index-backwards.js
+  api:
+    image: node:21-alpine
+    ports:
+      - 8888:8888
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: api/index.js
   server:
     image: hackbg/undexer-lighttpd
     build:
@@ -35,3 +46,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - 5050:80
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=password
