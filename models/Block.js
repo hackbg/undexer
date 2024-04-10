@@ -4,18 +4,18 @@ import sequelize from '../db/index.js';
 import Transaction from './Transaction.js';
 
 const Block = sequelize.define('block', {
-  id: {
-    type: DataTypes.TEXT,
+  height: {
+    type: DataTypes.INTEGER,
     allowNull: false,
     unique: true,
     primaryKey: true,
   },
-  header: {
-    type: DataTypes.JSON,
+  id: {
+    type: DataTypes.TEXT,
     allowNull: false,
   },
-  height: {
-    type: DataTypes.INTEGER,
+  header: {
+    type: DataTypes.JSON,
     allowNull: false,
   },
 });
