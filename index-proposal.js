@@ -1,6 +1,5 @@
 import * as Namada from '@fadroma/namada';
 import getRPC from './connection.js';
-import Block from './models/Block.js';
 import Proposal from './models/Proposal.js';
 
 const console = new Namada.Core.Console('Proposal');
