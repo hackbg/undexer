@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
-import sequelizer from "../db/index.js";
+import sequelize from "../db/index.js";
 
-const Voter = sequelizer.define("voter", {
+const Voter = sequelize.define("voter", {
     vote: {
         type: DataTypes.ENUM("yay", "nay", "abstain"),
     },
@@ -13,6 +13,7 @@ const Voter = sequelizer.define("voter", {
     },
     id: {
         type: DataTypes.TEXT,
+        primaryKey: true
     },
 });
 

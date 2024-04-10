@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
-import sequelizer from "../db/index.js";
+import sequelize from "../db/index.js";
 
-const Proposal = sequelizer.define('proposal', {
+const Proposal = sequelize.define('proposal', {
     id: {
         type: DataTypes.INTEGER,
         allowNull: false,

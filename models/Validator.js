@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
-import sequelizer from "../db/index.js";
+import sequelize from "../db/index.js";
 
-const Validator = sequelizer.define('validator', {
+const Validator = sequelize.define('validator', {
     timestamp: {
         type: DataTypes.DATE,
     },

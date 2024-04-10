@@ -1,4 +1,4 @@
-import sequelizer from "../db/index.js";
+import sequelize from "../db/index.js";
 import BecomeValidator from "./Contents/BecomeValidator.js";
 import Bond from "./Contents/Bond.js";
 import ChangeConsensusKey from "./Contents/ChangeConsensusKey.js";
@@ -19,7 +19,7 @@ import UpdateStewardCommission from "./Contents/UpdateStewardComission.js";
 import VoteProposal from "./Contents/VoteProposal.js";
 import Withdraw from "./Contents/Withdraw.js";
 
-const Content = sequelizer.define('content');
+const Content = sequelize.define('content');
 
 Content.hasOne(BecomeValidator);
 Content.hasOne(Bond);

@@ -1,14 +1,12 @@
-import sequelizer from "../../db/index.js";
+import sequelize from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const Data = sequelizer.define('section_data', {
+const Data = sequelize.define('section_data', {
     salt: {
         type: DataTypes.TEXT,
-        
     },
     data: {
         type: DataTypes.TEXT,
-        
     },
 });
 

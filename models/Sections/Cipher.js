@@ -1,10 +1,9 @@
-import sequelizer from "../../db/index.js";
+import sequelize from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const Cipher = sequelizer.define('section_cipher', {
+const Cipher = sequelize.define('section_cipher', {
     cipherText: {
-        type: DataTypes.TEXT,
-        
+        type: DataTypes.TEXT,   
     },
 });
 

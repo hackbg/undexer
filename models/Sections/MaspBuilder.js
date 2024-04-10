@@ -1,25 +1,21 @@
-import sequelizer from "../../db/index.js";
+import sequelize from "../../db/index.js";
 import { DataTypes } from "sequelize";
 
-const MaspBuilder = sequelizer.define("section_masp_builder", {
+const MaspBuilder = sequelize.define("section_masp_builder", {
     type: {
         type: DataTypes.TEXT,
     },
     target: {
-        type: DataTypes.TEXT,
-        
+        type: DataTypes.TEXT,  
     },
     token: {
         type: DataTypes.TEXT,
-        
     },
     denom: {
         type: DataTypes.TEXT,
-        
     },
     position: {
         type: DataTypes.TEXT,
-        
     },
 });
 
