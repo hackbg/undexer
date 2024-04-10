@@ -15,6 +15,8 @@ const fetchText = url => {
 
 export default async function indexBlock (height, events) {
 
+  const t0 = performance.now()
+
   // Get connection correspondinf to block height
   const { connection, query } = getRPC(height)
 
@@ -32,8 +34,6 @@ export default async function indexBlock (height, events) {
 
   // Write block and all transactions to database.
   console.debug('Storing block', height, block.id)
-
-  const t0 = performance.now()
 
   // TODO: Wrap this big promise in a PostgreSQL transaction
   //       so that block/transactions/sectionds/contents are either

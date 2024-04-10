@@ -16,6 +16,7 @@ const events        = await new Events()
 const blockQueue    = new Queue(1024*1024)
 const proposalQueue = new Queue(2048)
 
+// Index blocks from queue.
 ;(async function indexLatestBlock () {
   const index = blockQueue.last()
   if (index === null) {
@@ -34,12 +35,14 @@ const proposalQueue = new Queue(2048)
   }
 })()
 
+// Index proposals from queue
 ;(async function indexLatestProposal () {
   const index = proposalQueue.last()
   if (index === null) {
     console.debug('Waiting for new proposals')
     setTimeout(indexLatestProposal, 1000)
   } else {
+    // TODO: wrap in try/catch
     await indexProposal(index)
     proposalQueue.complete(index)
     setTimeout(indexLatestProposal, 100)
@@ -66,8 +69,9 @@ async function onProposal ({ height }) {
     .warn('TODO:', {onVote: {height}})
     .warn('TODO:', 'if height > lastHeightWhenListOfProposalsWasUpdated:')
     .warn('TODO:', '  proposalCount = updateProposalCount()')
-    .warn('TODO:', '  for i from lastProposalCount to proposalCount:')
+    .warn('TODO:', '  for i from 1 to proposalCount:')
     .warn('TODO:', '    proposalQueue.enqueue(proposal)')
+    .warn('TODO:', 'Only the new proposals should get enqueued')
     .br()
 }
 
