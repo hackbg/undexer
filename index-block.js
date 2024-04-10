@@ -41,7 +41,10 @@ export default async function indexBlock (height, events) {
   await Promise.all([
 
     // Block
-    Block.create(block),
+    Block.create({
+      height,
+      ...block
+    }),
 
     // Each transaction in the block:
     ...txs.map(tx=>Promise.all([
