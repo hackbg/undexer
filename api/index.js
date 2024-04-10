@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import sequelize from '../db/index.js';
 import Block from '../models/Block.js';
 import Transaction from '../models/Transaction.js';
@@ -9,6 +10,9 @@ import Proposal from '../models/Proposal.js';
 import Voter from '../models/Voter.js';
 
 const app = express();
+
+// CORS-enabled for all origins
+app.use(cors())
 
 app.get('/latest-block', async (req, res) => {
   const latestBlock = await Block.max('height')
