@@ -42,9 +42,14 @@ const proposalQueue = new Queue(2048)
     console.debug('Waiting for new proposals')
     setTimeout(indexLatestProposal, 1000)
   } else {
-    // TODO: wrap in try/catch
-    await indexProposal(index)
-    proposalQueue.complete(index)
+    try {
+      await indexProposal(index)
+      proposalQueue.complete(index)
+    } catch (e) {
+      e.message = `Failed to index proposal ${index}: ${e.message}`
+      proposalQueue.failure(index)
+      console.error(e)
+    }
     setTimeout(indexLatestProposal, 100)
   }
 })()
