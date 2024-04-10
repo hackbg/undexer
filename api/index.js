@@ -42,7 +42,7 @@ app.get('/block/hash/:hash', async (req, res) => {
       where: {
         id: req.params.hash,
       },
-      attributes: { exclude: ['transactionId'] },
+      attributes: { exclude: ['transactionId', 'createdAt', 'updatedAt'] },
       include: [
         {
           model: Transaction,
