@@ -19,11 +19,11 @@ const proposalQueue = new Queue(2048)
 ;(async function indexLatestBlock () {
   const index = blockQueue.last()
   if (index === null) {
-    console.debug('Waiting for blocks to index')
+    console.debug('Waiting for new blocks')
     setTimeout(indexLatestBlock, 1000)
   } else {
     try {
-      await indexBlock(index)
+      await indexBlock(index, events)
       blockQueue.complete(index)
     } catch (e) {
       e.message = `Failed to index block ${index}: ${e.message}`
@@ -37,7 +37,7 @@ const proposalQueue = new Queue(2048)
 ;(async function indexLatestProposal () {
   const index = proposalQueue.last()
   if (index === null) {
-    console.debug('Waiting for proposals to index')
+    console.debug('Waiting for new proposals')
     setTimeout(indexLatestProposal, 1000)
   } else {
     await indexProposal(index)
@@ -53,16 +53,30 @@ events
   .poll(1000)
 
 async function onBlock (height) {
-  const blocksToIndex = []
+  // TODO: Efficiently query DB and don't enqueue
+  //       blocks that have already been stored!
   for (let i = (blockQueue.first() || 1); i <= height; i++) {
     blockQueue.enqueue(i)
   }
 }
 
-async function onProposal () {
-  console.log({onProposal: arguments})
+async function onProposal ({ height }) {
+  console
+    .br()
+    .warn('TODO:', {onVote: {height}})
+    .warn('TODO:', 'if height > lastHeightWhenListOfProposalsWasUpdated:')
+    .warn('TODO:', '  proposalCount = updateProposalCount()')
+    .warn('TODO:', '  for i from lastProposalCount to proposalCount:')
+    .warn('TODO:', '    proposalQueue.enqueue(proposal)')
+    .br()
 }
 
-async function onVote () {
-  console.log({onVote: arguments})
+async function onVote ({ height, proposal }) {
+  console
+    .br()
+    .warn('TODO:', {onVote: {height, proposal}})
+    .warn('TODO:', 'if height > lastHeightWhenThisProposalWasUpdated:')
+    .warn('TODO:', '  proposalQueue.enqueue(proposal, true)')
+    .warn('TODO:', "Don't forget the 'true' parameter (forces proposal reindex)!")
+    .br()
 }

@@ -13,7 +13,7 @@ const fetchText = url => {
   return fetch(url).then(response=>response.text())
 }
 
-export default async function indexBlock (height) {
+export default async function indexBlock (height, events) {
 
   // Get connection correspondinf to block height
   const { connection, query } = getRPC(height)
@@ -33,6 +33,11 @@ export default async function indexBlock (height) {
   // Write block and all transactions to database.
   console.debug('Storing block', height, block.id)
 
+  const t0 = performance.now()
+
+  // TODO: Wrap this big promise in a PostgreSQL transaction
+  //       so that block/transactions/sectionds/contents are either
+  //       saved fully, or not at all!
   await Promise.all([
 
     // Block
@@ -54,6 +59,7 @@ export default async function indexBlock (height) {
       ),
 
       // The transaction's sections
+      // TODO: MaspTx section is not implemented in schema
       ...tx.sections.map(section=>{
         const Section = NAME_TO_SECTION[section.type]
         if (!Section) {
@@ -67,5 +73,20 @@ export default async function indexBlock (height) {
 
   ])
 
-}
+  // Write block and all transactions to database.
+  console.debug('Indexed in', performance.now() - t0, 'msec')
 
+  // If the event emitter has been passed in,
+  // emit events for transactions of interest
+  if (events) {
+    for (const tx of txs) {
+      if (tx.content.type === 'tx_init_proposal.wasm') {
+        events.emit('proposal', { height })
+      }
+      if (tx.content.type === 'tx_vote_proposal.wasm') {
+        events.emit('vote', { height, proposal: tx.content.data.proposalId })
+      }
+    }
+  }
+
+}
