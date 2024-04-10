@@ -1,8 +1,12 @@
 import express from 'express';
-import sequelizer from '../db/index.js';
+import sequelize from '../db/index.js';
 import Block from '../models/Block.js';
 import Transaction from '../models/Transaction.js';
 import Validator from '../models/Validator.js';
+import Section from '../models/Section.js';
+import Content from '../models/Content.js';
+import Proposal from '../models/Proposal.js';
+import Voter from '../models/Voter.js';
 
 const app = express();
 
@@ -12,7 +16,11 @@ app.get('/block/:height', async (req, res) => {
       where: {
         height: req.params.height,
       },
-      include: Transaction,
+      attributes: { exclude: ['transactionId'] },
+      include: [
+        { model: Transaction, attributes: { exclude: 'id' } },
+        { model: Section },
+      ],
     },
     {
       raw: true,
@@ -31,7 +39,8 @@ app.get('/block/hash/:hash', async (req, res) => {
       where: {
         id: req.params.hash,
       },
-      include: Transaction,
+      attributes: { exclude: ['transactionId'] },
+      include: [{ model: Transaction, attributes: { exclude: 'id' } }],
     },
     {
       raw: true,
@@ -46,11 +55,25 @@ app.get('/block/hash/:hash', async (req, res) => {
 });
 
 app.get('/tx/:txHash', async (req, res) => {
-  res.status(501).send({ error: 'Not implemented' });
-  /*
-  const tx = await Transaction.findOne({ id: req.params.txHash, raw: true });
+  const tx = await Transaction.findOne(
+    {
+      where: { txId: req.params.txHash },
+      include: [
+        {
+          model: Block,
+          attributes: { include: ['height'] },
+        },
+        {
+          model: Section,
+        },
+        { model: Content },
+      ],
+    },
+    {
+      raw: true,
+    },
+  );
   res.status(200).send(tx);
-  */
 });
 
 app.get('/validators', (req, res) => {
@@ -78,6 +101,6 @@ app.get('/validator/:type', (req, res) => {
 const { SERVER_PORT: port = 8888 } = process.env;
 
 app.listen({ port }, () => {
-  sequelizer.sync();
+  sequelize.sync();
   console.log(`🚀 Server ready at http://0.0.0.0:${port}`);
 });
