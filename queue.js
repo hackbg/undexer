@@ -4,9 +4,8 @@ export class Queue {
     this.positions = new Uint8Array(initialSize)
   }
 
-  /** Add item to queue, reallocating if necessary. */
-  add (index) {
-    // If we've run out of space, allocate twice as much
+  /** If index >= this.length, double the size of the allocated array. */
+  allocate (index) {
     if (index >= this.positions.length) {
       const positions = new Uint8Array(this.positions.length * 2)
       // Copy old values to new array
@@ -15,43 +14,42 @@ export class Queue {
       }
       this.positions = positions
     }
-    // Mark presence of item at position
-    this.positions[index] = 1
   }
 
   /** Remove item from queue. */
-  remove (index) {
+  dequeue (index) {
+    this.allocate(index)
     this.positions[index] = 0
   }
 
-  /** Return first item in queue. */
-  first () {
+  /** Add item to queue if not marked as complete. */
+  enqueue (index) {
+    this.allocate(index)
+    if (this.positions[index] === 0) {
+      this.positions[index] = 1
+    }
+  }
+
+  /** Mark item as processed. */
+  complete (index) {
+    this.allocate(index)
+    this.positions[index] = 2
+  }
+
+  /** Return first item in queue with matching state */
+  first (state = 1) {
     for (let i = 0; i < this.positions.length; i++) {
-      if (this.positions[i] > 0) return i
+      if (this.positions[i] === state) return i
     }
     return null
   }
 
-  /** Return and remove first item from queue */
-  popFirst () {
-    const i = this.first()
-    if (i !== null) this.remove(i)
-    return i
-  }
-
-  /** Return last item in queue. */
-  last () {
+  /** Return last item in queue with matching state */
+  last (state = 1) {
     for (let i = this.positions.length - 1; i >= 0; i--) {
-      if (this.positions[i] > 0) return i
+      if (this.positions[i] === state) return i
     }
     return null
-  }
-
-  /** Return and remove last item from queue */
-  popLast () {
-    const i = this.last()
-    if (i !== null) this.remove(i)
-    return i
   }
 
 }

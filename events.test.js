@@ -6,11 +6,12 @@ import { Queue } from './queue.js'
 const blockQueue = new Queue(1024*1024)
 indexLatestBlock()
 async function indexLatestBlock () {
-  const indexBlock = blockQueue.popLast()
-  if (indexBlock !== null) {
-    console.log({indexBlock})
+  const index = blockQueue.last()
+  if (index !== null) {
+    console.log({indexBlock: index})
+    blockQueue.complete(index)
   }
-  setTimeout(indexLatestBlock, 50)
+  setImmediate(indexLatestBlock)
 }
 
 const proposalQueue = new Queue(2048)
@@ -26,7 +27,7 @@ events
 async function onBlock (height) {
   const blocksToIndex = []
   for (let i = (blockQueue.first() || 1); i <= height; i++) {
-    blockQueue.add(i)
+    blockQueue.enqueue(i)
   }
 }
 
