@@ -68,12 +68,6 @@ app.get('/tx/:txHash', async (req, res) => {
       attributes: {
         exclude: ['id', 'createdAt', 'updatedAt'],
       },
-      include: [
-        {
-          model: Block,
-          attributes: { include: ['height'] },
-        },
-      ],
     },
     {
       raw: true,

@@ -1,12 +1,17 @@
-import { DataTypes } from "sequelize";
-import sequelize from "../db/index.js";
-import Section from "./Section.js";
-import Content from "./Content.js";
-// import Block from "./Block.js";
+import { DataTypes } from 'sequelize';
+import sequelize from '../db/index.js';
 
 const Transaction = sequelize.define('transaction', {
   txId: {
     type: DataTypes.TEXT,
+    unique: true,
+    primaryKey: true,
+  },
+  blockId: {
+    type: DataTypes.TEXT,
+  },
+  blockHeight: {
+    type: DataTypes.INTEGER,
   },
   chainId: {
     type: DataTypes.TEXT,
@@ -42,14 +47,11 @@ const Transaction = sequelize.define('transaction', {
     type: DataTypes.TEXT,
   },
   sections: {
-    type: DataTypes.JSONB
+    type: DataTypes.JSONB,
   },
   content: {
-    type: DataTypes.JSONB
-  }
+    type: DataTypes.JSONB,
+  },
 });
-
-// Transaction.hasOne(Content);
-// Transaction.hasMany(Section);
 
 export default Transaction;

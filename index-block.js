@@ -2,9 +2,6 @@ import * as Namada from '@fadroma/namada';
 import getRPC from './connection.js';
 import Block from './models/Block.js';
 import Transaction from './models/Transaction.js';
-import { WASM_TO_CONTENT } from './models/Contents/index.js';
-import { NAME_TO_SECTION } from './models/Sections/index.js';
-import { format } from './utils.js';
 
 const console = new Namada.Core.Console('Block');
 
@@ -56,9 +53,9 @@ export default async function indexBlock(height, events) {
         // The transaction
         Transaction.create({
           ...tx,
-          id: undefined,
           txId: tx.id,
           blockId: block.id,
+          blockHeight: height,
           sections: JSON.parse(
             JSON.stringify(
               tx.sections,
@@ -74,24 +71,6 @@ export default async function indexBlock(height, events) {
             ),
           ),
         }),
-
-        // The transaction's content
-        // WASM_TO_CONTENT[tx.content.type].create(
-        //   format(Object.assign(tx.content)).data,
-        // ),
-
-        // // The transaction's sections
-        // // TODO: MaspTx section is not implemented in schema
-        // ...tx.sections
-        //   .map((section) => {
-        //     const Section = NAME_TO_SECTION[section.type];
-        //     if (!Section) {
-        //       console.warn('Unknown section type', section.type);
-        //       return false;
-        //     }
-        //     return Section.create({ ...section, txId });
-        //   })
-        //   .filter(Boolean),
       ]),
     ),
   ]);
