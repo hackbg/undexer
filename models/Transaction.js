@@ -29,5 +29,6 @@ const Transaction = sequelize.define('transaction', {
 });
 
 Transaction.hasOne(Content);
+Transaction.hasMany(Section);
 
 export default Transaction;
