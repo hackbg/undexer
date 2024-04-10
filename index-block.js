@@ -36,7 +36,7 @@ export default async function indexBlock (height, events) {
   console.debug('Storing block', height, block.id)
 
   // TODO: Wrap this big promise in a PostgreSQL transaction
-  //       so that block/transactions/sectionds/contents are either
+  //       so that block/transactions/sections/contents are either
   //       saved fully, or not at all!
   await Promise.all([
 
