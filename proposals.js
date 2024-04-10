@@ -45,7 +45,10 @@ export default async function main () {
   async function ingestProposals () {
     while (true) {
       if (current <= latest) {
-        await retryForever('ingest proposal', 5000, ingestProposal, current, latest)
+        await retryForever(
+          `ingest proposal ${current}/${latest}`, 5000,
+          ingestProposal, current, latest
+        )
         current++
       } else {
         console.log('Reached latest proposal, waiting for next')

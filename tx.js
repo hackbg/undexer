@@ -47,7 +47,10 @@ export default async function main() {
   async function ingestBlocks() {
     while (true) {
       if (current <= latest) {
-        await retryForever('ingest block', 5000, ingestBlock, current, latest);
+        await retryForever(
+          `ingest block ${current}/${latest}`, 5000,
+          ingestBlock, current, latest
+        );
         current++;
       } else {
         console.log('Reached latest block, waiting for next');
