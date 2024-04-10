@@ -38,7 +38,8 @@ export async function retryForever (operation, interval, callback, ...args) {
     try {
       return await callback(...args)
     } catch (e) {
-      console.error(`Failed to ${operation}, waiting ${interval}ms and retrying`)
+      e.message = `Failed to ${operation}, waiting ${interval}ms and retrying: ${e.message}`
+      console.error(e)
       await waitFor(interval)
     }
   }
