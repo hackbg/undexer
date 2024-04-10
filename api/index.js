@@ -65,6 +65,9 @@ app.get('/tx/:txHash', async (req, res) => {
   const tx = await Transaction.findOne(
     {
       where: { txId: req.params.txHash },
+      attributes: {
+        exclude: ['id', 'createdAt', 'updatedAt'],
+      },
       include: [
         {
           model: Block,
