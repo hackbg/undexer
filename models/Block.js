@@ -21,7 +21,6 @@ const Block = sequelize.define('block', {
 });
 
 Block.hasMany(Transaction);
-Transaction.hasOne(Block);
 
 export default Block;
 
