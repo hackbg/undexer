@@ -1,8 +1,15 @@
 #!/usr/bin/env -S node --import=@ganesha/esbuild
+
 import * as Namada from '@fadroma/namada'
-import Events from './events.js'
-import Queue from './queue.js'
-import getRPC from './connection.js'
+import getRPC      from './connection.js'
+import Events      from './events.js'
+import Queue       from './queue.js'
+import indexBlock  from './index-block.js'
+import sequelizer  from "./db/index.js";
+
+await sequelizer.sync({
+  force: Boolean(process.env.START_FROM_SCRATCH)
+});
 
 const console       = new Namada.Core.Console('Undexer')
 const events        = await new Events()
@@ -15,8 +22,14 @@ const proposalQueue = new Queue(2048)
     console.debug('Waiting for blocks to index')
     setTimeout(indexLatestBlock, 1000)
   } else {
-    await indexBlock(index)
-    blockQueue.complete(index)
+    try {
+      await indexBlock(index)
+      blockQueue.complete(index)
+    } catch (e) {
+      e.message = `Failed to index block ${index}: ${e.message}`
+      blockQueue.failure(index)
+      console.error(e)
+    }
     setTimeout(indexLatestBlock, 100)
   }
 })()
@@ -52,25 +65,4 @@ async function onProposal () {
 
 async function onVote () {
   console.log({onVote: arguments})
-}
-
-async function indexBlock (height) {
-  console.debug('Indexing block', height)
-  const { connection, query } = getRPC(height)
-  const [ blockResponse, blockResultsResponse ] = await Promise.all([
-    fetch(`${connection.url}/block?height=${height}`)
-      .then(response=>response.text()),
-    fetch(`${connection.url}/block_results?height=${height}`)
-      .then(response=>response.text()),
-  ])
-  const decoded = connection.decode.block(
-    blockResponse,
-    blockResultsResponse
-  )
-  console.log({decoded})
-}
-
-async function indexProposal (id) {
-  console.debug('Indexing proposal', height)
-  const { connection, query } = getRPC()
 }

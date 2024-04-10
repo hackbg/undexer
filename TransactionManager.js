@@ -5,7 +5,7 @@ import ExtraData from "./models/Sections/ExtraData.js";
 import MaspBuilder from "./models/Sections/MaspBuilder.js";
 import Signature from "./models/Sections/Signature.js";
 import Transaction from "./models/Transaction.js";
-import { WASM_TO_MODEL } from './models/Contents/index.js';
+import { WASM_TO_CONTENT } from './models/Contents/index.js';
 import { format } from "./utils.js";
 
 export default class TransactionManager {
@@ -13,7 +13,7 @@ export default class TransactionManager {
         try {
             if (tx.content !== undefined) {
                 const uploadData = format(Object.assign(tx.content));
-                await WASM_TO_MODEL[tx.content.type].create(uploadData.data);
+                await WASM_TO_CONTENT[tx.content.type].create(uploadData.data);
                 await TransactionManager.sideEffects(blockHeight, tx, eventEmitter);
             }
             const { sections } = tx;

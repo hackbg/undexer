@@ -8,7 +8,7 @@ services:
     volumes:
       - .:/app
     working_dir: /app
-    command: --import @ganesha/esbuild-wasm index.js
+    command: --import @ganesha/esbuild-wasm index-backwards.js
   server:
     image: hackbg/undexer-lighttpd
     build:

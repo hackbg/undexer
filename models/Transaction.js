@@ -4,6 +4,9 @@ import Section from "./Section.js";
 import Content from "./Content.js";
 
 const Transaction = sequelizer.define('transaction', {
+    txId: {
+        type: DataTypes.TEXT,
+    },
     chainId: {
         type: DataTypes.TEXT,
     },

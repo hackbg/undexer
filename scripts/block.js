@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import * as Namada from "@fadroma/namada";
 import Block from "../models/Block.js";
 import Transaction from "../models/Transaction.js";
-import WASM_TO_MODEL from '../models/Contents/index.js';
+import WASM_TO_CONTENT from '../models/Contents/index.js';
 import { format, initialize } from "../utils.js";
 
 initialize()
@@ -49,7 +49,7 @@ export async function ingestBlock(connection, blockDbHeight, blockchainHeight) {
     for (let txDecoded of txsDecoded) {
         try{
             const { type } = txDecoded.content;
-            const txContentDb = await WASM_TO_MODEL[type].create(format(txDecoded.content));
+            const txContentDb = await WASM_TO_CONTENT[type].create(format(txDecoded.content));
             await txContentDb.save();
         }
         catch(e){

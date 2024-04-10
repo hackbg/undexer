@@ -38,6 +38,12 @@ export default class Queue {
     this.positions[index] = 2
   }
 
+  /** Mark item as failed. */
+  failure (index) {
+    this.allocate(index)
+    this.positions[index] = 3
+  }
+
   /** Return first item in queue with matching state */
   first (state = 1) {
     for (let i = 0; i < this.positions.length; i++) {
