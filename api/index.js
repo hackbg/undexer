@@ -16,9 +16,12 @@ app.get('/block/:height', async (req, res) => {
       where: {
         height: req.params.height,
       },
-      attributes: { exclude: ['transactionId'] },
+      attributes: { exclude: ['transactionId', 'createdAt', 'updatedAt'] },
       include: [
-        { model: Transaction, attributes: { exclude: 'id' } },
+        {
+          model: Transaction,
+          attributes: { exclude: ['id', 'createdAt', 'updatedAt', 'chainId'] },
+        },
         { model: Section },
       ],
     },
@@ -40,7 +43,12 @@ app.get('/block/hash/:hash', async (req, res) => {
         id: req.params.hash,
       },
       attributes: { exclude: ['transactionId'] },
-      include: [{ model: Transaction, attributes: { exclude: 'id' } }],
+      include: [
+        {
+          model: Transaction,
+          attributes: { exclude: ['id', 'createdAt', 'updatedAt', 'chainId'] },
+        },
+      ],
     },
     {
       raw: true,
