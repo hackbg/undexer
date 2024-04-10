@@ -10,6 +10,26 @@ import Voter from '../models/Voter.js';
 
 const app = express();
 
+app.get('/blocks', async (req, res) => {
+  const limit = req.query.limit ? Number(req.query.limit) : 20
+  const offset = req.query.offset ? Number(req.query.offset) : 0
+  const { rows, count } = await Block.findAndCountAll({
+    order: [['height', 'DESC']],
+    limit,
+    offset,
+    attributes: ['height', 'id', 'header'],
+  })
+  const blocks = await Promise.all(rows.map(async (block) => {
+    const txs = await Transaction.findAll({
+      where: { blockHeight: block.height },
+      attributes: ['txId']
+    })
+    return { ...block.get(), txs }
+  }))
+
+  res.status(200).send({ count, blocks })
+})
+
 app.get('/block/:height', async (req, res) => {
   const block = await Block.findOne(
     {
