@@ -104,6 +104,28 @@ app.get('/validator/:type', (req, res) => {
   res.status(200).send(validator);
 });
 
+app.get('/proposals/', (req, res) => {
+  const proposals = Proposal.findAll({ raw: true });
+  res.status(200).send(proposals);
+})
+
+app.get('/proposal/:id', (req, res) => {
+  const proposal = Proposal.findOne(
+    {
+      where: {
+        id: req.params.id,
+      },
+    },
+    { raw: true },
+  );
+  if (proposal === null) {
+    res.status(404).send({ error: 'Proposal not found' });
+    return;
+  }
+
+  res.status(200).send(proposal);
+})
+
 const { SERVER_PORT: port = 8888 } = process.env;
 
 app.listen({ port }, () => {
