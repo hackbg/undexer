@@ -9,24 +9,16 @@ import { initialize } from "./utils.js";
 
 await initialize();
 
+const rpcVariant = url => ({
+  connection: Namada.testnet({ url }),
+  query: new Query(url),
+})
+
 /** Map of first block number that uses a certain RPC URL
   * to a pair of { query, connection } objects that wrap the RPC. */
 export const rpcs = toSortedRPCs({
-
-  1: {
-    q: new Query(POST_UNDEXER_RPC_URL),
-    conn: Namada.testnet({
-      url: POST_UNDEXER_RPC_URL
-    })
-  },
-
-  [NODE_LOWEST_BLOCK_HEIGHT]: {
-    q: new Query(PRE_UNDEXER_RPC_URL),
-    conn: Namada.testnet({
-      url: PRE_UNDEXER_RPC_URL
-    })
-  }
-
+  1: rpcVariant(PRE_UNDEXER_RPC_URL),
+  [NODE_LOWEST_BLOCK_HEIGHT]: rpcVariant(POST_UNDEXER_RPC_URL),
 })
 
 /** Validate record of (first block number -> RPC) and
@@ -52,9 +44,9 @@ function toSortedRPCs (rpcs) {
 /** Iterate over list of (first block number, RPC)
   * and return the RPC corresponding to a given height */
 export default function getRPC (height = Infinity) {
-  for (const [limit, connection] of rpcs) {
+  for (const [limit, variant] of rpcs) {
     if (height >= limit) {
-      return connection
+      return variant
     }
   }
   throw new Error(`Could not find suitable RPC for height ${height}`)
