@@ -79,7 +79,7 @@ export default async function indexBlock(height, events) {
         events.emit('proposal', { height });
       }
       if (tx.content.type === 'tx_vote_proposal.wasm') {
-        events.emit('vote', { height, proposal: tx.content.data.proposalId });
+        events.emit('vote', { height, proposal: tx.content.data.id });
       }
     }
   }
