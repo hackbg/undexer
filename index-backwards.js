@@ -4,10 +4,11 @@ import * as Namada from '@fadroma/namada'
 import getRPC      from './connection.js'
 import Events      from './events.js'
 import Queue       from './queue.js'
-import indexBlock  from './index-block.js'
-import sequelizer  from "./db/index.js";
+import indexBlock from './index-block.js'
+import indexProposal from './index-proposal.js'
+import sequelize  from "./db/index.js";
 
-await sequelizer.sync({
+await sequelize.sync({
   force: Boolean(process.env.START_FROM_SCRATCH)
 });
 
