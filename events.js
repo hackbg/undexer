@@ -5,7 +5,7 @@ import { retryForever } from './utils.js'
 
 const console = new Core.Console('Events')
 
-export class Events extends EventEmitter {
+export default class Events extends EventEmitter {
 
   static async init (interval = 5000) {
     const emitter = new this()

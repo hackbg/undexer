@@ -1,4 +1,4 @@
-export class Queue {
+export default class Queue {
 
   constructor (initialSize = 1024*1024) {
     this.positions = new Uint8Array(initialSize)
@@ -22,10 +22,12 @@ export class Queue {
     this.positions[index] = 0
   }
 
-  /** Add item to queue if not marked as complete. */
-  enqueue (index) {
+  /** Add item to queue.
+    * @param index {number} index of item
+    * @param force {boolean} enqueue even if completed (to reindex) */
+  enqueue (index, force = false) {
     this.allocate(index)
-    if (this.positions[index] === 0) {
+    if (force || (this.positions[index] === 0)) {
       this.positions[index] = 1
     }
   }

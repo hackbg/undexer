@@ -1,10 +1,12 @@
 #!/usr/bin/env -S node --import=@ganesha/esbuild
 
-import { Events } from './events.js'
-import { Queue } from './queue.js'
+import Events from './events.js'
+import Queue from './queue.js'
 
 const blockQueue = new Queue(1024*1024)
+
 indexLatestBlock()
+
 async function indexLatestBlock () {
   const index = blockQueue.last()
   if (index !== null) {
