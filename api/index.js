@@ -10,6 +10,11 @@ import Voter from '../models/Voter.js';
 
 const app = express();
 
+app.get('/latest-block', async (req, res) => {
+  const latestBlock = await Block.max('height')
+  res.status(200).send(latestBlock.toString())
+})
+
 app.get('/blocks', async (req, res) => {
   const limit = req.query.limit ? Number(req.query.limit) : 20
   const offset = req.query.offset ? Number(req.query.offset) : 0
