@@ -22,7 +22,6 @@ app.get('/block/:height', async (req, res) => {
           model: Transaction,
           attributes: { exclude: ['id', 'createdAt', 'updatedAt', 'chainId'] },
         },
-        { model: Section },
       ],
     },
     {
