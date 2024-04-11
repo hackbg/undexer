@@ -110,12 +110,12 @@ router.get('/tx/:txHash', async (req, res) => {
 });
 
 router.get('/validators', async (req, res) => {
-  const validators = Validator.findAll({ raw: true });
+  const validators = await Validator.findAll({ raw: true });
   res.status(200).send(validators);
 });
 
 router.get('/validator/:type', async (req, res) => {
-  const validator = Validator.findAll(
+  const validator = await Validator.findAll(
     {
       where: {
         type: req.params.type,
@@ -158,12 +158,12 @@ router.get('/validator/uptime/:address', async (req, res) => {
 });
 
 router.get('/proposals/', async (req, res) => {
-  const proposals = Proposal.findAll({ raw: true });
+  const proposals = await Proposal.findAll({ raw: true });
   res.status(200).send(proposals);
 });
 
-router.get('/proposal/:id', (req, res) => {
-  const proposal = Proposal.findOne(
+router.get('/proposal/:id', async (req, res) => {
+  const proposal = await Proposal.findOne(
     {
       where: {
         id: req.params.id,
