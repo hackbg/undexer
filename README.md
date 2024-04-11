@@ -58,6 +58,7 @@ GET  /v2/tx/:txHash                        - transaction information by hash
 
 GET  /v2/validators                        - all validators
 GET  /v2/validator/:type                   - validator information by type
+GET  /v2/validator/uptime/:address         - validator uptime for the last 100 blocks
 
 GET  /v2/proposals                         - governance proposals
 GET  /v2/proposal/:id                      - governance proposal by id
