@@ -33,7 +33,7 @@ export default async function main() {
   let latest = await getBlockHeight();
   setTimeout(pollCurrentBlock, 5000);
 
-  let current = 346740;
+  let current = 350000;
   pollCurrentBlock();
 
   ingestBlocks();
@@ -94,7 +94,7 @@ export async function ingestBlock(current, latest) {
       `(${((current / latest) * 100).toFixed(3)}%)`,
     );
 
-    let { rawTxs, txs, ...block } = await retryForever(
+    let { txs, txsDecoded, ...block } = await retryForever(
       `get block ${current}`,
       5000,
       () => connection.getBlock(current),
@@ -102,7 +102,7 @@ export async function ingestBlock(current, latest) {
 
     await mkdirp(blockDir);
 
-    const txsDecodedWithId = txs
+    const txsDecodedWithId = txsDecoded
       .map((tx, index) => {
         if (tx.chainId && tx.codeHash && tx.txType && tx.dataHash)
           return {
