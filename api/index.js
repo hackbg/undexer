@@ -10,9 +10,11 @@ import Proposal from '../models/Proposal.js';
 import Voter from '../models/Voter.js';
 
 const app = express();
+const router = express.Router();
 
 // CORS-enabled for all origins
 app.use(cors())
+app.use('/v2', router)
 
 app.get('/block/latest', async (req, res) => {
   const latestBlock = await Block.max('height')
