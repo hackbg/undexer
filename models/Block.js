@@ -18,6 +18,14 @@ const Block = sequelize.define('block', {
     type: DataTypes.JSON,
     allowNull: false,
   },
+  results: {
+    type: DataTypes.JSONB,
+    allowNull: false
+  },
+  rpcResponse: {
+    type: DataTypes.JSONB,
+    allowNull: false
+  }
 });
 
 Block.hasMany(Transaction);
