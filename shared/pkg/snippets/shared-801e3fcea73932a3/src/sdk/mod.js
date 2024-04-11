@@ -1,6 +1,7 @@
-export const PREFIX = "Namada::SDK";
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+const PREFIX = "Namada::SDK";
 
-export async function hasMaspParams() {
+export const hasMaspParams = async () => {
   return (
     (await has("masp-spend.params")) &&
     (await has("masp-output.params")) &&
@@ -8,7 +9,7 @@ export async function hasMaspParams() {
   );
 }
 
-export async function fetchAndStoreMaspParams() {
+export const fetchAndStoreMaspParams = async () => {
   return Promise.all([
     fetchAndStore("masp-spend.params"),
     fetchAndStore("masp-output.params"),
@@ -16,7 +17,7 @@ export async function fetchAndStoreMaspParams() {
   ]);
 }
 
-export async function getMaspParams() {
+export const getMaspParams =  async () => {
   return Promise.all([
     get("masp-spend.params"),
     get("masp-output.params"),
@@ -24,12 +25,12 @@ export async function getMaspParams() {
   ]);
 }
 
-async function fetchAndStore(params) {
+export const fetchAndStore = async (params) => {
   const data = await fetchParams(params);
   await set(params, data);
 }
 
-async function fetchParams(params) {
+export const fetchParams = async (params) => {
   const path =
     process.env.NAMADA_INTERFACE_MASP_PARAMS_PATH ||
     "https://github.com/anoma/masp-mpc/releases/download/namada-trusted-setup/";
@@ -59,7 +60,7 @@ function getDB() {
   });
 }
 
-export async function get(key) {
+export const get = async (key) => {
   const tx = (await getDB()).transaction(PREFIX, "readonly");
   const store = tx.objectStore(PREFIX);
 
@@ -80,7 +81,7 @@ export async function get(key) {
   });
 }
 
-async function has(key) {
+export const has = async (key) => {
   const tx = (await getDB()).transaction(PREFIX, "readonly");
   const store = tx.objectStore(PREFIX);
 
@@ -98,7 +99,7 @@ async function has(key) {
   });
 }
 
-export async function set(key, data) {
+export const set =  async (key, data) => {
   const tx = (await getDB()).transaction(PREFIX, "readwrite");
   const store = tx.objectStore(PREFIX);
 
@@ -117,3 +118,12 @@ export async function set(key, data) {
     };
   });
 }
+
+// module.exports = {
+//   PREFIX,
+//   has,
+//   set,
+//   hasMaspParams,
+//   fetchAndStoreMaspParams,
+//   getMaspParams,
+// };

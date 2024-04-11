@@ -157,7 +157,8 @@ export class Query {
   query_total_bonds(address: string): Promise<any>;
 /**
 * Gets all delegations for every provided address.
-* Returns a tuple of (owner_address, validator_address, total_bonds)
+* Returns a tuple of:
+* (owner_address, validator_address, total_bonds, total_unbonds, withdrawable)
 *
 * # Arguments
 *
@@ -294,18 +295,18 @@ export class Sdk {
 /**
 * @param {Uint8Array} tx_bytes
 * @param {Uint8Array} tx_msg
-* @returns {Promise<void>}
+* @returns {Promise<any>}
 */
-  process_tx(tx_bytes: Uint8Array, tx_msg: Uint8Array): Promise<void>;
+  process_tx(tx_bytes: Uint8Array, tx_msg: Uint8Array): Promise<any>;
 /**
 * Build transaction for specified type, return bytes to client
 * @param {number} tx_type
 * @param {Uint8Array} specific_msg
 * @param {Uint8Array} tx_msg
 * @param {string} gas_payer
-* @returns {Promise<any>}
+* @returns {Promise<BuiltTx>}
 */
-  build_tx(tx_type: number, specific_msg: Uint8Array, tx_msg: Uint8Array, gas_payer: string): Promise<any>;
+  build_tx(tx_type: number, specific_msg: Uint8Array, tx_msg: Uint8Array, gas_payer: string): Promise<BuiltTx>;
 /**
 * @param {Uint8Array} tx_bytes
 * @param {Uint8Array} sig_msg_bytes
@@ -399,40 +400,6 @@ export interface InitOutput {
   readonly address_implicit: (a: number, b: number) => void;
   readonly address_public: (a: number, b: number) => void;
   readonly address_hash: (a: number, b: number) => void;
-  readonly initThreadPool: (a: number) => number;
-  readonly __wbg_query_free: (a: number) => void;
-  readonly query_new: (a: number, b: number) => number;
-  readonly query_query_epoch: (a: number) => number;
-  readonly query_query_all_validator_addresses: (a: number) => number;
-  readonly query_query_total_bonds: (a: number, b: number, c: number) => number;
-  readonly query_query_my_validators: (a: number, b: number, c: number) => number;
-  readonly query_query_staking_positions: (a: number, b: number, c: number) => number;
-  readonly query_shielded_sync: (a: number, b: number, c: number) => number;
-  readonly query_query_balance: (a: number, b: number, c: number, d: number, e: number) => number;
-  readonly query_query_public_key: (a: number, b: number, c: number) => number;
-  readonly query_query_signed_bridge_pool: (a: number, b: number, c: number) => number;
-  readonly query_query_protocol_parameters: (a: number) => number;
-  readonly query_last_proposal_id: (a: number) => number;
-  readonly query_query_proposals: (a: number) => number;
-  readonly query_query_proposal: (a: number, b: number) => number;
-  readonly query_get_total_delegations: (a: number, b: number, c: number, d: number, e: number) => number;
-  readonly query_delegators_votes: (a: number, b: number) => number;
-  readonly query_query_gas_costs: (a: number) => number;
-  readonly query_query_native_token: (a: number) => number;
-  readonly query_query_voters_power_by_proposal_id: (a: number, b: number) => number;
-  readonly query_get_address_from_u8: (a: number, b: number, c: number) => number;
-  readonly __wbg_extendedviewingkey_free: (a: number) => void;
-  readonly extendedviewingkey_new: (a: number, b: number, c: number) => void;
-  readonly extendedviewingkey_encode: (a: number, b: number) => void;
-  readonly __wbg_extendedspendingkey_free: (a: number) => void;
-  readonly extendedspendingkey_new: (a: number, b: number, c: number) => void;
-  readonly extendedspendingkey_encode: (a: number, b: number) => void;
-  readonly __wbg_paymentaddress_free: (a: number) => void;
-  readonly paymentaddress_new: (a: number, b: number, c: number) => void;
-  readonly paymentaddress_pinned: (a: number, b: number) => number;
-  readonly paymentaddress_is_pinned: (a: number) => number;
-  readonly paymentaddress_hash: (a: number, b: number) => void;
-  readonly paymentaddress_encode: (a: number, b: number) => void;
   readonly __wbg_builttx_free: (a: number) => void;
   readonly builttx_tx_bytes: (a: number, b: number) => void;
   readonly __wbg_sdk_free: (a: number) => void;
@@ -456,6 +423,40 @@ export interface InitOutput {
   readonly sdk_reveal_pk: (a: number, b: number, c: number, d: number, e: number) => number;
   readonly sdk_sign_arbitrary: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
   readonly sdk_verify_arbitrary: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+  readonly __wbg_extendedviewingkey_free: (a: number) => void;
+  readonly extendedviewingkey_new: (a: number, b: number, c: number) => void;
+  readonly extendedviewingkey_encode: (a: number, b: number) => void;
+  readonly __wbg_extendedspendingkey_free: (a: number) => void;
+  readonly extendedspendingkey_new: (a: number, b: number, c: number) => void;
+  readonly extendedspendingkey_encode: (a: number, b: number) => void;
+  readonly __wbg_paymentaddress_free: (a: number) => void;
+  readonly paymentaddress_new: (a: number, b: number, c: number) => void;
+  readonly paymentaddress_pinned: (a: number, b: number) => number;
+  readonly paymentaddress_is_pinned: (a: number) => number;
+  readonly paymentaddress_hash: (a: number, b: number) => void;
+  readonly paymentaddress_encode: (a: number, b: number) => void;
+  readonly __wbg_query_free: (a: number) => void;
+  readonly query_new: (a: number, b: number) => number;
+  readonly query_query_epoch: (a: number) => number;
+  readonly query_query_all_validator_addresses: (a: number) => number;
+  readonly query_query_total_bonds: (a: number, b: number, c: number) => number;
+  readonly query_query_my_validators: (a: number, b: number, c: number) => number;
+  readonly query_query_staking_positions: (a: number, b: number, c: number) => number;
+  readonly query_shielded_sync: (a: number, b: number, c: number) => number;
+  readonly query_query_balance: (a: number, b: number, c: number, d: number, e: number) => number;
+  readonly query_query_public_key: (a: number, b: number, c: number) => number;
+  readonly query_query_signed_bridge_pool: (a: number, b: number, c: number) => number;
+  readonly query_query_protocol_parameters: (a: number) => number;
+  readonly query_last_proposal_id: (a: number) => number;
+  readonly query_query_proposals: (a: number) => number;
+  readonly query_query_proposal: (a: number, b: number) => number;
+  readonly query_get_total_delegations: (a: number, b: number, c: number, d: number, e: number) => number;
+  readonly query_delegators_votes: (a: number, b: number) => number;
+  readonly query_query_gas_costs: (a: number) => number;
+  readonly query_query_native_token: (a: number) => number;
+  readonly query_query_voters_power_by_proposal_id: (a: number, b: number) => number;
+  readonly query_get_address_from_u8: (a: number, b: number, c: number) => number;
+  readonly initThreadPool: (a: number) => number;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
   readonly __wbindgen_export_2: WebAssembly.Table;

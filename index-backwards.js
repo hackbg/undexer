@@ -81,7 +81,9 @@ async function onProposal ({ height }) {
     .br()
 }
 
-async function onVote ({ height, proposal }) {
+async function onVote({ height, proposal }) {
+
+  proposalQueue.enqueue(proposal, true);
   console
     .br()
     .warn('TODO:', {onVote: {height, proposal}})
