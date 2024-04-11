@@ -94,7 +94,7 @@ export async function ingestBlock(current, latest) {
       `(${((current / latest) * 100).toFixed(3)}%)`,
     );
 
-    let { txs, txsDecoded, ...block } = await retryForever(
+    let { rawTxs, txs, ...block } = await retryForever(
       `get block ${current}`,
       5000,
       () => connection.getBlock(current),
@@ -102,7 +102,7 @@ export async function ingestBlock(current, latest) {
 
     await mkdirp(blockDir);
 
-    const txsDecodedWithId = txsDecoded
+    const txsDecodedWithId = txs
       .map((tx, index) => {
         if (tx.chainId && tx.codeHash && tx.txType && tx.dataHash)
           return {
