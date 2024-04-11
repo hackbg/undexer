@@ -16,12 +16,12 @@ const router = express.Router();
 app.use(cors())
 app.use('/v2', router)
 
-app.get('/block/latest', async (req, res) => {
+router.get('/block/latest', async (req, res) => {
   const latestBlock = await Block.max('height')
   res.status(200).send(latestBlock.toString())
 })
 
-app.get('/blocks', async (req, res) => {
+router.get('/blocks', async (req, res) => {
   const limit = req.query.limit ? Number(req.query.limit) : 20
   const offset = req.query.offset ? Number(req.query.offset) : 0
   const { rows, count } = await Block.findAndCountAll({
@@ -41,7 +41,7 @@ app.get('/blocks', async (req, res) => {
   res.status(200).send({ count, blocks })
 })
 
-app.get('/block/:height', async (req, res) => {
+router.get('/block/:height', async (req, res) => {
   const block = await Block.findOne(
     {
       where: {
@@ -66,7 +66,7 @@ app.get('/block/:height', async (req, res) => {
   res.status(200).send(block);
 });
 
-app.get('/block/hash/:hash', async (req, res) => {
+router.get('/block/hash/:hash', async (req, res) => {
   const block = await Block.findOne(
     {
       where: {
@@ -92,7 +92,7 @@ app.get('/block/hash/:hash', async (req, res) => {
   res.status(200).send(block);
 });
 
-app.get('/tx/:txHash', async (req, res) => {
+router.get('/tx/:txHash', async (req, res) => {
   const tx = await Transaction.findOne(
     {
       where: { txId: req.params.txHash },
@@ -107,12 +107,12 @@ app.get('/tx/:txHash', async (req, res) => {
   res.status(200).send(tx);
 });
 
-app.get('/validators', (req, res) => {
+router.get('/validators', (req, res) => {
   const validators = Validator.findAll({ raw: true });
   res.status(200).send(validators);
 });
 
-app.get('/validator/:type', (req, res) => {
+router.get('/validator/:type', (req, res) => {
   const validator = Validator.findAll(
     {
       where: {
@@ -129,12 +129,12 @@ app.get('/validator/:type', (req, res) => {
   res.status(200).send(validator);
 });
 
-app.get('/proposals/', (req, res) => {
+router.get('/proposals/', (req, res) => {
   const proposals = Proposal.findAll({ raw: true });
   res.status(200).send(proposals);
 })
 
-app.get('/proposal/:id', (req, res) => {
+router.get('/proposal/:id', (req, res) => {
   const proposal = Proposal.findOne(
     {
       where: {
