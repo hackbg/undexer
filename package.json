@@ -7,7 +7,7 @@
   "dependencies": {
     "@cosmjs/encoding": "^0.32.3",
     "@dao-xyz/borsh":   "^5.2.1",
-    "@fadroma/namada":  "^1.0.0-rc.24",
+    "@fadroma/namada":  "1.0.0-rc.18",
     "@ganesha/esbuild": "^1.0.0-rc.3",
     "@hackbg/cmds":     "^4.0.0-rc.5",
     "@namada/shared":   "./shared",

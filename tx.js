@@ -33,7 +33,7 @@ export default async function main() {
   let latest = await getBlockHeight();
   setTimeout(pollCurrentBlock, 5000);
 
-  let current = 346000;
+  let current = 346743;
   pollCurrentBlock();
 
   ingestBlocks();
@@ -48,8 +48,11 @@ export default async function main() {
     while (true) {
       if (current <= latest) {
         await retryForever(
-          `ingest block ${current}/${latest}`, 5000,
-          ingestBlock, current, latest
+          `ingest block ${current}/${latest}`,
+          5000,
+          ingestBlock,
+          current,
+          latest,
         );
         current++;
       } else {
@@ -97,18 +100,19 @@ export async function ingestBlock(current, latest) {
       () => connection.getBlock(current),
     );
 
-    console.log(txs.length, 'txs in block');
-
     await mkdirp(blockDir);
 
-    txsDecoded = txsDecoded.map((tx) => {
-      return {
-        txId: tx.sections[tx.sections.length - 1].targets[0],
-        ...tx,
-      };
-    });
+    const txsDecodedWithId = txsDecoded
+      .map((tx, index) => {
+        if (tx.chainId && tx.codeHash && tx.txType && tx.dataHash)
+          return {
+            txId: tx.sections[tx.sections.length - 1].targets[0],
+            ...tx,
+          };
+      })
+      .filter((e) => e !== undefined);
 
-    const txids = txsDecoded
+    const txids = txsDecodedWithId
       .map((tx) => {
         if (tx.txId) {
           return tx.txId;
@@ -121,7 +125,7 @@ export async function ingestBlock(current, latest) {
 
     await Promise.all([
       save(txsPath, { block: current, txs }),
-      ...txsDecoded.map((tx, i) => {
+      ...txsDecodedWithId.map((tx, i) => {
         if (tx.dataHash) {
           const txPath = `${blockDir}/tx-${i}.json`;
           return save(txPath, { block: current, tx });
