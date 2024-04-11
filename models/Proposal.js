@@ -10,22 +10,18 @@ const Proposal = sequelize.define('proposal', {
     },
     type: {
         type: DataTypes.JSON,
-        allowNull: false,
     },
     author: {
         type: DataTypes.TEXT,
     },
     votingStartEpoch: {
         type: DataTypes.INTEGER,
-        allowNull: false,
     },
     votingEndEpoch: {
         type: DataTypes.INTEGER,
-        allowNull: false,
     },
     graceEpoch: {
         type: DataTypes.INTEGER,
-        allowNull: false,
     },
     contentJSON: {
         type: DataTypes.JSON,
