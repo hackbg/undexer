@@ -49,18 +49,18 @@ NOTE: Local deploy with default configuration endpoints will run on localhost:88
 ## [WIP] HTTP v2 (latest) endpoints
 The routes and respective responses are:
 ```
-GET  /block/:height                     - block information by height
-GET  /block/hash/:hash                  - block information by hash
-GET  /block/latest                      - latest block information
-GET  /blocks/?limit=_&offset=_          - get blocks by specifying pagination
+GET  /v2/block/:height                     - block information by height
+GET  /v2/block/hash/:hash                  - block information by hash
+GET  /v2/block/latest                      - latest block information
+GET  /v2/blocks/?limit=_&offset=_          - get blocks by specifying pagination
 
-GET  /tx/:txHash                        - transaction information by hash
+GET  /v2/tx/:txHash                        - transaction information by hash
 
-GET  /validators                        - all validators
-GET  /validator/:type                   - validator information by type
+GET  /v2/validators                        - all validators
+GET  /v2/validator/:type                   - validator information by type
 
-GET  /proposals                         - governance proposals
-GET  /proposal/:id                      - governance proposal by id
+GET  /v2/proposals                         - governance proposals
+GET  /v2/proposal/:id                      - governance proposal by id
 ```
 
 ## HTTP v1 (DEPRECATED) endpoints
