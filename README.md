@@ -17,7 +17,7 @@ The architecture of the app is explained here.
 Implementation keeping these goals in mind should result in a undexer usable as a data source for the frontend, as well as a generic service component in any other setup working with Namada network.
 
 ### Design
-The design decision with the greatest impact was laying support for Namada in [Fadroma](https://fadroma.tech) (@fadroma/namada).
+The design decision with the greatest impact was laying support for Namada in [Fadroma](https://fadroma.tech) (@fadroma/namada). Decoding in Fadroma is primarily done using [`@hackbg/borshest`](https://github.com/hackbg/toolbox/tree/main/borshest).
 
 The extension of this decision is running a custom WASM precompile with the undexer logic when targeting complex data retrieval via RPC queries (non-existent on the base Tendermint ABCI endpoints or the official SDKs e.g. namada-shared, light-sdk).
 
