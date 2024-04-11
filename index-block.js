@@ -42,6 +42,8 @@ export default async function indexBlock(height, events) {
   await Block.create({
     height,
     ...block,
+    results: blockResultsResponse,
+    rpcResponse: blockResponse,
   }),
     // Each transaction in the block:
     [...txs].map(async (tx) => {
