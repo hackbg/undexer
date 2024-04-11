@@ -179,6 +179,31 @@ impl Query {
         result
     }
 
+    // get active proposals
+    pub async fn query_active_proposals(&self) -> Result<JsValue, JsError> {
+        let last_proposal_id_key = governance_storage::get_counter_key();
+        let last_proposal_id =
+            query_storage_value::<HttpClient, u64>(&self.client, &last_proposal_id_key)
+                .await
+                .unwrap();
+
+        let from_id = 0;
+
+        let mut proposal_ids: Vec<u64> = vec![];
+        let epoch = RPC.shell().epoch(&self.client).await?;
+
+        for id in from_id..last_proposal_id {
+            let proposal = query_proposal_by_id(&self.client, id)
+                .await.unwrap().expect("Proposal should be written to storage.");
+            let proposal = proposal;
+            if proposal.voting_end_epoch > epoch {
+                proposal_ids.push(proposal.id);
+            }
+        }
+
+        to_js_result(proposal_ids)
+    }
+
     pub async fn query_staking_positions(
         &self,
         owner_addresses: Box<[JsValue]>,
@@ -546,6 +571,7 @@ impl Query {
         Ok(Uint8Array::from(writer.as_slice()))
     }
 
+    
     pub async fn query_proposal(&self, id: u64) -> Result<Uint8Array, JsError> {
         let epoch = RPC.shell().epoch(&self.client).await?;
 
@@ -755,11 +781,11 @@ impl Query {
     }
 
     pub async fn get_address_from_u8(&self, validator: &[u8]) -> Result<JsValue, JsError>
-where {
-        let address = Address::try_from_slice(validator).ok();
-        to_js_result(address)
+        where {
+            let address = Address::try_from_slice(validator).ok();
+            to_js_result(address)
+        }
     }
-}
 
 pub async fn compute_proposal_votes(
     client: &HttpClient,
