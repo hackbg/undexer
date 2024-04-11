@@ -14,7 +14,7 @@ const app = express();
 // CORS-enabled for all origins
 app.use(cors())
 
-app.get('/latest-block', async (req, res) => {
+app.get('/block/latest', async (req, res) => {
   const latestBlock = await Block.max('height')
   res.status(200).send(latestBlock.toString())
 })
