@@ -44,30 +44,29 @@ export default async function indexBlock(height, events) {
     ...block,
   }),
     // Each transaction in the block:
-    [...txs].map(
-      async (tx) =>
-        await // The transaction
-        Transaction.create({
-          ...tx,
-          txId: tx.id,
-          blockId: block.id,
-          blockHeight: height,
-          sections: JSON.parse(
-            JSON.stringify(
-              tx.sections,
-              (key, value) =>
-                typeof value === 'bigint' ? value.toString() : value, // return everything else unchanged
-            ),
+    [...txs].map(async (tx) => {
+      // The transaction
+      await Transaction.create({
+        ...tx,
+        txId: tx.id,
+        blockId: block.id,
+        blockHeight: height,
+        sections: JSON.parse(
+          JSON.stringify(
+            tx.sections,
+            (key, value) =>
+              typeof value === 'bigint' ? value.toString() : value, // return everything else unchanged
           ),
-          content: JSON.parse(
-            JSON.stringify(
-              tx.content,
-              (key, value) =>
-                typeof value === 'bigint' ? value.toString() : value, // return everything else unchanged
-            ),
+        ),
+        content: JSON.parse(
+          JSON.stringify(
+            tx.content,
+            (key, value) =>
+              typeof value === 'bigint' ? value.toString() : value, // return everything else unchanged
           ),
-        }),
-    ),
+        ),
+      });
+    }),
     // Write block and all transactions to database.
     console.debug('Indexed in', performance.now() - t0, 'msec');
 

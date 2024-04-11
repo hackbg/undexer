@@ -33,12 +33,12 @@ export default async function indexProposal(id) {
   // Fetch proposal data
   console.debug('Fetching proposal', id);
 
-  const proposal = await query.query_proposal(BigInt(id));
+  // const proposal = await query.query_proposal(BigInt(id));
 
-  console.debug('Deserialize proposal');
-  const deserializedProposal = deserialize(ProposalSchema, proposal);
+  console.debug('Deserialize proposal', id);
+  // const deserializedProposal = deserialize(ProposalSchema, proposal);
 
-  console.log(deserializedProposal);
+  // console.log(deserializedProposal);
 
   // Write block and all transactions to database.
   console.debug('Storing proposal', id);

@@ -14,8 +14,7 @@ import {
 } from "./constants.js";
 import Validator from "./models/Validator.js";
 import VoteProposal from "./models/Contents/VoteProposal.js";
-import sequelizer from "./db/index.js";
-import { Sequelize } from "sequelize";
+import sequelize from "./db/index.js";
 import TransactionManager from "./TransactionManager.js";
 import 'dotenv/config';
 
@@ -23,7 +22,7 @@ let isProcessingNewBlock = false;
 let isProcessingNewValidator = false;
 
 await initialize();
-await sequelizer.sync({ force: Boolean(process.env.START_FROM_SCRATCH) });
+await sequelize.sync({ force: Boolean(process.env.START_FROM_SCRATCH) });
 
 const console = new Namada.Core.Console('Index')
 const eventEmitter = new EventEmitter();
