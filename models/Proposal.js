@@ -8,7 +8,7 @@ const Proposal = sequelize.define('proposal', {
         unique: true,
         primaryKey: true,
     },
-    type: {
+    propoalType: {
         type: DataTypes.JSON,
     },
     author: {
