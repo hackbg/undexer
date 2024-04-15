@@ -53,3 +53,17 @@ services:
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@admin.com
       - PGADMIN_DEFAULT_PASSWORD=password
+  proposals:
+    image: node:21-alpine
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: npx tsx proposal.js --init
+  proposal_voters:
+    image: node:21-alpine
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: npx tsx voters.js --init
