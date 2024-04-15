@@ -541,7 +541,7 @@ impl Query {
                 .await
                 .unwrap()
                 .expect("Proposal should be written to storage.");
-            let votes = compute_proposal_votes(&self.client, id, proposal.voting_end_epoch).await;
+            let votes = compute_proposal_votes(&self.client, id, proposal.voting_end_epoch).await?;
             let total_voting_power =
                 get_total_staked_tokens(&self.client, proposal.voting_end_epoch)
                     .await
@@ -600,12 +600,10 @@ impl Query {
         let epoch = RPC.shell().epoch(&self.client).await?;
 
         let proposal = query_proposal_by_id(&self.client, id)
-            .await
-            .unwrap()
-            .expect("Proposal should be written to storage.");
+            .await?
+            .ok_or_else(|| JsError::new("Proposal not found"))?;
         let total_voting_power = get_total_staked_tokens(&self.client, proposal.voting_end_epoch)
-            .await
-            .unwrap();
+            .await?;
 
         let proposal_type = match proposal.r#type {
             ProposalType::PGFSteward(_) => "pgf_steward",
@@ -622,7 +620,9 @@ impl Query {
 
         //TODO: for now we assume that interface does not support steward accounts
 
-        let votes = compute_proposal_votes(&self.client, proposal.id, epoch).await;
+        let votes = compute_proposal_votes(&self.client, proposal.id, epoch)
+        .await?;
+        
         let tally_type = proposal.get_tally_type(false);
         let result = compute_proposal_result(votes, total_voting_power, tally_type);
         let total_yay_power = result.total_yay_power.to_string_native();
@@ -758,9 +758,11 @@ impl Query {
                     .vp()
                     .pos()
                     .validator_stake(&self.client, &vote.validator.clone(), &Some(epoch))
-                    .await
-                    .expect("Validator stake should be present")
-                    .unwrap_or_default();
+                    .await?
+                    
+                    .ok_or_else(|| JsError::new("Validator stake not found"))?;
+                    
+                    
 
                 let casted: String = match vote.data {
                     ProposalVote::Yay => "yay".to_string(),
@@ -785,7 +787,7 @@ impl Query {
                         &Some(epoch),
                     )
                     .await
-                    .expect("Delegator stake should be present");
+                    .map_err(|_| JsError::new("Delegator stake should be present"))?;
 
                 let casted: String = match vote.data {
                     ProposalVote::Yay => "yay".to_string(),
@@ -815,8 +817,8 @@ pub async fn compute_proposal_votes(
     client: &HttpClient,
     proposal_id: u64,
     epoch: Epoch,
-) -> ProposalVotes {
-    let votes = query_proposal_votes(client, proposal_id).await.unwrap();
+) -> Result<ProposalVotes, JsError> {
+    let votes = query_proposal_votes(client, proposal_id).await.expect_throw("No votes.");
 
     let mut validators_vote: HashMap<Address, TallyVote> = HashMap::default();
     let mut validator_voting_power: HashMap<Address, VotePower> = HashMap::default();
@@ -830,9 +832,8 @@ pub async fn compute_proposal_votes(
                 .vp()
                 .pos()
                 .validator_stake(client, &vote.validator.clone(), &Some(epoch))
-                .await
-                .expect("Validator stake should be present")
-                .unwrap_or_default();
+                .await?
+                .ok_or_else(|| JsError::new("Stake not found"))?;
 
             validators_vote.insert(vote.validator.clone(), vote.data.into());
             validator_voting_power.insert(vote.validator, validator_stake);
@@ -841,8 +842,7 @@ pub async fn compute_proposal_votes(
                 .vp()
                 .pos()
                 .bond_with_slashing(client, &vote.delegator, &vote.validator, &Some(epoch))
-                .await
-                .expect("Delegator stake should be present");
+                .await?;
 
             delegators_vote.insert(vote.delegator.clone(), vote.data.into());
             delegator_voting_power
@@ -852,10 +852,10 @@ pub async fn compute_proposal_votes(
         }
     }
 
-    ProposalVotes {
+    Ok(ProposalVotes {
         validators_vote,
         validator_voting_power,
         delegators_vote,
         delegator_voting_power,
-    }
+    })
 }
