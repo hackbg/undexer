@@ -1,51 +1,73 @@
-import { Query } from "./rust/pkg/shared.js";
 import { Core } from "@fadroma/namada";
+import { Query } from "./rust/pkg/shared.js";
 import { deserialize } from "borsh";
+import fs from "fs/promises";
+import { save } from "./utils.js";
 import { ProposalSchema } from "./borsher-schema.js";
-import sequelizer from "./db/index.js";
-import Proposal from "./models/Proposal.js";
 
-const console = new Core.Console("Proposals");
+const flags = process.argv.slice(2);
+const shouldInit = flags.some((flag) => {
+  return flag === "--init";
+});
+
 const q = new Query("https://rpc-namada-testnet.whispernode.com");
-await Proposal.sync({ force: true });
+const console = new Core.Console("Proposals");
 
-// add finished proposals to the database
-try {
-  console.log("Querying finished proposals");
-  const finishedProposals = await q.query_finished_proposals();
-  console.log("Finished querying proposals", finishedProposals.join(", "));
-  for (let proposal of finishedProposals) {
-    console.log(`Querying proposal with id: ${proposal}`);
-    const proposalBinary = await q.query_proposal(BigInt(proposal));
-    const finishedProposal = deserialize(ProposalSchema, proposalBinary);
-    console.log("Finished proposal:", finishedProposal);
-    await Proposal.create(finishedProposal, {
-      where: {
-        id: BigInt(proposal),
-      },
-    });
-  }
-} catch (error) {
-    console.log(err);
+process.chdir("data/proposals");
+
+if (shouldInit) {
+  const lastProposal = {
+    chain: await q.last_proposal_id(),
+    file: await getLastProposalFile(),
+  };
+  const newProposalIds = Array.from(
+    { length: lastProposal.chain },
+    (_, i) => i
+  ).slice(lastProposal.file, lastProposal.chain);
+  const QUERY_THREADS = 20;
+
+  console.log("Initializing new proposals...");
+  await queryMultipleProposals(QUERY_THREADS, newProposalIds, saveProposals);
 }
 
-// update active proposals every 3 hours
 setInterval(async () => {
-  for (let proposal of activeProposals) {
-    try {
-      const activeProposals = await q.query_active_proposals();
-      console.log("Active Proposals", activeProposals.join(", "));
-      console.log(`Querying proposal with id: ${proposal}`);
-      const proposalBinary = await q.query_proposal(BigInt(proposal));
-      const updatedProposal = deserialize(ProposalSchema, proposalBinary);
-      console.log("Proposal:", updatedProposal);
-      await Proposal.update(updatedProposal, {
-        where: {
-          id: BigInt(proposal),
-        },
-      });
-    } catch (err) {
-      console.log(err);
+  console.log("Querying active proposals...");
+  const activeProposalIds = await q.query_active_proposals();
+  const QUERY_THREADS = 20;
+  await queryMultipleProposals(QUERY_THREADS, activeProposalIds, saveProposals);
+}, 1000 * 60 * 5);
+
+async function queryMultipleProposals(
+  threads,
+  proposalIds,
+  batchProposalsCallback
+) {
+  for (let i = 0; i < proposalIds.length; i += threads) {
+    const batchPromises = [];
+    const tempProposalIds = proposalIds.slice(i, i + threads);
+
+    for (const id of tempProposalIds) {
+      console.log("Querying proposal", id);
+      batchPromises.push(q.query_proposal(BigInt(id)));
     }
+    const batchProposals = await Promise.all(batchPromises);
+    const proposals = batchProposals.map((proposal) =>
+      deserialize(ProposalSchema, proposal)
+    );
+    await batchProposalsCallback(proposals);
   }
-}, 1000 * 60 * 60 * 3);
+}
+
+async function getLastProposalFile() {
+  const files = await fs.readdir("./");
+  const fileIds = files
+    .map((file) => parseInt(file.split(".")[0]))
+    .sort((a, b) => a - b);
+  return fileIds[fileIds.length - 1];
+}
+
+async function saveProposals(proposals) {
+  for (const proposal of proposals) {
+    await save(proposal.id + ".json", proposal);
+  }
+}
