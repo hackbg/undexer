@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import initShared from "./shared/pkg/shared.js";
 import { Core, initDecoder } from "@fadroma/namada";
 
@@ -49,4 +49,9 @@ export function format(txContent){
   }
 
   return result;
+}
+
+export async function save(path, data) {
+  console.log("Writing", path);
+  return await writeFile(path, serialize(data));
 }
