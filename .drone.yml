@@ -25,7 +25,7 @@ steps:
     DOCKER_HOST: "tcp://127.0.0.1:2375"
   commands:
   - nohup dockerd --tls=false --dns 1.1.1.1 --rootless=true --bridge=none --iptables=false --data-root "$DOCKER_DATA" --host="$DOCKER_HOST" --registry-mirror "$MIRROR" &
-  - sleep 10
+  - sleep 15
   - docker version; docker info
   - echo "\nLooking around...\n"; whoami; pwd; ls -al
   - echo "$PASS" | docker login -u "$USER" --password-stdin https://oci.hack.bg
