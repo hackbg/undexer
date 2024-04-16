@@ -7,7 +7,7 @@ const flags = process.argv.slice(2);
 const shouldInit = flags.some((flag) => {
   return flag === "--init";
 });
-const q = new Query("https://rpc.namada.info");
+const q = new Query("https://rpc-namada-testnet.whispernode.com");
 const console = new Core.Console("Proposals");
 
 process.chdir("data/voters");
