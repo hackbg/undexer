@@ -6,6 +6,7 @@ RUN ~/.cargo/bin/cargo install wasm-pack
 ADD ./rust/ ./rust
 RUN pwd && ls -al
 RUN cd rust && PATH=$PATH:~/.cargo/bin wasm-pack build --dev --target nodejs
+RUN rm -rf rust/target
 ADD . ./
 RUN pwd && ls -al
 RUN corepack enable && pnpm i --frozen-lockfile
