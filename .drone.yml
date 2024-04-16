@@ -12,6 +12,7 @@ steps:
   - ls -al $HOME
   - printf $(git rev-parse --abbrev-ref HEAD) > BRANCH
   - cat BRANCH
+  - git submodule update --init --recursive
 - name: build-undexer
   image: docker:24.0.7-alpine3.18
   volumes: [ { name: cache, path: /cache/docker } ]
@@ -25,7 +26,7 @@ steps:
     DOCKER_HOST: "tcp://127.0.0.1:2375"
   commands:
   - nohup dockerd --tls=false --dns 1.1.1.1 --rootless=true --bridge=none --iptables=false --data-root "$DOCKER_DATA" --host="$DOCKER_HOST" --registry-mirror "$MIRROR" &
-  - sleep 15
+  - sleep 10
   - docker version; docker info
   - echo "\nLooking around...\n"; whoami; pwd; ls -al
   - echo "$PASS" | docker login -u "$USER" --password-stdin https://oci.hack.bg
