@@ -12,8 +12,8 @@ dependencies:
     specifier: ^5.2.1
     version: 5.2.2
   '@fadroma/namada':
-    specifier: 1.0.0-rc.18
-    version: 1.0.0-rc.18(ws@8.16.0)
+    specifier: 1.0.0-rc.27
+    version: 1.0.0-rc.27(ws@8.16.0)
   '@ganesha/esbuild':
     specifier: ^1.0.0-rc.3
     version: 1.0.0-rc.3
@@ -284,8 +284,8 @@ packages:
     dev: false
     optional: true
 
-  /@fadroma/agent@2.0.0-rc.41:
-    resolution: {integrity: sha512-2yHDFUd0DCrKznX1hsiADXeHjkpSxopzxlAaOyt7uB7Ya+otCkaZMIo/By9PKShyBLNWBpSE7YMW7OUi7AYdbA==}
+  /@fadroma/agent@2.0.0-rc.42:
+    resolution: {integrity: sha512-8c+UBqvmHp5BQCUjrZWQZ6mOZ3lJmw5KhBMisRuVM4P1/h9J4yiVk40n+TxVDOnvhpLPnpWgkCQ4bQx4qfxhNw==}
     hasBin: true
     dependencies:
       '@hackbg/4mat': 3.1.2
@@ -297,11 +297,11 @@ packages:
       '@hackbg/oops': 1.1.0
     dev: false
 
-  /@fadroma/cw@1.0.0-rc.56(ws@8.16.0):
-    resolution: {integrity: sha512-UiP7u2w+dHUti7zdkUGmJNxtehNzYrnYrJ9sJv/2PlAUt9D9VZyWkZcVGJ7giGQvR68J2B/yTgi7fbuqrAc/kQ==}
+  /@fadroma/cw@1.0.0-rc.57(ws@8.16.0):
+    resolution: {integrity: sha512-yt0jysuj5PNItUBBZ5Xi6TeWpJ+0cdA+PIVk4TBbAnxYEGOlSLq4pOirjvdYtNdaWVF3z65CccwNA5cZDbAISQ==}
     hasBin: true
     dependencies:
-      '@fadroma/agent': 2.0.0-rc.41
+      '@fadroma/agent': 2.0.0-rc.42
       '@hackbg/borshest': 1.0.0-rc.1
       '@hackbg/cmds': 4.0.0-rc.5
       '@hackbg/cosmjs-esm': 1.0.0-rc.45(ws@8.16.0)
@@ -312,11 +312,11 @@ packages:
       - ws
     dev: false
 
-  /@fadroma/namada@1.0.0-rc.18(ws@8.16.0):
-    resolution: {integrity: sha512-EJP0NNcFPQA59tDJVi4IrncPiuFh8LKWk4shrs5yF/EUJbQHBOyIZTRUXymSZZTxwCp/6pHKSZMH07yDy8OWiQ==}
+  /@fadroma/namada@1.0.0-rc.27(ws@8.16.0):
+    resolution: {integrity: sha512-IWQ40RciCSv+c8+GPXxJsCGepd129/pcPOj1Keg+VVjrft8CImpC/asTf93CmS5TxiM+kena3G4AUQPW74k3rQ==}
     hasBin: true
     dependencies:
-      '@fadroma/cw': 1.0.0-rc.56(ws@8.16.0)
+      '@fadroma/cw': 1.0.0-rc.57(ws@8.16.0)
       '@hackbg/borshest': 1.0.0-rc.1
       '@hackbg/cmds': 4.0.0-rc.5
     transitivePeerDependencies:

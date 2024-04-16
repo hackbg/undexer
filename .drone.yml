@@ -12,7 +12,6 @@ steps:
   - ls -al $HOME
   - printf $(git rev-parse --abbrev-ref HEAD) > BRANCH
   - cat BRANCH
-  - git submodule update --init --recursive
 - name: build-undexer
   image: docker:24.0.7-alpine3.18
   volumes: [ { name: cache, path: /cache/docker } ]
