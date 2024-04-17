@@ -3,13 +3,14 @@ import { Query } from "./rust/pkg/shared.js";
 import { deserialize } from "borsh";
 import Proposal from "./models/Proposal.js";
 import { ProposalSchema } from "./borsher-schema.js";
+import { POST_UNDEXER_RPC_URL } from "./constants.js";
 
 const flags = process.argv.slice(2);
 const shouldInit = flags.some((flag) => {
   return flag === "--init";
 });
 
-const q = new Query("https://rpc-namada-testnet.whispernode.com");
+const q = new Query(POST_UNDEXER_RPC_URL);
 const console = new Core.Console("Proposals");
 
 

@@ -6,7 +6,7 @@ const flags = process.argv.slice(2);
 const shouldInit = flags.some((flag) => {
   return flag === "--init";
 });
-const q = new Query("https://rpc-namada-testnet.whispernode.com");
+const q = new Query(POST_UNDEXER_RPC_URL);
 const console = new Core.Console("Proposals");
 
 if (shouldInit) {
