@@ -7,7 +7,7 @@ const flags = process.argv.slice(2);
 const shouldInit = flags.some((flag) => {
   return flag === "--init";
 });
-const q = new Query("https://rpc.namada.info");
+const q = new Query("https://rpc-namada-testnet.whispernode.com");
 const console = new Core.Console("Proposals");
 
 process.chdir("data/voters");
@@ -29,7 +29,7 @@ if (shouldInit) {
 
 setInterval(async () => {
   console.log("Querying active voter powers...");
-  const activeProposalIds = await q.query_voters_power_by_proposal_id();
+  const activeProposalIds = await q.query_active_proposals();
   const QUERY_THREADS = 1;
   await queryMultipleVoters(QUERY_THREADS, activeProposalIds, saveVoters);
 }, 1000 * 60 * 5);

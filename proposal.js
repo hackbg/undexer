@@ -62,7 +62,8 @@ async function getLastProposalFile() {
   const files = await fs.readdir("./");
   const fileIds = files
     .map((file) => parseInt(file.split(".")[0]))
-    .sort((a, b) => a - b);
+    .sort((a, b) => a - b)
+    .filter(x=>!isNaN(x));
   return fileIds[fileIds.length - 1];
 }
 
