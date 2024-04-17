@@ -94,6 +94,21 @@ router.get('/block/hash/:hash', async (req, res) => {
   res.status(200).send(block);
 });
 
+router.get('/txs', async (req, res) => {
+  const limit = req.query.limit ? Number(req.query.limit) : 20
+  const offset = req.query.offset ? Number(req.query.offset) : 0
+  const { rows, count } = await Transaction.findAndCountAll({
+    order: [['timestamp', 'DESC']],
+    limit,
+    offset,
+    attributes: {
+      exclude: ['id', 'createdAt', 'updatedAt'],
+    },
+  })
+
+  res.status(200).send({ count, txs: rows })
+})
+
 router.get('/tx/:txHash', async (req, res) => {
   const tx = await Transaction.findOne(
     {
@@ -101,10 +116,7 @@ router.get('/tx/:txHash', async (req, res) => {
       attributes: {
         exclude: ['id', 'createdAt', 'updatedAt'],
       },
-    },
-    {
-      raw: true,
-    },
+    }
   );
   res.status(200).send(tx);
 });
