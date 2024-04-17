@@ -9,6 +9,9 @@ import Validator from '../models/Validator.js';
 import Proposal from '../models/Proposal.js';
 import Voter from '../models/Voter.js';
 
+const DEFAULT_PAGE_LIMIT = 25
+const DEFAULT_PAGE_OFFSET = 0
+
 const app = express();
 const router = express.Router();
 
@@ -22,8 +25,8 @@ router.get('/block/latest', async (req, res) => {
 });
 
 router.get('/blocks', async (req, res) => {
-  const limit = req.query.limit ? Number(req.query.limit) : 20;
-  const offset = req.query.offset ? Number(req.query.offset) : 0;
+  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
+  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
   const { rows, count } = await Block.findAndCountAll({
     order: [['height', 'DESC']],
     limit,
@@ -56,10 +59,7 @@ router.get('/block/:height', async (req, res) => {
           attributes: { exclude: ['id', 'createdAt', 'updatedAt', 'chainId'] },
         },
       ],
-    },
-    {
-      raw: true,
-    },
+    }
   );
   if (block === null) {
     res.status(404).send({ error: 'Block not found' });
@@ -82,9 +82,6 @@ router.get('/block/hash/:hash', async (req, res) => {
         },
       ],
     },
-    {
-      raw: true,
-    },
   );
   if (block === null) {
     res.status(404).send({ error: 'Block not found' });
@@ -95,8 +92,8 @@ router.get('/block/hash/:hash', async (req, res) => {
 });
 
 router.get('/txs', async (req, res) => {
-  const limit = req.query.limit ? Number(req.query.limit) : 20
-  const offset = req.query.offset ? Number(req.query.offset) : 0
+  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
+  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
   const { rows, count } = await Transaction.findAndCountAll({
     order: [['timestamp', 'DESC']],
     limit,
@@ -122,23 +119,53 @@ router.get('/tx/:txHash', async (req, res) => {
 });
 
 router.get('/validators', async (req, res) => {
-  const validators = await Validator.findAll({ raw: true });
-  res.status(200).send(validators);
+  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
+  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+  const { rows, count } = await Validator.findAndCountAll({
+    order: [['stake', 'DESC']],
+    limit,
+    offset,
+    attributes: {
+      exclude: ['id', 'createdAt', 'updatedAt'],
+    },
+  });
+
+  res.status(200).send({ count, validators: rows })
 });
 
-router.get('/validator/:type', async (req, res) => {
-  const validator = await Validator.findAll(
+router.get('/validators/:state', async (req, res) => {
+  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
+  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+  const state = req.params.state
+
+  const { rows, count } = await Validator.findAndCountAll(
     {
       where: {
-        type: req.params.type,
+        state
+      },
+      order: [['stake', 'DESC']],
+      limit,
+      offset,
+      attributes: {
+        exclude: ['id', 'createdAt', 'updatedAt'],
       },
     },
-    { raw: true },
   );
-  if (validator === null) {
-    res.status(404).send({ error: 'Validator not found' });
-    return;
-  }
+
+  res.status(200).send({ count, validators: rows })
+});
+
+router.get('/validator/:hash', async (req, res) => {
+  const hash = req.params.hash
+
+  const validator = await Validator.findOne(
+    {
+      where: { validator: hash },
+      attributes: {
+        exclude: ['id', 'createdAt', 'updatedAt'],
+      },
+    }
+  );
 
   res.status(200).send(validator);
 });
@@ -169,24 +196,35 @@ router.get('/validator/uptime/:address', async (req, res) => {
   res.status(200).send({ uptime, currentHeight, countedBlocks });
 });
 
-router.get('/proposals/', async (req, res) => {
-  const proposals = await Proposal.findAll({ raw: true });
-  res.status(200).send(proposals);
-});
+router.get('/proposals', async (req, res) => {
+  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
+  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+
+  const { rows, count } = await Proposal.findAndCountAll({
+    order: [['id', 'DESC']],
+    limit,
+    offset,
+    attributes: {
+      exclude: ['createdAt', 'updatedAt'],
+    },
+  });
+
+  res.status(200).send({ count, proposals: rows })
+})
 
 router.get('/proposal/:id', async (req, res) => {
+  const id = req.params.id
+
   const proposal = await Proposal.findOne(
     {
       where: {
-        id: req.params.id,
+        id
+      },
+      attributes: {
+        exclude: ['createdAt', 'updatedAt'],
       },
     },
-    { raw: true },
   );
-  if (proposal === null) {
-    res.status(404).send({ error: 'Proposal not found' });
-    return;
-  }
 
   res.status(200).send(proposal);
 });
