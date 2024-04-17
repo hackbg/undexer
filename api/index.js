@@ -179,6 +179,23 @@ router.get('/proposal/:id', async (req, res) => {
   res.status(200).send(proposal);
 });
 
+router.get('/voters/:id', async (req, res) => {
+  const voters = await Voter.findAll(
+    {
+      where: {
+        proposalId: req.params.id,
+      },
+    },
+    { raw: true },
+  );
+  if (voters === null) {
+    res.status(404).send({ error: 'Voter not found' });
+    return;
+  }
+
+  res.status(200).send(voters);
+});
+
 const { SERVER_PORT: port = 8888 } = process.env;
 
 app.listen({ port }, () => {
