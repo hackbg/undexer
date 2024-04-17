@@ -177,8 +177,7 @@ router.get('/validator/uptime/:address', async (req, res) => {
       order: [['height', 'DESC']],
       limit: 100,
       attributes: ['rpcResponse', 'height'],
-    },
-    { raw: true },
+    }
   );
 
   const currentHeight = blocks[0].height;
@@ -199,17 +198,36 @@ router.get('/validator/uptime/:address', async (req, res) => {
 router.get('/proposals', async (req, res) => {
   const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
   const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+  const orderBy = req.query.orderBy ?? 'id';
+  const orderDirection = req.query.orderDirection ?? 'DESC'
+  let where = {}
+  const { proposalType, status, result } = req.query
+  if (proposalType) {
+    where.proposalType = proposalType
+  }
+  if (status) {
+    where.status = status
+  }
+  if (result) {
+    where.result = result
+  }
 
   const { rows, count } = await Proposal.findAndCountAll({
-    order: [['id', 'DESC']],
+    order: [[orderBy, orderDirection]],
     limit,
     offset,
+    where,
     attributes: {
       exclude: ['createdAt', 'updatedAt'],
     },
   });
 
-  res.status(200).send({ count, proposals: rows })
+  const proposals = rows.map((r) => {
+    const { contentJSON, ...proposal } = r.get()
+    return { ...proposal, ...JSON.parse(contentJSON) }
+  })
+
+  res.status(200).send({ count, proposals })
 })
 
 router.get('/proposal/:id', async (req, res) => {
