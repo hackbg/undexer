@@ -1,8 +1,7 @@
 import { Core } from "@fadroma/namada";
 import { Query } from "./rust/pkg/shared.js";
 import { deserialize } from "borsh";
-import fs from "fs/promises";
-import { save } from "./utils.js";
+import Proposal from "./models/Proposal.js";
 import { ProposalSchema } from "./borsher-schema.js";
 
 const flags = process.argv.slice(2);
@@ -13,17 +12,16 @@ const shouldInit = flags.some((flag) => {
 const q = new Query("https://rpc-namada-testnet.whispernode.com");
 const console = new Core.Console("Proposals");
 
-process.chdir("data/proposals");
 
 if (shouldInit) {
   const lastProposal = {
     chain: await q.last_proposal_id(),
-    file: await getLastProposalFile(),
+    db: await getLastProposalDb(),
   };
   const newProposalIds = Array.from(
     { length: lastProposal.chain },
     (_, i) => i
-  ).slice(lastProposal.file, lastProposal.chain);
+  ).slice(lastProposal.db, lastProposal.chain);
   const QUERY_THREADS = 20;
 
   console.log("Initializing new proposals...");
@@ -58,17 +56,14 @@ async function queryMultipleProposals(
   }
 }
 
-async function getLastProposalFile() {
-  const files = await fs.readdir("./");
-  const fileIds = files
-    .map((file) => parseInt(file.split(".")[0]))
-    .sort((a, b) => a - b)
-    .filter(x=>!isNaN(x));
-  return fileIds[fileIds.length - 1];
+async function getLastProposalDb() {
+  const latestProposal = await Proposal.findOne({
+    raw: true,
+    order: [["id", "DESC"]],
+  });
+  return latestProposal ? latestProposal.id+1 : 0;
 }
 
 async function saveProposals(proposals) {
-  for (const proposal of proposals) {
-    await save(proposal.id + ".json", proposal);
-  }
+  await Proposal.bulkCreate(proposals);
 }
