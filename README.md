@@ -17,7 +17,7 @@ The architecture of the app is explained here.
 Implementation keeping these goals in mind should result in a undexer usable as a data source for the frontend, as well as a generic service component in any other setup working with Namada network.
 
 ### Design
-The design decision with the greatest impact was laying support for Namada in [Fadroma](https://fadroma.tech) (@fadroma/namada). Decoding in Fadroma is primarily done using [`@hackbg/borshest`](https://github.com/hackbg/toolbox/tree/main/borshest).
+The design decision with the greatest impact was adding support for Namada to [Fadroma](https://fadroma.tech), our FOSS cross-chain toolkit. Decoding of binary data in [the `@fadroma/namada` package](https://www.npmjs.com/package/@fadroma/namada) is achieved using [a custom Rust/WASM module](https://github.com/hackbg/fadroma/tree/v2/packages/namada/src), and supplemented by [`@hackbg/borshest`](https://github.com/hackbg/toolbox/tree/main/borshest), our enhanced Borsh decoding library.
 
 The extension of this decision is running a custom WASM precompile with the undexer logic when targeting complex data retrieval via RPC queries (non-existent on the base Tendermint ABCI endpoints or the official SDKs e.g. namada-shared, light-sdk).
 
@@ -39,14 +39,15 @@ Image below depicts how these two large blocks fit together.
 
 ## Docker setup for local dev
 
-Use the `docker-compose.yml` to run the undexer as is.
+Use the `docker-compose.yml` to run the undexer as is. Local deploy with default configuration endpoints will run on localhost:8888.
 
 ## Hosted Infrastructure
+
 We currently provide hosted infrastructure of the v1 version of Undexer at https://namada.undexer.demo.hack.bg/.
 
-NOTE: Local deploy with default configuration endpoints will run on localhost:8888.
+## API
 
-## [WIP] HTTP v2 (latest) endpoints
+### [WIP] HTTP v2 (latest) endpoints
 The routes and respective responses are:
 ```
 GET  /v2/block/:height                     - block information by height
@@ -64,7 +65,7 @@ GET  /v2/proposals                         - governance proposals
 GET  /v2/proposal/:id                      - governance proposal by id
 ```
 
-## HTTP v1 (DEPRECATED) endpoints
+### HTTP v1 (DEPRECATED) endpoints
 ```
 GET  /block/index.json                            - summary of last block and pagination options
 GET  /block/:page/:height/block.json              - block information
