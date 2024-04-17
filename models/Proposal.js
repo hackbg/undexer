@@ -8,16 +8,16 @@ const Proposal = sequelize.define('proposal', {
         unique: true,
         primaryKey: true,
     },
-    propoalType: {
-        type: DataTypes.JSON,
+    proposalType: {
+        type: DataTypes.TEXT,
     },
     author: {
         type: DataTypes.TEXT,
     },
-    votingStartEpoch: {
+    startEpoch: {
         type: DataTypes.INTEGER,
     },
-    votingEndEpoch: {
+    endEpoch: {
         type: DataTypes.INTEGER,
     },
     graceEpoch: {
