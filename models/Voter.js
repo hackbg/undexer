@@ -11,9 +11,8 @@ const Voter = sequelize.define("voter", {
     voter: {
         type: DataTypes.TEXT,
     },
-    id: {
-        type: DataTypes.TEXT,
-        primaryKey: true
+    proposalId: {
+        type: DataTypes.INTEGER,
     },
 });
 

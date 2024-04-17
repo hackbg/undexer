@@ -1,7 +1,6 @@
 import { Core } from "@fadroma/namada";
 import { Query } from "./rust/pkg/shared.js";
-import fs from "fs/promises";
-import { save } from "./utils.js";
+import Voter from './models/Voter.js'
 
 const flags = process.argv.slice(2);
 const shouldInit = flags.some((flag) => {
@@ -10,17 +9,15 @@ const shouldInit = flags.some((flag) => {
 const q = new Query("https://rpc-namada-testnet.whispernode.com");
 const console = new Core.Console("Proposals");
 
-process.chdir("data/voters");
-
 if (shouldInit) {
   const lastProposal = {
     chain: await q.last_proposal_id(),
-    file: await getLastAddedFile(),
+    db: await getLastAddedVoter(),
   };
   const newProposalIds = Array.from(
     { length: lastProposal.chain },
     (_, i) => i
-  ).slice(lastProposal.file, lastProposal.chain);
+  ).slice(lastProposal.db, lastProposal.chain);
   const QUERY_THREADS = 1;
 
   console.log("Initializing new voters...");
@@ -35,7 +32,6 @@ setInterval(async () => {
 }, 1000 * 60 * 5);
 
 async function queryMultipleVoters(threads, proposalIds, batchVotersCallback) {
-  const ids = [];
   for (let i = 0; i < proposalIds.length; i += threads) {
     const batchPromises = [];
     const tempProposalIds = proposalIds.slice(i, i + threads);
@@ -50,17 +46,28 @@ async function queryMultipleVoters(threads, proposalIds, batchVotersCallback) {
   }
 }
 
-async function getLastAddedFile() {
-  const files = await fs.readdir("./");
-  const fileIds = files
-    .map((file) => parseInt(file.split(".")[0]))
-    .sort((a, b) => a - b);
-  return fileIds[fileIds.length - 1];
+async function getLastAddedVoter() {
+  const result = await Voter.findOne({
+    raw: true,
+    order: [["proposalId", "DESC"]],
+  });
+  return result ? result.proposalId+1 : 0
 }
 
 async function saveVoters(proposalIds, voters) {
-  for (let i = 0; i < proposalIds.length; i++) {
-    const proposalId = proposalIds[i];
-    await save(proposalId + ".json", voters);
+  for(const proposalId of proposalIds){
+      await Voter.bulkCreate(format(proposalId, voters));
   }
+}
+
+function format(proposalId, voters){
+  const addresses = Object.keys(voters);
+  return addresses.map((address) => {
+    return {
+      vote: voters[address].vote,
+      power: voters[address].power,
+      voter: address,
+      proposalId,
+    }
+  })
 }
