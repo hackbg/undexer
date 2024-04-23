@@ -243,7 +243,7 @@ router.get('/proposals/stats', async (req, res) => {
 router.get('/proposal/:id', async (req, res) => {
   const id = req.params.id
 
-  const proposal = await Proposal.findOne(
+  const result = await Proposal.findOne(
     {
       where: {
         id
@@ -253,8 +253,9 @@ router.get('/proposal/:id', async (req, res) => {
       },
     },
   );
+  const { contentJSON, ...proposal } = result.get()
 
-  res.status(200).send(proposal);
+  res.status(200).send({ ...proposal, ...JSON.parse(contentJSON) });
 });
 
 router.get('/voters/:id', async (req, res) => {
