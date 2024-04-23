@@ -230,6 +230,16 @@ router.get('/proposals', async (req, res) => {
   res.status(200).send({ count, proposals })
 })
 
+router.get('/proposals/stats', async (req, res) => {
+  const all = (await Proposal.findAll()).length
+  const ongoing = (await Proposal.findAll({ where: { status: 'ongoing' } })).length
+  const upcoming = (await Proposal.findAll({ where: { status: 'upcoming' } })).length
+  const finished = (await Proposal.findAll({ where: { status: 'finished' } })).length
+  const passed = (await Proposal.findAll({ where: { result: 'passed' } })).length
+  const rejected = (await Proposal.findAll({ where: { result: 'rejected' } })).length
+  res.status(200).send({ all, ongoing, upcoming, finished, passed, rejected })
+})
+
 router.get('/proposal/:id', async (req, res) => {
   const id = req.params.id
 
