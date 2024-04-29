@@ -258,21 +258,23 @@ router.get('/proposal/:id', async (req, res) => {
   res.status(200).send({ ...proposal, ...JSON.parse(contentJSON) });
 });
 
-router.get('/voters/:id', async (req, res) => {
-  const voters = await Voter.findAll(
-    {
-      where: {
-        proposalId: req.params.id,
-      },
-    },
-    { raw: true },
-  );
-  if (voters === null) {
-    res.status(404).send({ error: 'Voter not found' });
-    return;
-  }
+router.get('/proposal/votes/:proposalId', async (req, res) => {
+  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
+  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
 
-  res.status(200).send(voters);
+  const { count, rows } = await Voter.findAndCountAll(
+    {
+      limit,
+      offset,
+      where: {
+        proposalId: req.params.proposalId,
+      },
+      attributes: {
+        exclude: ['createdAt', 'updatedAt'],
+      },
+    }
+  );
+  res.status(200).send({ count, votes: rows });
 });
 
 const { SERVER_PORT: port = 8888 } = process.env;
