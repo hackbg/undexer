@@ -1,6 +1,7 @@
 # Undexer
 
 ## Overview
+
 The Undexer is a caching and reporting layer which sits in front of the nodes of the Namada network. Its purpose is to respond to queries faster than the node can do, and to support queries that for reasons of efficiency the node cannot or will not support itself.
 
 The architecture of the app is explained here.
@@ -8,6 +9,7 @@ The architecture of the app is explained here.
 ## Architecture
 
 ### Goals
+
 - **Versioned API**: Implement a versioning strategy for the API to ensure backward compatibility and allow for future updates without breaking existing integrations. This helps to manage changes and provide a stable interface for clients.
 - **Rapid Sync Speed**: Optimize the sync process to achieve faster data synchronization. This can involve improving algorithms, utilizing parallel processing, optimizing database queries, or implementing efficient caching mechanisms. By reducing sync times, you can provide real-time or near real-time data updates to users.
 - **Lean, Fast, and Easy Development and Deployment**: Focus on improving the undexer's performance, reducing resource consumption, and enhancing its development and deployment process. Employ efficient coding practices, utilize lightweight frameworks, and automate deployment pipelines to streamline development and ensure faster, hassle-free deployments.
@@ -17,6 +19,7 @@ The architecture of the app is explained here.
 Implementation keeping these goals in mind should result in a undexer usable as a data source for the frontend, as well as a generic service component in any other setup working with Namada network.
 
 ### Design
+
 The design decision with the greatest impact was adding support for Namada to [Fadroma](https://fadroma.tech), our FOSS cross-chain toolkit. Decoding of binary data in [the `@fadroma/namada` package](https://www.npmjs.com/package/@fadroma/namada) is achieved using [a custom Rust/WASM module](https://github.com/hackbg/fadroma/tree/v2/packages/namada/src), and supplemented by [`@hackbg/borshest`](https://github.com/hackbg/toolbox/tree/main/borshest), our enhanced Borsh decoding library.
 
 The extension of this decision is running a custom WASM precompile with the undexer logic when targeting complex data retrieval via RPC queries (non-existent on the base Tendermint ABCI endpoints or the official SDKs e.g. namada-shared, light-sdk).
@@ -31,6 +34,7 @@ The benefits of these decisions were:
 - Easier deployment and upgrading
 
 ## Main components
+
 Undexer could be understood as an application running alongside of Namada node.
 
 Image below depicts how these two large blocks fit together.
@@ -47,25 +51,27 @@ We currently provide hosted infrastructure of the v1 version of Undexer at https
 
 ## API
 
-### [WIP] HTTP v2 (latest) endpoints
-The routes and respective responses are:
-```
-GET  /v2/block/:height                     - block information by height
-GET  /v2/block/hash/:hash                  - block information by hash
-GET  /v2/block/latest                      - latest block information
-GET  /v2/blocks/?limit=_&offset=_          - get blocks by specifying pagination
+### HTTP v2 (latest) endpoints
 
-GET  /v2/tx/:txHash                        - transaction information by hash
-
-GET  /v2/validators                        - all validators
-GET  /v2/validator/:type                   - validator information by type
-GET  /v2/validator/uptime/:address         - validator uptime for the last 100 blocks
-
-GET  /v2/proposals                         - governance proposals
-GET  /v2/proposal/:id                      - governance proposal by id
-```
+|     | Endpoint                                                                                          | Result                                                                                                                                                                                                                                                                                                                                                        |
+| --- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET | /v2/block/latest                                                                                  | The height of the latest block                                                                                                                                                                                                                                                                                                                                |
+| GET | /v2/blocks?limit= _&offset=_                                                                      | Paginated list of blocks, icluding the transaction ids for every block, sorted by height in descending order and the count of all blocks.                                                                                                                                                                                                                     |
+| GET | /v2/block/:height                                                                                 | The block on the corresponding height, including transactions information for the block                                                                                                                                                                                                                                                                       |
+| GET | /v2/block/hash/:hash                                                                              | The block with the corresponding hash, including transactions information for the block                                                                                                                                                                                                                                                                       |
+| GET | /v2/txs?limit= _&offset=_                                                                         | Paginated list of transactions sorted by date and the count of all transactions                                                                                                                                                                                                                                                                               |
+| GET | /v2/tx/:txHash                                                                                    | The transaction with corresponding hash                                                                                                                                                                                                                                                                                                                       |
+| GET | /v2/validators?limit= _&offset=_                                                                  | Paginated list of validators sorted by stake in descending order and the count of all validators.                                                                                                                                                                                                                                                             |
+| GET | /v2/validators/:state?limit= _&offset=_                                                           | Paginated list of the validators with the corresponding state, sorted by stake in descending order and the count of all validators. Valid states: `BelowThreshold`, `BelowCapacity`, `Jailed`, `Consensus`, `Inactive`                                                                                                                                        |
+| GET | /v2/validator/:hash                                                                               | The validator with corresponding hash.                                                                                                                                                                                                                                                                                                                        |
+| GET | /v2/validator/uptime/:address                                                                     | Returns `currentHeight` - latest block hight, `countedBlocks` - the amount of blocks that are checked (default 100), `uptime` - the amount of blocks in `countedBlocks` signed by the given validator                                                                                                                                                         |
+| GET | /v2/proposals?limit=_ &offset=_ &orderBy=_ &orderDirection=_ &proposalType=_ &status=_ &result=\_ | Paginated list of proposals and the count of all proposals. The results can be sorted and filtered with the queries: `orderBy: 'id' \| 'status' \| 'result' \| 'proposalType'` `orderDirection: 'ASC' \| 'DESC'` `proposalType: 'pgf_steward' \| 'pgf_payment' \| 'default'` `status: 'upcoming' \| 'ongoing' \| 'finished'` `result: 'passed' \| 'rejected'` |
+| GET | /v2/proposals/stats                                                                               | The count of proposals by status, result and total count of all proposals                                                                                                                                                                                                                                                                                     |
+| GET | /v2/proposal/:id                                                                                  | Governance proposal information by id                                                                                                                                                                                                                                                                                                                         |
+| GET | /v2/proposal/votes/:proposalId                                                                    | Get all votes by proposal id                                                                                                                                                                                                                                                                                                                                  |
 
 ### HTTP v1 (DEPRECATED) endpoints
+
 ```
 GET  /block/index.json                            - summary of last block and pagination options
 GET  /block/:page/:height/block.json              - block information
@@ -85,6 +91,7 @@ GET  /voters/{:proposalId}.json                   - list voters with vote type a
 ```
 
 ## OpenAPI specs
+
 The swagger specification of the endpoints can be downloaded from:
 
 // TODO
@@ -95,10 +102,12 @@ It can be visualized on a swagger UI at:
 
 This npm package can be also used for a self-hosted app to visualize these specs: https://www.npmjs.com/package/swagger-ui
 
-## CI (Drone) 
+## CI (Drone)
+
 Actions
 
 On push:
+
 - Unit tests
 - Build & publish a new release image
 

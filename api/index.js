@@ -9,6 +9,9 @@ import Validator from '../models/Validator.js';
 import Proposal from '../models/Proposal.js';
 import Voter from '../models/Voter.js';
 
+const DEFAULT_PAGE_LIMIT = 25
+const DEFAULT_PAGE_OFFSET = 0
+
 const app = express();
 const router = express.Router();
 
@@ -22,8 +25,8 @@ router.get('/block/latest', async (req, res) => {
 });
 
 router.get('/blocks', async (req, res) => {
-  const limit = req.query.limit ? Number(req.query.limit) : 20;
-  const offset = req.query.offset ? Number(req.query.offset) : 0;
+  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
+  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
   const { rows, count } = await Block.findAndCountAll({
     order: [['height', 'DESC']],
     limit,
@@ -56,10 +59,7 @@ router.get('/block/:height', async (req, res) => {
           attributes: { exclude: ['id', 'createdAt', 'updatedAt', 'chainId'] },
         },
       ],
-    },
-    {
-      raw: true,
-    },
+    }
   );
   if (block === null) {
     res.status(404).send({ error: 'Block not found' });
@@ -82,9 +82,6 @@ router.get('/block/hash/:hash', async (req, res) => {
         },
       ],
     },
-    {
-      raw: true,
-    },
   );
   if (block === null) {
     res.status(404).send({ error: 'Block not found' });
@@ -94,6 +91,21 @@ router.get('/block/hash/:hash', async (req, res) => {
   res.status(200).send(block);
 });
 
+router.get('/txs', async (req, res) => {
+  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
+  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+  const { rows, count } = await Transaction.findAndCountAll({
+    order: [['timestamp', 'DESC']],
+    limit,
+    offset,
+    attributes: {
+      exclude: ['id', 'createdAt', 'updatedAt'],
+    },
+  })
+
+  res.status(200).send({ count, txs: rows })
+})
+
 router.get('/tx/:txHash', async (req, res) => {
   const tx = await Transaction.findOne(
     {
@@ -101,32 +113,59 @@ router.get('/tx/:txHash', async (req, res) => {
       attributes: {
         exclude: ['id', 'createdAt', 'updatedAt'],
       },
-    },
-    {
-      raw: true,
-    },
+    }
   );
   res.status(200).send(tx);
 });
 
 router.get('/validators', async (req, res) => {
-  const validators = await Validator.findAll({ raw: true });
-  res.status(200).send(validators);
+  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
+  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+  const { rows, count } = await Validator.findAndCountAll({
+    order: [['stake', 'DESC']],
+    limit,
+    offset,
+    attributes: {
+      exclude: ['id', 'createdAt', 'updatedAt'],
+    },
+  });
+
+  res.status(200).send({ count, validators: rows })
 });
 
-router.get('/validator/:type', async (req, res) => {
-  const validator = await Validator.findAll(
+router.get('/validators/:state', async (req, res) => {
+  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
+  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+  const state = req.params.state
+
+  const { rows, count } = await Validator.findAndCountAll(
     {
       where: {
-        type: req.params.type,
+        state
+      },
+      order: [['stake', 'DESC']],
+      limit,
+      offset,
+      attributes: {
+        exclude: ['id', 'createdAt', 'updatedAt'],
       },
     },
-    { raw: true },
   );
-  if (validator === null) {
-    res.status(404).send({ error: 'Validator not found' });
-    return;
-  }
+
+  res.status(200).send({ count, validators: rows })
+});
+
+router.get('/validator/:hash', async (req, res) => {
+  const hash = req.params.hash
+
+  const validator = await Validator.findOne(
+    {
+      where: { validator: hash },
+      attributes: {
+        exclude: ['id', 'createdAt', 'updatedAt'],
+      },
+    }
+  );
 
   res.status(200).send(validator);
 });
@@ -138,8 +177,7 @@ router.get('/validator/uptime/:address', async (req, res) => {
       order: [['height', 'DESC']],
       limit: 100,
       attributes: ['rpcResponse', 'height'],
-    },
-    { raw: true },
+    }
   );
 
   const currentHeight = blocks[0].height;
@@ -157,43 +195,86 @@ router.get('/validator/uptime/:address', async (req, res) => {
   res.status(200).send({ uptime, currentHeight, countedBlocks });
 });
 
-router.get('/proposals/', async (req, res) => {
-  const proposals = await Proposal.findAll({ raw: true });
-  res.status(200).send(proposals);
-});
+router.get('/proposals', async (req, res) => {
+  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
+  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+  const orderBy = req.query.orderBy ?? 'id';
+  const orderDirection = req.query.orderDirection ?? 'DESC'
+  let where = {}
+  const { proposalType, status, result } = req.query
+  if (proposalType) {
+    where.proposalType = proposalType
+  }
+  if (status) {
+    where.status = status
+  }
+  if (result) {
+    where.result = result
+  }
+
+  const { rows, count } = await Proposal.findAndCountAll({
+    order: [[orderBy, orderDirection]],
+    limit,
+    offset,
+    where,
+    attributes: {
+      exclude: ['createdAt', 'updatedAt'],
+    },
+  });
+
+  const proposals = rows.map((r) => {
+    const { contentJSON, ...proposal } = r.get()
+    return { ...proposal, ...JSON.parse(contentJSON) }
+  })
+
+  res.status(200).send({ count, proposals })
+})
+
+router.get('/proposals/stats', async (req, res) => {
+  const all = (await Proposal.findAll()).length
+  const ongoing = (await Proposal.findAll({ where: { status: 'ongoing' } })).length
+  const upcoming = (await Proposal.findAll({ where: { status: 'upcoming' } })).length
+  const finished = (await Proposal.findAll({ where: { status: 'finished' } })).length
+  const passed = (await Proposal.findAll({ where: { result: 'passed' } })).length
+  const rejected = (await Proposal.findAll({ where: { result: 'rejected' } })).length
+  res.status(200).send({ all, ongoing, upcoming, finished, passed, rejected })
+})
 
 router.get('/proposal/:id', async (req, res) => {
-  const proposal = await Proposal.findOne(
+  const id = req.params.id
+
+  const result = await Proposal.findOne(
     {
       where: {
-        id: req.params.id,
+        id
+      },
+      attributes: {
+        exclude: ['createdAt', 'updatedAt'],
       },
     },
-    { raw: true },
   );
-  if (proposal === null) {
-    res.status(404).send({ error: 'Proposal not found' });
-    return;
-  }
+  const { contentJSON, ...proposal } = result.get()
 
-  res.status(200).send(proposal);
+  res.status(200).send({ ...proposal, ...JSON.parse(contentJSON) });
 });
 
-router.get('/voters/:id', async (req, res) => {
-  const voters = await Voter.findAll(
-    {
-      where: {
-        proposalId: req.params.id,
-      },
-    },
-    { raw: true },
-  );
-  if (voters === null) {
-    res.status(404).send({ error: 'Voter not found' });
-    return;
-  }
+router.get('/proposal/votes/:proposalId', async (req, res) => {
+  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
+  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
 
-  res.status(200).send(voters);
+  const { count, rows } = await Voter.findAndCountAll(
+    {
+      limit,
+      offset,
+      where: {
+        proposalId: req.params.proposalId,
+      },
+      attributes: {
+        exclude: ['createdAt', 'updatedAt'],
+      },
+    }
+  );
+  res.status(200).send({ count, votes: rows });
 });
 
 const { SERVER_PORT: port = 8888 } = process.env;
