@@ -1,36 +1,6 @@
 version: "3"
 services:
-  indexer:
-    image: node:21-alpine
-    depends_on:
-      - postgres
-    restart: unless-stopped
-    volumes:
-      - .:/app
-    working_dir: /app
-    command: --import @ganesha/esbuild-wasm index-backwards.js
-  api:
-    image: node:21-alpine
-    ports:
-      - 8888:8888
-    depends_on:
-      - postgres
-    restart: unless-stopped
-    volumes:
-      - .:/app
-    working_dir: /app
-    command: api/index.js
-  server:
-    image: hackbg/undexer-lighttpd
-    build:
-      context: ./docker
-      dockerfile: lighttpd.Dockerfile
-    volumes:
-      - ./data:/data:ro
-      - ./lighttpd.conf:/lighttpd.conf:ro
-    command: lighttpd -D -f /lighttpd.conf
-    ports:
-      - 8080
+
   postgres:
     image: postgres:16.2-alpine
     ports:
@@ -46,6 +16,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   pgadmin:
     image: dpage/pgadmin4
     ports:
@@ -53,17 +24,32 @@ services:
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@admin.com
       - PGADMIN_DEFAULT_PASSWORD=password
-  proposals:
+
+  api:
     image: node:21-alpine
+    ports:
+      - 8888:8888
+    depends_on:
+      - postgres
     restart: unless-stopped
     volumes:
       - .:/app
     working_dir: /app
-    command: npx tsx proposal.js --init
-  proposal_voters:
+    command: api/index.js
+    environment:
+      DATABASE_URL: postgresql://postgres:insecure@postgres/postgres
+
+  indexer:
     image: node:21-alpine
+    depends_on:
+      - postgres
     restart: unless-stopped
     volumes:
       - .:/app
     working_dir: /app
-    command: npx tsx voters.js --init
+    command: --import @ganesha/esbuild-wasm index.js
+    environment:
+      DATABASE_URL: postgresql://postgres:insecure@postgres/postgres
+      UNDEXER_RPC_URL: https://namada-testnet-rpc.itrocket.net
+      PRE_UNDEXER_RPC_URL: https://namada-testnet-rpc.itrocket.net
+      POST_UNDEXER_RPC_URL: https://namada-testnet-rpc.itrocket.net

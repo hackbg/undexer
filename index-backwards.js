@@ -1,16 +1,14 @@
 #!/usr/bin/env -S node --import=@ganesha/esbuild
 
-import * as Namada from '@fadroma/namada'
-import getRPC      from './connection.js'
-import Events      from './events.js'
-import Queue       from './queue.js'
-import indexBlock from './index-block.js'
+import * as Namada   from '@fadroma/namada'
+import getRPC        from './connection.js'
+import Events        from './events.js'
+import Queue         from './queue.js'
+import indexBlock    from './index-block.js'
 import indexProposal from './index-proposal.js'
-import sequelize  from "./db/index.js";
+import sequelize     from "./db/index.js";
 
-await sequelize.sync({
-  force: Boolean(process.env.START_FROM_SCRATCH)
-});
+await sequelize.sync({ force: Boolean(process.env.START_FROM_SCRATCH) });
 
 const console       = new Namada.Core.Console('Undexer')
 const events        = await new Events()

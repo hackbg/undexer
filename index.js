@@ -60,15 +60,55 @@ async function updateBlocks(blockHeightDb, chainHeight) {
 
   for (let i = blockHeightDb; i <= chainHeight; i++) {
     const { conn } = getUndexerRPCUrl(i);
-    const block = await conn.getBlock(i);
-    const { txsDecoded } = block;
 
-    console.log({ block });
+    const [blockRaw, resultsRaw] = await Promise.all([
+      fetch(`${conn.url}/block?height=${i}`)
+        .then(response=>response.text()),
+      fetch(`${conn.url}/block_results?height=${i}`)
+        .then(response=>response.text()),
+    ])
 
-    await Block.create(block);
-    for (let tx of txsDecoded) {
-      await TransactionManager.handleTransaction(i, tx, eventEmitter);
+    const {
+      id,
+      txs,
+      header
+    } = conn.decode.block(blockRaw, resultsRaw)
+
+    header.height = String(header.height)
+    header.version.block = String(header.version.block)
+    header.version.app = String(header.version.app)
+
+    const blockData = {
+      id,
+      header,
+      height:      header.height,
+      results:     JSON.parse(resultsRaw),
+      rpcResponse: JSON.parse(blockRaw),
     }
+
+    console.log(blockData)
+
+    await Block.create(blockData);
+
+    const txsDecoded = []
+    for (const i in txs) {
+      try {
+        txsDecoded[i] = Namada.TX.Transaction.fromDecoded(txs[i])
+      } catch (error) {
+        console.error(error)
+        console.warn(`Failed to decode transaction #${i} in block ${height}, see above for details.`)
+        txsDecoded[i] = new Namada.TX.Transactions.Undecoded({
+          data: txs[i],
+          error: error
+        })
+      }
+    }
+    for (let tx of txsDecoded) {
+      tx.txId = tx.id
+      await TransactionManager.handleTransaction(i, tx, eventEmitter);
+      console.log(i, tx)
+    }
+
     console.log("Added block", i);
   }
   isProcessingNewBlock = false;

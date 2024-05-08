@@ -1,3 +1,4 @@
+import { serialize } from '../serialize';
 import sequelize from '../../db/index.js';
 import { DataTypes } from 'sequelize';
 
@@ -15,7 +16,7 @@ const Signature = sequelize.define('section_signature', {
       }
     },
     set(value) {
-      this.setDataValue('signer', JSON.stringify(value));
+      this.setDataValue('signer', serialize(value));
     },
   },
   signatures: {

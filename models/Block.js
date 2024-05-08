@@ -1,6 +1,6 @@
-import { Sequelize } from 'sequelize';
-import { DataTypes } from 'sequelize';
+import { Sequelize, DataTypes } from 'sequelize';
 import sequelize from '../db/index.js';
+import { serialize } from './serialize';
 import Transaction from './Transaction.js';
 
 const Block = sequelize.define('block', {
@@ -21,7 +21,7 @@ const Block = sequelize.define('block', {
       return JSON.parse(this.getDataValue('header'));
     },
     set(value) {
-      return this.setDataValue('header', JSON.stringify(value));
+      return this.setDataValue('header', serialize(value));
     },
   },
   results: {
@@ -31,7 +31,7 @@ const Block = sequelize.define('block', {
       return JSON.parse(this.getDataValue('results'));
     },
     set(value) {
-      return this.setDataValue('results', JSON.stringify(value));
+      return this.setDataValue('results', serialize(value));
     },
   },
   rpcResponse: {
@@ -41,7 +41,7 @@ const Block = sequelize.define('block', {
       return JSON.parse(this.getDataValue('rpcResponse'));
     },
     set(value) {
-      return this.setDataValue('rpcResponse', JSON.stringify(value));
+      return this.setDataValue('rpcResponse', serialize(value));
     },
   },
 });

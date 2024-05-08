@@ -1,5 +1,6 @@
 import sequelizer from "../../db/index.js";
 import { DataTypes } from "sequelize";
+import { serialize } from '../serialize';
 
 const VoteProposal = sequelizer.define("content_vote_proposal", {
     id:{
@@ -9,6 +10,12 @@ const VoteProposal = sequelizer.define("content_vote_proposal", {
     },
     proposalId: {
         type: DataTypes.INTEGER,
+        get() {
+            return JSON.parse(this.getDataValue('proposalId'));
+        },
+        set(value) {
+            return this.setDataValue('proposalId', serialize(value));
+        },
     },
     vote: {
         type: DataTypes.TEXT,
