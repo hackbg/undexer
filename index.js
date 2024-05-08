@@ -10,92 +10,93 @@ import Proposal from "./models/Proposal.js";
 import {
   NODE_LOWEST_BLOCK_HEIGHT,
   POST_UNDEXER_RPC_URL,
-  PRE_UNDEXER_RPC_URL
+  PRE_UNDEXER_RPC_URL,
 } from "./constants.js";
 import Validator from "./models/Validator.js";
 import VoteProposal from "./models/Contents/VoteProposal.js";
 import sequelize from "./db/index.js";
 import TransactionManager from "./TransactionManager.js";
-import 'dotenv/config';
+import "dotenv/config";
 
 let isProcessingNewBlock = false;
 let isProcessingNewValidator = false;
+const { START_FROM_SCRATCH, START_BLOCK = 237908 } = process.env;
 
 await initialize();
-await sequelize.sync({ force: Boolean(process.env.START_FROM_SCRATCH) });
+await sequelize.sync({ force: Boolean(START_FROM_SCRATCH) });
 
-const console = new Namada.Core.Console('Index')
+const console = new Namada.Core.Console("Index");
 const eventEmitter = new EventEmitter();
 
 setTimeout(checkForNewBlock, 5000);
 async function checkForNewBlock() {
   // should use newer node for the blockchain height
-  const currentBlockOnChain =
-    await getUndexerRPCUrl(NODE_LOWEST_BLOCK_HEIGHT+1).conn.height;
-  const isDatabaseEmpty =
-    (await Block.count()) === 0
-  if (isDatabaseEmpty) {
-    await updateBlocks(1, currentBlockOnChain)
+  const currentBlockOnChain = await getUndexerRPCUrl(
+    NODE_LOWEST_BLOCK_HEIGHT + 1
+  ).conn.height;
+  const isDatabaseEmpty = (await Block.count()) === 0;
+
+  const latestBlockInDb = Number(START_BLOCK) || (await getLatestBlockInDB());
+  console.log({ currentBlockOnChain, latestBlockInDb });
+  if (currentBlockOnChain > latestBlockInDb) {
+    console.br().log("Starting from block", latestBlockInDb + 1);
+    await updateBlocks(latestBlockInDb + 1, currentBlockOnChain);
   } else {
-    const latestBlockInDb =
-      await getLatestBlockInDB();
-    if (currentBlockOnChain > latestBlockInDb) {
-      console.br().log('Starting from block', latestBlockInDb + 1)
-      await updateBlocks(latestBlockInDb + 1, currentBlockOnChain)
-    } else {
-      console.log("=====================================");
-      console.info("No new blocks");
-      console.log("=====================================");
-    }
+    console.log("=====================================");
+    console.info("No new blocks");
+    console.log("=====================================");
   }
-  setTimeout(checkForNewBlock, 5000)
+
+  setTimeout(checkForNewBlock, 5000);
 }
 
-async function updateBlocks (blockHeightDb, chainHeight) {
-    if (isProcessingNewBlock) return;
-    isProcessingNewBlock = true;
+async function updateBlocks(blockHeightDb, chainHeight) {
+  if (isProcessingNewBlock) return;
+  isProcessingNewBlock = true;
 
-    console.log("=====================================");
-    console.log("Processing new blocks");
-    console.log("=====================================");
+  console.log("=====================================");
+  console.log("Processing new blocks");
+  console.log("=====================================");
 
-    for (let i = blockHeightDb; i <= chainHeight; i++) {
-        const { conn } = getUndexerRPCUrl(i);
-        const block = await conn.getBlock(i);
-        const { txsDecoded } = block;
+  for (let i = blockHeightDb; i <= chainHeight; i++) {
+    const { conn } = getUndexerRPCUrl(i);
+    const block = await conn.getBlock(i);
+    const { txsDecoded } = block;
 
-        await Block.create(block);
-        for (let tx of txsDecoded) {
-            await TransactionManager.handleTransaction(i, tx, eventEmitter);
-        }
-        console.log('Added block', i)
+    console.log({ block });
+
+    await Block.create(block);
+    for (let tx of txsDecoded) {
+      await TransactionManager.handleTransaction(i, tx, eventEmitter);
     }
-    isProcessingNewBlock = false;
+    console.log("Added block", i);
+  }
+  isProcessingNewBlock = false;
 }
 
 eventEmitter.on("updateValidators", async () => {
-    if (isProcessingNewValidator) return;
-    isProcessingNewValidator = true;
+  if (isProcessingNewValidator) return;
+  isProcessingNewValidator = true;
 
-    const { q, conn } = getUndexerRPCUrl(NODE_LOWEST_BLOCK_HEIGHT+1);
+  const { q, conn } = getUndexerRPCUrl(NODE_LOWEST_BLOCK_HEIGHT + 1);
 
-    console.log("=====================================");
-    console.log("Processing new validator");
-    console.log("=====================================");
+  console.log("=====================================");
+  console.log("Processing new validator");
+  console.log("=====================================");
 
-    const validatorsBinary = await getValidatorsFromNode(conn);
-    for (const validatorBinary of validatorsBinary) {
-        const validator = await getValidator(q, conn, validatorBinary);
-        await Validator.create(JSON.parse(serialize(validator)));
-    }
+  const validatorsBinary = await getValidatorsFromNode(conn);
+  for (const validatorBinary of validatorsBinary) {
+    const validator = await getValidator(q, conn, validatorBinary);
+    await Validator.create(JSON.parse(serialize(validator)));
+  }
 
-    isProcessingNewValidator = false;
+  isProcessingNewValidator = false;
 });
 
 eventEmitter.on("createProposal", async (txData) => {
-    await Proposal.create(txData);
-    // const latestProposal = await Proposal.findOne({ order: [["id", "DESC"]] });
-    /*
+  await Proposal.create(txData);
+  // const latestProposal = await Proposal.findOne({ order: [["id", "DESC"]] });
+  /*
     const { q } = getUndexerRPCUrl(NODE_LOWEST_BLOCK_HEIGHT+1)
     const proposalChain = await q.query_proposal(BigInt(txData.proposalId));
     await Proposal.create(proposalChain);
@@ -103,24 +104,23 @@ eventEmitter.on("createProposal", async (txData) => {
 });
 
 eventEmitter.on("updateProposal", async (proposalId, blockHeight) => {
-    await Proposal.destroy({ where: { id: proposalId } });
-    const { q } = getUndexerRPCUrl(blockHeight);
+  await Proposal.destroy({ where: { id: proposalId } });
+  const { q } = getUndexerRPCUrl(blockHeight);
 
-    const proposal = await q.query_proposal(BigInt(proposalId));
-    await VoteProposal.create(proposal);
+  const proposal = await q.query_proposal(BigInt(proposalId));
+  await VoteProposal.create(proposal);
 });
 
 function getUndexerRPCUrl(blockHeight) {
-    if(blockHeight > NODE_LOWEST_BLOCK_HEIGHT) {
-        return {
-            q: new Query(POST_UNDEXER_RPC_URL),
-            conn: Namada.testnet({ url: POST_UNDEXER_RPC_URL })
-        }
-    }
-    else {
-        return {
-            q: new Query(PRE_UNDEXER_RPC_URL),
-            conn: Namada.testnet({ url: PRE_UNDEXER_RPC_URL })
-        }
-    }
+  if (blockHeight > NODE_LOWEST_BLOCK_HEIGHT) {
+    return {
+      q: new Query(POST_UNDEXER_RPC_URL),
+      conn: Namada.testnet({ url: POST_UNDEXER_RPC_URL }),
+    };
+  } else {
+    return {
+      q: new Query(PRE_UNDEXER_RPC_URL),
+      conn: Namada.testnet({ url: PRE_UNDEXER_RPC_URL }),
+    };
+  }
 }

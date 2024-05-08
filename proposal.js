@@ -5,6 +5,8 @@ import Proposal from "./models/Proposal.js";
 import { ProposalSchema } from "./borsher-schema.js";
 import { POST_UNDEXER_RPC_URL } from "./constants.js";
 
+await Proposal.sync({ force: true });
+
 const flags = process.argv.slice(2);
 const shouldInit = flags.some((flag) => {
   return flag === "--init";
@@ -12,7 +14,6 @@ const shouldInit = flags.some((flag) => {
 
 const q = new Query(POST_UNDEXER_RPC_URL);
 const console = new Core.Console("Proposals");
-
 
 if (shouldInit) {
   const lastProposal = {
@@ -62,7 +63,7 @@ async function getLastProposalDb() {
     raw: true,
     order: [["id", "DESC"]],
   });
-  return latestProposal ? latestProposal.id+1 : 0;
+  return latestProposal ? latestProposal.id + 1 : 0;
 }
 
 async function saveProposals(proposals) {
