@@ -1,35 +1,35 @@
-import { mkdirSync } from "fs";
-import fs from "fs/promises";
+import sequelize from "../../db/index.js";
 import "dotenv/config";
+import fs from "fs";
 
-mkdirSync("tests/seed/data", { recursive: true });
-mkdirSync("tests/seed/data/block", { recursive: true });
-mkdirSync("tests/seed/data/block_response", { recursive: true });
-process.chdir("tests/seed/data");
-
-const fetchText = (url) => {
+const fetchJSON = (url) => {
   console.log(`Fetching ${url}`);
-  return fetch(url).then((response) => response.text());
+  return fetch(url).then((response) => response.json());
 };
 
 const { START_BLOCK, POST_UNDEXER_RPC_URL } = process.env;
+
 async function main() {
+  const blocks = [];
+  const blockResponses = [];
   for (let i = 0; i < 1000; i++) {
     const currentBlockNumber = Number(START_BLOCK) + i;
     console.log(`Downloading block ${currentBlockNumber} ...`);
     const [block, blockResponse] = await Promise.all([
-      fetchText(`${POST_UNDEXER_RPC_URL}/block?height=${currentBlockNumber}`),
-      fetchText(
+      fetchJSON(`${POST_UNDEXER_RPC_URL}/block?height=${currentBlockNumber}`),
+      fetchJSON(
         `${POST_UNDEXER_RPC_URL}/block_results?height=${currentBlockNumber}`
       ),
     ]);
-
-    await fs.writeFile(`block/${currentBlockNumber}.json`, block);
-    await fs.writeFile(
-      `block_response/${currentBlockNumber}.json`,
-      blockResponse
-    );
+    blocks.push(block);
+    blockResponses.push(blockResponse);
   }
+
+  await fs.writeFile(`block/seed.json`, JSON.stringify(blocks));
+  await fs.writeFile(
+    `block_response/seed.json`,
+    JSON.stringify(blockResponses)
+  );
 }
 
 main();
