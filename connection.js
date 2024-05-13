@@ -1,16 +1,20 @@
 import { Query } from "./shared/pkg/shared.js";
-import * as Namada from "@fadroma/namada";
-import {
-  POST_UNDEXER_RPC_URL,
-  PRE_UNDEXER_RPC_URL,
-  NODE_LOWEST_BLOCK_HEIGHT,
-} from "./constants.js";
+import { readFile } from "fs/promises";
+import Namada from "@fadroma/namada";
 import { initialize } from "./utils.js";
+import "dotenv/config";
+
+const { PRE_UNDEXER_RPC_URL, POST_UNDEXER_RPC_URL, START_BLOCK } = process.env;
 
 await initialize();
 
-const rpcVariant = url => ({
-  connection: Namada.testnet({ url }),
+const rpcVariant = async (url) => ({
+  connection: await Namada.connect({
+    url,
+    decoder: await readFile(
+      "node_modules/@fadroma/namada/pkg/fadroma_namada_bg.wasm"
+    )
+  }),
   query: new Query(url),
 })
 
@@ -18,7 +22,7 @@ const rpcVariant = url => ({
   * to a pair of { query, connection } objects that wrap the RPC. */
 export const rpcs = toSortedRPCs({
   1: rpcVariant(PRE_UNDEXER_RPC_URL),
-  [NODE_LOWEST_BLOCK_HEIGHT]: rpcVariant(POST_UNDEXER_RPC_URL),
+  [START_BLOCK]: rpcVariant(POST_UNDEXER_RPC_URL),
 })
 
 /** Validate record of (first block number -> RPC) and

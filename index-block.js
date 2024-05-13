@@ -1,9 +1,9 @@
-import * as Namada from '@fadroma/namada';
+import { Console } from '@fadroma/agent';
 import getRPC from './connection.js';
 import Block from './models/Block.js';
 import Transaction from './models/Transaction.js';
 
-const console = new Namada.Core.Console('Block');
+const console = new Console('Block');
 
 const fetchText = (url) => {
   console.log(`Fetching ${url}`);

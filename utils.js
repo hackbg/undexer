@@ -1,6 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import initShared from "./shared/pkg/shared.js";
-import { Core, initDecoder } from "@fadroma/namada";
+import { initDecoder } from "@fadroma/namada";
+import { base64 } from "@fadroma/agent";
 
 export function serialize(data) {
     return JSON.stringify(data, stringifier);
@@ -11,7 +12,7 @@ export function stringifier(key, value) {
         return value.toString();
     }
     if (value instanceof Uint8Array) {
-        return Core.base64.encode(value);
+        return base64.encode(value);
     }
     return value;
 }
