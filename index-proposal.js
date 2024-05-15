@@ -1,7 +1,7 @@
-import * as Namada from '@fadroma/namada';
+import { Console } from '@fadroma/agent';
 import getRPC from './connection.js';
-import Proposal from './models/Proposal.js';
-import { deserialize } from 'borsh';
+// import Proposal from './models/Proposal.js';
+// import { deserialize } from 'borsh';
 
 export const ProposalSchema = {
   struct: {
@@ -22,11 +22,11 @@ export const ProposalSchema = {
   },
 };
 
-const console = new Namada.Core.Console('Proposal');
+const console = new Console('Proposal');
 
 export default async function indexProposal(id) {
   console.debug('Indexing proposal', id);
-  const { connection, query } = getRPC();
+  // const { connection, query } = getRPC();
 
   const t0 = performance.now();
 

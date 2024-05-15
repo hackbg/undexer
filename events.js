@@ -1,9 +1,9 @@
 import EventEmitter from 'node:events'
-import { Core } from '@fadroma/namada'
+import { Console } from '@fadroma/agent'
 import getRPC from './connection.js'
 import { retryForever } from './utils.js'
 
-const console = new Core.Console('Events')
+const console = new Console('Events')
 
 export default class Events extends EventEmitter {
 

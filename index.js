@@ -3,8 +3,7 @@
 import EventEmitter from "node:events";
 import { initialize, serialize } from "./utils.js";
 import { getValidator, getValidatorsFromNode } from "./scripts/validator.js";
-import { Query } from "./shared/pkg/shared.js";
-import * as Namada from "@fadroma/namada";
+import { Console } from "@fadroma/agent";
 import Block, { getLatestBlockInDB } from "./models/Block.js";
 import Proposal from "./models/Proposal.js";
 import {
@@ -17,6 +16,7 @@ import VoteProposal from "./models/Contents/VoteProposal.js";
 import sequelize from "./db/index.js";
 import TransactionManager from "./TransactionManager.js";
 import "dotenv/config";
+import getRPC from "./connection.js";
 
 let isProcessingNewBlock = false;
 let isProcessingNewValidator = false;
@@ -25,17 +25,14 @@ const { START_FROM_SCRATCH, START_BLOCK = 237908 } = process.env;
 await initialize();
 await sequelize.sync({ force: Boolean(START_FROM_SCRATCH) });
 
-const console = new Namada.Core.Console("Index");
+const console = new Console("Index");
 const eventEmitter = new EventEmitter();
 
 setTimeout(checkForNewBlock, 5000);
 async function checkForNewBlock() {
   // should use newer node for the blockchain height
-  const currentBlockOnChain = await getUndexerRPCUrl(
-    NODE_LOWEST_BLOCK_HEIGHT + 1
-  ).conn.height;
-  const isDatabaseEmpty = (await Block.count()) === 0;
-
+   const { connection }= await getRPC(START_BLOCK+1);
+  const currentBlockOnChain = await connection.height;
   const latestBlockInDb = Number(START_BLOCK) || (await getLatestBlockInDB());
   console.log({ currentBlockOnChain, latestBlockInDb });
   if (currentBlockOnChain > latestBlockInDb) {
@@ -59,20 +56,9 @@ async function updateBlocks(blockHeightDb, chainHeight) {
   console.log("=====================================");
 
   for (let i = blockHeightDb; i <= chainHeight; i++) {
-    const { conn } = getUndexerRPCUrl(i);
+    const { connection } = await getRPC(i);
 
-    const [blockRaw, resultsRaw] = await Promise.all([
-      fetch(`${conn.url}/block?height=${i}`)
-        .then(response=>response.text()),
-      fetch(`${conn.url}/block_results?height=${i}`)
-        .then(response=>response.text()),
-    ])
-
-    const {
-      id,
-      txs,
-      header
-    } = conn.decode.block(blockRaw, resultsRaw)
+    const { id, header, blockRaw, resultsRaw, txs } = await connection.fetchBlock({ height:i });
 
     header.height = String(header.height)
     header.version.block = String(header.version.block)
@@ -114,11 +100,12 @@ async function updateBlocks(blockHeightDb, chainHeight) {
   isProcessingNewBlock = false;
 }
 
+
 eventEmitter.on("updateValidators", async () => {
   if (isProcessingNewValidator) return;
   isProcessingNewValidator = true;
 
-  const { q, conn } = getUndexerRPCUrl(NODE_LOWEST_BLOCK_HEIGHT + 1);
+  const { q, conn } = getRPC(NODE_LOWEST_BLOCK_HEIGHT + 1);
 
   console.log("=====================================");
   console.log("Processing new validator");
@@ -145,22 +132,9 @@ eventEmitter.on("createProposal", async (txData) => {
 
 eventEmitter.on("updateProposal", async (proposalId, blockHeight) => {
   await Proposal.destroy({ where: { id: proposalId } });
-  const { q } = getUndexerRPCUrl(blockHeight);
+  const { q } = getRPC(blockHeight);
 
   const proposal = await q.query_proposal(BigInt(proposalId));
   await VoteProposal.create(proposal);
 });
 
-function getUndexerRPCUrl(blockHeight) {
-  if (blockHeight > NODE_LOWEST_BLOCK_HEIGHT) {
-    return {
-      q: new Query(POST_UNDEXER_RPC_URL),
-      conn: Namada.testnet({ url: POST_UNDEXER_RPC_URL }),
-    };
-  } else {
-    return {
-      q: new Query(PRE_UNDEXER_RPC_URL),
-      conn: Namada.testnet({ url: PRE_UNDEXER_RPC_URL }),
-    };
-  }
-}
