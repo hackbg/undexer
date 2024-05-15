@@ -27,19 +27,15 @@ async function main() {
       return fetch(`${UNDEXER_API_URL}/${endpoint}`, { redirect: "follow" });
     })
   );
-  const notWorkingEndpoints = endpointsResponse.filter(
-    (response) => response.status >= 200 && response.status < 400
-  );
+  const notWorkingEndpoints = endpointsResponse.filter((response) => response.status >= 400)
 
-  endpointsResponse.forEach(({ url, status, statusText }) => {
+  notWorkingEndpoints.forEach(({ url, status, statusText }) => {
     console.error(url, status, statusText);
   });
-
-  if (notWorkingEndpoints.length === 0) {
-    throw new Error("Healthcheck failed");
-  } else {
-    console.log("Healthcheck passed");
+  if (notWorkingEndpoints.length !== 0){
+    throw new Error("Healthcheck failed"); 
   }
+  console.log("Healthcheck passed");
 }
 
 main();
