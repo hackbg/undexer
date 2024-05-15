@@ -21,12 +21,20 @@ app.use('/v2', router);
 
 router.get('/block/latest', async (req, res) => {
   const latestBlock = await Block.max('height');
-  res.status(200).send(latestBlock.toString());
+  if(latestBlock === null){
+    return res.status(404).send({ error: 'Block not found' });
+  }
+  
+  return res.status(200).send(latestBlock.toString());
 });
 
 router.get('/blocks', async (req, res) => {
   const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
   const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+  if(await Block.count() === 0){
+    return res.status(404).send({ error: 'No blocks found' });
+  }
+
   const { rows, count } = await Block.findAndCountAll({
     order: [['height', 'DESC']],
     limit,
@@ -94,6 +102,11 @@ router.get('/block/hash/:hash', async (req, res) => {
 router.get('/txs', async (req, res) => {
   const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
   const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+
+  if(await Transaction.count() === 0){
+    return res.status(404).send({ error: 'No transactions found' });
+  }
+
   const { rows, count } = await Transaction.findAndCountAll({
     order: [['timestamp', 'DESC']],
     limit,
@@ -115,12 +128,22 @@ router.get('/tx/:txHash', async (req, res) => {
       },
     }
   );
+
+  if (tx === null) {
+    return res.status(404).send({ error: 'Transaction not found' });
+  }
+
   res.status(200).send(tx);
 });
 
 router.get('/validators', async (req, res) => {
   const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
   const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+
+  if(await Validator.count() === 0){
+    return res.status(404).send({ error: 'Validator not found' });
+  }
+
   const { rows, count } = await Validator.findAndCountAll({
     order: [['stake', 'DESC']],
     limit,
@@ -134,6 +157,10 @@ router.get('/validators', async (req, res) => {
 });
 
 router.get('/validators/:state', async (req, res) => {
+  if(await Validator.count() === 0){
+    return res.status(404).send({ error: 'Validator not found' });
+  }
+
   const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
   const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
   const state = req.params.state
@@ -167,10 +194,18 @@ router.get('/validator/:hash', async (req, res) => {
     }
   );
 
+  if (validator === null) {
+    return res.status(404).send({ error: 'Validator not found' });
+  }
+
   res.status(200).send(validator);
 });
 
 router.get('/validator/uptime/:address', async (req, res) => {
+  if(await Validator.count() === 0){
+    return res.status(404).send({ error: 'Validator not found' });
+    
+  }
   const address = req.params.address;
   const blocks = await Block.findAll(
     {
@@ -253,8 +288,11 @@ router.get('/proposal/:id', async (req, res) => {
       },
     },
   );
-  const { contentJSON, ...proposal } = result.get()
+  if(result === null){
+    return res.status(404).send({ error: 'Proposal not found' });
+  }
 
+  const { contentJSON, ...proposal } = result.get();
   res.status(200).send({ ...proposal, ...JSON.parse(contentJSON) });
 });
 
