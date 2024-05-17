@@ -6,8 +6,9 @@ import Queue         from './queue.js'
 import indexBlock    from './index-block.js'
 import indexProposal from './index-proposal.js'
 import sequelize     from "./db/index.js";
+import { START_FROM_SCRATCH } from './constants.js';
 
-await sequelize.sync({ force: Boolean(process.env.START_FROM_SCRATCH) });
+await sequelize.sync({ force: Boolean(START_FROM_SCRATCH) });
 
 const console       = new Console('Undexer')
 const events        = await new Events()

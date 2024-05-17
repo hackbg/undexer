@@ -1,5 +1,5 @@
-import "dotenv/config";
 import { Console } from "./fadroma/packages/agent";
+import { UNDEXER_API_URL } from './constants.js'
 
 const console = new Console("Healthchecks");
 
@@ -18,8 +18,6 @@ const endpoints = [
   "txs",
   "tx/D7F20626E603C1F185C9C6B8EC01EAA200E9F6E15002B68D7F6C63BDB3CF1E2B",
 ];
-
-const { UNDEXER_API_URL } = process.env;
 
 async function main() {
   const endpointsResponse = await Promise.all(

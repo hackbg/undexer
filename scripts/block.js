@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-import "dotenv/config";
-
 import { readFileSync } from "node:fs";
 import * as Namada from "@fadroma/namada";
 import Block from "../models/Block.js";
 import Transaction from "../models/Transaction.js";
 import WASM_TO_CONTENT from '../models/Contents/index.js';
 import { format, initialize } from "../utils.js";
+import { POST_UNDEXER_RPC_URL } from '../constants.js'
+
 
 initialize()
 
@@ -15,7 +15,7 @@ export default async function uploadBlocksAndTxs(RPC_URL) {
     // blocks is not possible. We need to start indexing from the lowest.
     const lowestBlockHeight = 238387;
     const connection = Namada.testnet({
-        url: process.env.UNDEXER_RPC_URL || RPC_URL,
+        url: POST_UNDEXER_RPC_URL || RPC_URL,
     });
     let blockchainHeight = await connection.height;
     let blocksInDb = await Block.findAll();

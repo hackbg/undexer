@@ -5,7 +5,6 @@ import { readFileSync } from "node:fs";
 import init, { Query } from "../shared/pkg/shared.js";
 import { retryForever } from "../utils.js";
 import { StakeSchema, ValidatorSchema } from "../borsher-schema.js";
-import "dotenv/config";
 import Validator from "../models/Validator.js";
 import { POST_UNDEXER_RPC_URL } from "../constants.js";
 

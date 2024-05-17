@@ -3,9 +3,6 @@ import { describe, it, before } from "node:test";
 import fs from "fs";
 import { readFile, readdir } from "fs/promises";
 import Namada from "@fadroma/namada";
-import "dotenv/config";
-
-const { POST_UNDEXER_RPC_URL } = process.env;
 
 describe("block", async () => {
 

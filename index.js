@@ -10,17 +10,17 @@ import {
   NODE_LOWEST_BLOCK_HEIGHT,
   POST_UNDEXER_RPC_URL,
   PRE_UNDEXER_RPC_URL,
+  START_FROM_SCRATCH
+
 } from "./constants.js";
 import Validator from "./models/Validator.js";
 import VoteProposal from "./models/Contents/VoteProposal.js";
 import sequelize from "./db/index.js";
 import TransactionManager from "./TransactionManager.js";
-import "dotenv/config";
 import getRPC from "./connection.js";
 
 let isProcessingNewBlock = false;
 let isProcessingNewValidator = false;
-const { START_FROM_SCRATCH, START_BLOCK = 237908 } = process.env;
 
 await initialize();
 await sequelize.sync({ force: Boolean(START_FROM_SCRATCH) });
@@ -31,9 +31,9 @@ const eventEmitter = new EventEmitter();
 setTimeout(checkForNewBlock, 5000);
 async function checkForNewBlock() {
   // should use newer node for the blockchain height
-   const { connection }= await getRPC(START_BLOCK+1);
+   const { connection }= await getRPC(NODE_LOWEST_BLOCK_HEIGHT+1);
   const currentBlockOnChain = await connection.height;
-  const latestBlockInDb = Number(START_BLOCK) || (await getLatestBlockInDB());
+  const latestBlockInDb = Number(NODE_LOWEST_BLOCK_HEIGHT) || (await getLatestBlockInDB());
   console.log({ currentBlockOnChain, latestBlockInDb });
   if (currentBlockOnChain > latestBlockInDb) {
     console.br().log("Starting from block", latestBlockInDb + 1);

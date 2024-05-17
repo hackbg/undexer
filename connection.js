@@ -2,9 +2,7 @@ import { Query } from "./shared/pkg/shared.js";
 import { readFile } from "fs/promises";
 import Namada from "@fadroma/namada";
 import { initialize } from "./utils.js";
-import "dotenv/config";
-
-const { PRE_UNDEXER_RPC_URL, POST_UNDEXER_RPC_URL, START_BLOCK } = process.env;
+import { PRE_UNDEXER_RPC_URL, POST_UNDEXER_RPC_URL, START_BLOCK } from './constants.js';
 
 await initialize();
 
