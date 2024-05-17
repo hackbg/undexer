@@ -1,6 +1,5 @@
 import fs from "fs";
 import { POST_UNDEXER_RPC_URL, NODE_LOWEST_BLOCK_HEIGHT } from "../../constants.js";
-import sequelize from "../../db/index.js";
 
 const fetchJSON = (url) => {
   console.log(`Fetching ${url}`);

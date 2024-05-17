@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { readFileSync } from "node:fs";
 import * as Namada from "@fadroma/namada";
 import Block from "../models/Block.js";
 import Transaction from "../models/Transaction.js";

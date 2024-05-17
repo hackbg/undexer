@@ -1,24 +1,4 @@
 import sequelize from "../db/index.js";
-import BecomeValidator from "./Contents/BecomeValidator.js";
-import Bond from "./Contents/Bond.js";
-import ChangeConsensusKey from "./Contents/ChangeConsensusKey.js";
-import ChangeValidatorComission from "./Contents/ChangeValidatorComission.js";
-import ChangeValidatorMetadata from "./Contents/ChangeValidatorMetadata.js";
-import ClaimRewards from "./Contents/ClaimRewards.js";
-import DeactivateValidator from "./Contents/DeactivateValidator.js";
-import IBC from "./Contents/IBC.js";
-import InitAccount from "./Contents/InitAccount.js";
-import InitProposal from "./Contents/InitProposal.js";
-import ReactivateValidator from "./Contents/ReactivateValidator.js";
-import ResignSteward from "./Contents/ResignSteward.js";
-import Transfer from "./Contents/Transfer.js";
-import Unbond from "./Contents/Unbond.js";
-import UnjailValidator from "./Contents/UnjailValidator.js";
-import UpdateAccount from "./Contents/UpdateAccount.js";
-import UpdateStewardCommission from "./Contents/UpdateStewardComission.js";
-import VoteProposal from "./Contents/VoteProposal.js";
-import Withdraw from "./Contents/Withdraw.js";
-
 const Content = sequelize.define('content');
 
 // Content.hasOne(BecomeValidator);

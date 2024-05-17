@@ -8,10 +8,7 @@ import Block, { getLatestBlockInDB } from "./models/Block.js";
 import Proposal from "./models/Proposal.js";
 import {
   NODE_LOWEST_BLOCK_HEIGHT,
-  POST_UNDEXER_RPC_URL,
-  PRE_UNDEXER_RPC_URL,
   START_FROM_SCRATCH
-
 } from "./constants.js";
 import Validator from "./models/Validator.js";
 import VoteProposal from "./models/Contents/VoteProposal.js";

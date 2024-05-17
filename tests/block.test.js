@@ -1,6 +1,5 @@
 #!/usr/bin/env -S npx tsx
-import { describe, it, before } from "node:test";
-import fs from "fs";
+import { describe, it } from "node:test";
 import { readFile, readdir } from "fs/promises";
 import Namada from "@fadroma/namada";
 
