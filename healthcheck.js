@@ -1,4 +1,5 @@
-import { Console } from "./fadroma/packages/agent";
+#!/usr/bin/env -S npx tsx
+import { Console } from "@hackbg/fadroma";
 import { UNDEXER_API_URL } from './constants.js'
 
 const console = new Console("Healthchecks");
