@@ -3,7 +3,7 @@
 import EventEmitter from "node:events";
 import { initialize, serialize } from "./utils.js";
 import { getValidator, getValidatorsFromNode } from "./scripts/validator.js";
-import { Console } from "@fadroma/agent";
+import { Console } from "@hackbg/fadroma";
 import Block, { getLatestBlockInDB } from "./models/Block.js";
 import Proposal from "./models/Proposal.js";
 import {

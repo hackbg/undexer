@@ -1,4 +1,4 @@
-import { Console } from '@fadroma/agent';
+import { Console } from '@hackbg/fadroma';
 import getRPC from './connection.js';
 import Block from './models/Block.js';
 import Transaction from './models/Transaction.js';

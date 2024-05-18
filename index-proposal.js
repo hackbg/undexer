@@ -1,4 +1,4 @@
-import { Console } from '@fadroma/agent';
+import { Console } from '@hackbg/fadroma';
 import getRPC from './connection.js';
 // import Proposal from './models/Proposal.js';
 // import { deserialize } from 'borsh';

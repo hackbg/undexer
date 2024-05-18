@@ -1,6 +1,6 @@
 #!/usr/bin/env -S node --import=@ganesha/esbuild
 
-import { Console }      from '@fadroma/agent'
+import { Console }   from '@hackbg/fadroma'
 import Events        from './events.js'
 import Queue         from './queue.js'
 import indexBlock    from './index-block.js'

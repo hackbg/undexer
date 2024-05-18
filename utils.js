@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import initShared from "./shared/pkg/shared.js";
 import { initDecoder } from "@fadroma/namada";
-import { base64 } from "@fadroma/agent";
+import { base64 } from "@hackbg/fadroma";
 
 export function serialize(data) {
     return JSON.stringify(data, stringifier);

@@ -14,9 +14,6 @@ importers:
       '@dao-xyz/borsh':
         specifier: ^5.2.1
         version: 5.2.2
-      '@fadroma/agent':
-        specifier: workspace:./fadroma/packages/agent
-        version: link:fadroma/packages/agent
       '@fadroma/namada':
         specifier: workspace:./fadroma/packages/namada
         version: link:fadroma/packages/namada
@@ -29,6 +26,9 @@ importers:
       '@hackbg/cmds':
         specifier: ^4.0.0-rc.5
         version: link:fadroma/toolbox/cmds
+      '@hackbg/fadroma':
+        specifier: workspace:./fadroma
+        version: link:fadroma
       '@hackbg/logs':
         specifier: ^2.3.2
         version: link:fadroma/toolbox/logs
@@ -71,33 +71,33 @@ importers:
 
   fadroma:
     dependencies:
-      '@fadroma/agent':
+      '@hackbg/4mat':
         specifier: workspace:*
-        version: link:packages/agent
-      '@fadroma/create':
-        specifier: workspace:*
-        version: link:packages/create
-      '@fadroma/cw':
-        specifier: workspace:*
-        version: link:packages/cw
-      '@fadroma/scrt':
-        specifier: workspace:*
-        version: link:packages/scrt
+        version: link:toolbox/4mat
       '@hackbg/cmds':
         specifier: workspace:*
         version: link:toolbox/cmds
       '@hackbg/conf':
         specifier: workspace:*
         version: link:toolbox/conf
+      '@hackbg/dump':
+        specifier: workspace:*
+        version: link:toolbox/dump
       '@hackbg/file':
         specifier: workspace:*
         version: link:toolbox/file
-      '@hackbg/ganesha':
-        specifier: '*'
-        version: link:toolbox/ganesha
+      '@hackbg/hide':
+        specifier: workspace:*
+        version: link:toolbox/hide
+      '@hackbg/into':
+        specifier: workspace:*
+        version: link:toolbox/into
       '@hackbg/logs':
         specifier: workspace:*
         version: link:toolbox/logs
+      '@hackbg/oops':
+        specifier: workspace:*
+        version: link:toolbox/oops
       '@hackbg/port':
         specifier: workspace:*
         version: link:toolbox/port
@@ -117,30 +117,48 @@ importers:
       '@fadroma/compile':
         specifier: workspace:^
         version: link:packages/compile
+      '@fadroma/create':
+        specifier: workspace:*
+        version: link:packages/create
+      '@fadroma/cw':
+        specifier: workspace:*
+        version: link:packages/cw
+      '@fadroma/deploy':
+        specifier: workspace:*
+        version: link:packages/deploy
       '@fadroma/devnet':
         specifier: workspace:^
         version: link:packages/devnet
       '@fadroma/fixtures':
         specifier: link:fixtures
         version: link:fixtures
+      '@fadroma/namada':
+        specifier: workspace:*
+        version: link:packages/namada
       '@fadroma/oci':
         specifier: workspace:^
         version: link:packages/oci
+      '@fadroma/scrt':
+        specifier: workspace:*
+        version: link:packages/scrt
+      '@fadroma/stub':
+        specifier: workspace:*
+        version: link:packages/stub
       '@ganesha/esbuild':
         specifier: workspace:^
         version: link:toolbox/ganesha/esbuild
       '@hackbg/docs':
         specifier: workspace:^
         version: link:toolbox/docs
-      '@hackbg/dump':
-        specifier: workspace:^
-        version: link:toolbox/dump
       '@hackbg/ensuite':
         specifier: workspace:^
         version: link:toolbox/ensuite
       '@hackbg/fadroma':
         specifier: workspace:^
         version: 'link:'
+      '@hackbg/ganesha':
+        specifier: '*'
+        version: link:toolbox/ganesha
       '@hackbg/ubik':
         specifier: workspace:^
         version: link:toolbox/ubik
@@ -180,47 +198,60 @@ importers:
 
   fadroma/examples:
     dependencies:
+      '@fadroma/deploy':
+        specifier: link:../packages/deploy
+        version: link:../packages/deploy
       '@hackbg/fadroma':
         specifier: link:..
         version: link:..
 
-  fadroma/fixtures: {}
-
-  fadroma/packages/agent:
+  fadroma/fixtures:
     dependencies:
-      '@hackbg/4mat':
-        specifier: workspace:^
-        version: link:../../toolbox/4mat
+      '@fadroma/deploy':
+        specifier: workspace:*
+        version: link:../packages/deploy
+      '@hackbg/fadroma':
+        specifier: workspace:*
+        version: link:..
+      '@hackbg/file':
+        specifier: workspace:*
+        version: link:../toolbox/file
+
+  fadroma/packages/cli:
+    dependencies:
+      '@fadroma/create':
+        specifier: workspace:*
+        version: link:../create
+      '@fadroma/cw':
+        specifier: workspace:*
+        version: link:../cw
+      '@fadroma/devnet':
+        specifier: workspace:*
+        version: link:../devnet
+      '@fadroma/namada':
+        specifier: workspace:*
+        version: link:../namada
       '@hackbg/cmds':
         specifier: workspace:*
         version: link:../../toolbox/cmds
-      '@hackbg/dump':
-        specifier: workspace:^1.0.1
-        version: link:../../toolbox/dump
-      '@hackbg/hide':
-        specifier: workspace:^1.0.4
-        version: link:../../toolbox/hide
-      '@hackbg/into':
-        specifier: workspace:^1.0.1
-        version: link:../../toolbox/into
-      '@hackbg/logs':
-        specifier: workspace:^2.3.2
-        version: link:../../toolbox/logs
-      '@hackbg/oops':
-        specifier: workspace:^1.1
-        version: link:../../toolbox/oops
+      '@hackbg/fadroma':
+        specifier: workspace:*
+        version: link:../..
+      '@hackbg/ganesha':
+        specifier: workspace:*
+        version: link:../../toolbox/ganesha
 
   fadroma/packages/compile:
     dependencies:
-      '@fadroma/agent':
-        specifier: workspace:*
-        version: link:../agent
       '@fadroma/oci':
         specifier: workspace:*
         version: link:../oci
       '@hackbg/cmds':
         specifier: workspace:*
         version: link:../../toolbox/cmds
+      '@hackbg/fadroma':
+        specifier: workspace:*
+        version: link:../..
       '@hackbg/file':
         specifier: workspace:*
         version: link:../../toolbox/file
@@ -652,12 +683,12 @@ importers:
 
   fadroma/packages/create:
     dependencies:
-      '@fadroma/agent':
-        specifier: workspace:*
-        version: link:../agent
       '@hackbg/cmds':
         specifier: workspace:*
         version: link:../../toolbox/cmds
+      '@hackbg/fadroma':
+        specifier: workspace:*
+        version: link:../..
       '@hackbg/file':
         specifier: workspace:*
         version: link:../../toolbox/file
@@ -692,17 +723,14 @@ importers:
         specifier: ^1.2.1
         version: 1.2.1
     devDependencies:
-      '@fadroma/agent':
+      '@hackbg/fadroma':
         specifier: workspace:*
-        version: link:../agent
+        version: link:../..
 
   fadroma/packages/deploy: {}
 
   fadroma/packages/devnet:
     dependencies:
-      '@fadroma/agent':
-        specifier: workspace:*
-        version: link:../agent
       '@fadroma/cw':
         specifier: workspace:*
         version: link:../cw
@@ -715,6 +743,9 @@ importers:
       '@hackbg/cmds':
         specifier: workspace:^
         version: link:../../toolbox/cmds
+      '@hackbg/fadroma':
+        specifier: workspace:*
+        version: link:../..
       '@hackbg/file':
         specifier: workspace:^
         version: link:../../toolbox/file
@@ -737,15 +768,12 @@ importers:
 
   fadroma/packages/evm:
     dependencies:
-      '@fadroma/agent':
+      '@hackbg/fadroma':
         specifier: workspace:*
-        version: link:../agent
+        version: link:../..
 
   fadroma/packages/namada:
     dependencies:
-      '@fadroma/agent':
-        specifier: workspace:*
-        version: link:../agent
       '@fadroma/cw':
         specifier: workspace:*
         version: link:../cw
@@ -755,12 +783,15 @@ importers:
       '@hackbg/cmds':
         specifier: workspace:*
         version: link:../../toolbox/cmds
+      '@hackbg/fadroma':
+        specifier: workspace:*
+        version: link:../..
 
   fadroma/packages/oci:
     dependencies:
-      '@fadroma/agent':
+      '@hackbg/fadroma':
         specifier: workspace:*
-        version: link:../agent
+        version: link:../..
       '@hackbg/file':
         specifier: workspace:^
         version: link:../../toolbox/file
@@ -791,9 +822,9 @@ importers:
 
   fadroma/packages/scrt:
     dependencies:
-      '@fadroma/agent':
+      '@hackbg/fadroma':
         specifier: workspace:*
-        version: link:../agent
+        version: link:../..
       '@hackbg/secretjs-esm':
         specifier: workspace:*
         version: link:../secretjs-esm
@@ -920,6 +951,12 @@ importers:
         version: 4.9.2(webpack@5.76.0)
 
   fadroma/packages/shim: {}
+
+  fadroma/packages/stub:
+    devDependencies:
+      '@hackbg/fadroma':
+        specifier: workspace:*
+        version: link:../..
 
   fadroma/toolbox:
     devDependencies:
@@ -1220,6 +1257,8 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
 
+  fadroma/toolbox/ganesha/oxc/pkg: {}
+
   fadroma/toolbox/hide: {}
 
   fadroma/toolbox/into: {}
@@ -1317,8 +1356,6 @@ importers:
       typescript:
         specifier: ~5.3.3
         version: 5.3.3
-
-  rust/pkg: {}
 
 packages:
 
