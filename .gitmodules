@@ -1,4 +1,4 @@
 [submodule "fadroma"]
-	path = fadroma
-  url = git@github.com:hackbg/fadroma.git
-  branch = namada-stable
+  path = fadroma
+  url = https://github.com/hackbg/fadroma
+  branch = v2
