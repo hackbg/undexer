@@ -2,7 +2,7 @@ import { Query } from "./shared/pkg/shared.js";
 import { readFile } from "fs/promises";
 import Namada from "@fadroma/namada";
 import { initialize } from "./utils.js";
-import { PRE_UNDEXER_RPC_URL, POST_UNDEXER_RPC_URL, START_BLOCK } from './constants.js';
+import { PRE_UNDEXER_RPC_URL, POST_UNDEXER_RPC_URL, NODE_LOWEST_BLOCK_HEIGHT } from './constants.js';
 
 await initialize();
 
@@ -20,7 +20,7 @@ const rpcVariant = async (url) => ({
   * to a pair of { query, connection } objects that wrap the RPC. */
 export const rpcs = toSortedRPCs({
   1: rpcVariant(PRE_UNDEXER_RPC_URL),
-  [START_BLOCK]: rpcVariant(POST_UNDEXER_RPC_URL),
+  [NODE_LOWEST_BLOCK_HEIGHT]: rpcVariant(POST_UNDEXER_RPC_URL),
 })
 
 /** Validate record of (first block number -> RPC) and
