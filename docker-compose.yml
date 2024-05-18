@@ -35,7 +35,7 @@ services:
     volumes:
       - .:/app
     working_dir: /app
-    command: api/index.js
+    command: --import @ganesha/esbuild-wasm api/index.js
     environment:
       DATABASE_URL: postgresql://postgres:insecure@postgres/postgres
 
