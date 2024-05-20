@@ -13,7 +13,7 @@ import {
 import Validator from "./models/Validator.js";
 import VoteProposal from "./models/Contents/VoteProposal.js";
 import sequelize from "./db/index.js";
-import TransactionManager from "./TransactionManager.js";
+import * as TransactionManager from "./TransactionManager.js";
 import getRPC from "./connection.js";
 
 let isProcessingNewBlock = false;
@@ -29,15 +29,17 @@ setTimeout(checkForNewBlock, 5000);
 setTimeout(updateValidators, 5000);
 
 async function updateValidators() {
-  const { connection }= await getRPC(NODE_LOWEST_BLOCK_HEIGHT+1);
+  const { connection } = await getRPC(NODE_LOWEST_BLOCK_HEIGHT+1);
   const validators = await connection.getValidators({ details: true });
-  await Validator.destroy({ where: {} });
-  await Validator.bulkCreate(validators);
+  await sequelize.transaction(async dbTransaction => {
+    await Validator.destroy({ where: {} }, { transaction: dbTransaction });
+    await Validator.bulkCreate(validators, { transaction: dbTransaction });
+  })
 }
 
 async function checkForNewBlock() {
   // should use newer node for the blockchain height
-   const { connection }= await getRPC(NODE_LOWEST_BLOCK_HEIGHT+1);
+  const { connection } = await getRPC(NODE_LOWEST_BLOCK_HEIGHT+1);
   const currentBlockOnChain = await connection.height;
   const latestBlockInDb = Number(NODE_LOWEST_BLOCK_HEIGHT) || (await getLatestBlockInDB());
   console.log({ currentBlockOnChain, latestBlockInDb });
@@ -80,8 +82,6 @@ async function updateBlocks(blockHeightDb, chainHeight) {
 
     console.log(blockData)
 
-    await Block.create(blockData);
-
     const txsDecoded = []
     for (const i in txs) {
       try {
@@ -95,17 +95,20 @@ async function updateBlocks(blockHeightDb, chainHeight) {
         })
       }
     }
-    for (let tx of txsDecoded) {
-      tx.txId = tx.id
-      await TransactionManager.handleTransaction(i, tx, eventEmitter);
-      console.log(i, tx)
-    }
+
+    await sequelize.transaction(async dbTransaction => {
+      await Block.create(blockData, { transaction: dbTransaction });
+      for (let tx of txsDecoded) {
+        tx.txId = tx.id
+        await TransactionManager.handleTransaction(i, tx, eventEmitter, dbTransaction);
+        console.log(i, tx)
+      }
+    })
 
     console.log("Added block", i);
   }
   isProcessingNewBlock = false;
 }
-
 
 eventEmitter.on("updateValidators", async () => {
   if (isProcessingNewValidator) return;
@@ -118,10 +121,17 @@ eventEmitter.on("updateValidators", async () => {
   console.log("=====================================");
 
   const validatorsBinary = await getValidatorsFromNode(conn);
+  const validators = []
   for (const validatorBinary of validatorsBinary) {
     const validator = await getValidator(q, conn, validatorBinary);
-    await Validator.create(JSON.parse(serialize(validator)));
+    const validatorData = JSON.parse(serialize(validator));
+    validators.push(validatorData);
   }
+  await sequelize.transaction(async dbTransaction => {
+    for (const validatorData of validators) {
+      await Validator.create(validatorData, { transaction: dbTransaction });
+    }
+  })
 
   isProcessingNewValidator = false;
 });
@@ -137,10 +147,10 @@ eventEmitter.on("createProposal", async (txData) => {
 });
 
 eventEmitter.on("updateProposal", async (proposalId, blockHeight) => {
-  await Proposal.destroy({ where: { id: proposalId } });
   const { q } = getRPC(blockHeight);
-
   const proposal = await q.query_proposal(BigInt(proposalId));
-  await VoteProposal.create(proposal);
+  await sequelize.transaction(async dbTransaction => {
+    await Proposal.destroy({ where: { id: proposalId } }, { transaction: dbTransaction });
+    await VoteProposal.create(proposal, { transaction: dbTransaction });
+  })
 });
-
