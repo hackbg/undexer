@@ -2,22 +2,37 @@ import { DataTypes } from "sequelize";
 import sequelize from "../db/index.js";
 
 const Validator = sequelize.define('validator', {
-    timestamp: {
-        type: DataTypes.DATE,
+    address: {
+        type: DataTypes.TEXT,
     },
-    validator: {
+    publicKey: {
+        type: DataTypes.TEXT,
+    },
+    votingPower: {
+        type: DataTypes.TEXT,
+    },
+    proposerPriority:{
+        type: DataTypes.TEXT,
+    },
+    namadaAddress: {
         type: DataTypes.TEXT,
     },
     metadata: {
         type: DataTypes.JSON,
     },
-    stake: {
-        type: DataTypes.JSON,
-    },
     commission: {
         type: DataTypes.JSON,
     },
-    state: DataTypes.ENUM("BelowThreshold", "BelowCapacity", "Jailed", "Consensus", "Inactive"),
+    state: DataTypes.ENUM(
+        "BelowThreshold",
+        "BelowCapacity", 
+        "Jailed",
+        "Consensus",
+        "Inactive"
+    ),
+    stake: {
+        type: DataTypes.TEXT,
+    },
 });
 
 export default Validator;

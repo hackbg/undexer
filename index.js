@@ -26,6 +26,15 @@ const console = new Console("Index");
 const eventEmitter = new EventEmitter();
 
 setTimeout(checkForNewBlock, 5000);
+setTimeout(updateValidators, 5000);
+
+async function updateValidators() {
+  const { connection }= await getRPC(NODE_LOWEST_BLOCK_HEIGHT+1);
+  const validators = await connection.getValidators({ details: true });
+  await Validator.destroy({ where: {} });
+  await Validator.bulkCreate(validators);
+}
+
 async function checkForNewBlock() {
   // should use newer node for the blockchain height
    const { connection }= await getRPC(NODE_LOWEST_BLOCK_HEIGHT+1);
