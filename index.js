@@ -1,32 +1,41 @@
 #!/usr/bin/env -S node --import=@ganesha/esbuild
 
+import {
+  NODE_LOWEST_BLOCK_HEIGHT,
+  START_FROM_SCRATCH,
+  VALIDATOR_UPDATE_INTERVAL,
+  BLOCK_UPDATE_INTERVAL
+} from "./constants.js";
+
+import getRPC from "./connection.js";
+import sequelize from "./db/index.js";
 import EventEmitter from "node:events";
 import { initialize, serialize } from "./utils.js";
 import { getValidator, getValidatorsFromNode } from "./scripts/validator.js";
 import { Console } from "@hackbg/fadroma";
-import Block, { getLatestBlockInDB } from "./models/Block.js";
+import { format } from "./utils.js";
+
+import Block from "./models/Block.js";
 import Proposal from "./models/Proposal.js";
-import {
-  NODE_LOWEST_BLOCK_HEIGHT,
-  START_FROM_SCRATCH
-} from "./constants.js";
 import Validator from "./models/Validator.js";
 import VoteProposal from "./models/Contents/VoteProposal.js";
-import sequelize from "./db/index.js";
-import * as TransactionManager from "./TransactionManager.js";
-import getRPC from "./connection.js";
-
-let isProcessingNewBlock = false;
-let isProcessingNewValidator = false;
+import Cipher from "./models/Sections/Cipher.js";
+import Code from "./models/Sections/Code.js";
+import Data from "./models/Sections/Data.js";
+import ExtraData from "./models/Sections/ExtraData.js";
+import MaspBuilder from "./models/Sections/MaspBuilder.js";
+import Signature from "./models/Sections/Signature.js";
+import Transaction from "./models/Transaction.js";
+import { WASM_TO_CONTENT } from './models/Contents/index.js';
 
 await initialize();
 await sequelize.sync({ force: Boolean(START_FROM_SCRATCH) });
 
 const console = new Console("Index");
-const eventEmitter = new EventEmitter();
+const events = new EventEmitter();
 
-setTimeout(checkForNewBlock, 5000);
-setTimeout(updateValidators, 5000);
+checkForNewBlock();
+updateValidators();
 
 async function updateValidators() {
   const { connection } = await getRPC(NODE_LOWEST_BLOCK_HEIGHT+1);
@@ -35,43 +44,32 @@ async function updateValidators() {
     await Validator.destroy({ where: {} }, { transaction: dbTransaction });
     await Validator.bulkCreate(validators, { transaction: dbTransaction });
   })
+  setTimeout(updateValidators, VALIDATOR_UPDATE_INTERVAL);
 }
 
 async function checkForNewBlock() {
   // should use newer node for the blockchain height
-  const { connection } = await getRPC(NODE_LOWEST_BLOCK_HEIGHT+1);
+  const { connection }      = await getRPC(NODE_LOWEST_BLOCK_HEIGHT+1);
   const currentBlockOnChain = await connection.height;
-  const latestBlockInDb = Number(NODE_LOWEST_BLOCK_HEIGHT) || (await getLatestBlockInDB());
-  console.log({ currentBlockOnChain, latestBlockInDb });
+  const latestBlockInDb     = await Block.max('height') || Number(NODE_LOWEST_BLOCK_HEIGHT);
   if (currentBlockOnChain > latestBlockInDb) {
-    console.br().log("Starting from block", latestBlockInDb + 1);
+    console.log("=> Current block on chain:", currentBlockOnChain);
+    console.log("=> Latest block in DB:", latestBlockInDb);
     await updateBlocks(latestBlockInDb + 1, currentBlockOnChain);
   } else {
-    console.log("=====================================");
-    console.info("No new blocks");
-    console.log("=====================================");
+    console.info("=> No new blocks");
   }
-
-  setTimeout(checkForNewBlock, 5000);
+  setTimeout(checkForNewBlock, BLOCK_UPDATE_INTERVAL);
 }
 
-async function updateBlocks(blockHeightDb, chainHeight) {
-  if (isProcessingNewBlock) return;
-  isProcessingNewBlock = true;
-
-  console.log("=====================================");
-  console.log("Processing new blocks");
-  console.log("=====================================");
-
-  for (let i = blockHeightDb; i <= chainHeight; i++) {
+async function updateBlocks(startHeight, endHeight) {
+  console.log("=> Processing blocks from", startHeight, "to", endHeight);
+  for (let i = startHeight; i <= endHeight; i++) {
     const { connection } = await getRPC(i);
-
-    const { id, header, blockRaw, resultsRaw, txs } = await connection.fetchBlock({ height:i });
-
+    const { id, header, blockRaw, resultsRaw, txs } = await connection.fetchBlock({ height: i });
     header.height = String(header.height)
     header.version.block = String(header.version.block)
     header.version.app = String(header.version.app)
-
     const blockData = {
       id,
       header,
@@ -79,9 +77,6 @@ async function updateBlocks(blockHeightDb, chainHeight) {
       results:     JSON.parse(resultsRaw),
       rpcResponse: JSON.parse(blockRaw),
     }
-
-    console.log(blockData)
-
     const txsDecoded = []
     for (const i in txs) {
       try {
@@ -95,31 +90,23 @@ async function updateBlocks(blockHeightDb, chainHeight) {
         })
       }
     }
-
     await sequelize.transaction(async dbTransaction => {
       await Block.create(blockData, { transaction: dbTransaction });
       for (let tx of txsDecoded) {
         tx.txId = tx.id
-        await TransactionManager.handleTransaction(i, tx, eventEmitter, dbTransaction);
+        await handleTransaction(i, tx, events, dbTransaction);
         console.log(i, tx)
       }
     })
-
     console.log("Added block", i);
   }
-  isProcessingNewBlock = false;
 }
 
-eventEmitter.on("updateValidators", async () => {
-  if (isProcessingNewValidator) return;
-  isProcessingNewValidator = true;
-
+events.on("updateValidators", async () => {
   const { q, conn } = getRPC(NODE_LOWEST_BLOCK_HEIGHT + 1);
-
   console.log("=====================================");
   console.log("Processing new validator");
   console.log("=====================================");
-
   const validatorsBinary = await getValidatorsFromNode(conn);
   const validators = []
   for (const validatorBinary of validatorsBinary) {
@@ -132,11 +119,9 @@ eventEmitter.on("updateValidators", async () => {
       await Validator.create(validatorData, { transaction: dbTransaction });
     }
   })
-
-  isProcessingNewValidator = false;
 });
 
-eventEmitter.on("createProposal", async (txData) => {
+events.on("createProposal", async (txData) => {
   await Proposal.create(txData);
   // const latestProposal = await Proposal.findOne({ order: [["id", "DESC"]] });
   /*
@@ -146,7 +131,7 @@ eventEmitter.on("createProposal", async (txData) => {
     */
 });
 
-eventEmitter.on("updateProposal", async (proposalId, blockHeight) => {
+events.on("updateProposal", async (proposalId, blockHeight) => {
   const { q } = getRPC(blockHeight);
   const proposal = await q.query_proposal(BigInt(proposalId));
   await sequelize.transaction(async dbTransaction => {
@@ -154,3 +139,44 @@ eventEmitter.on("updateProposal", async (proposalId, blockHeight) => {
     await VoteProposal.create(proposal, { transaction: dbTransaction });
   })
 });
+
+export async function handleTransaction(blockHeight, tx, events, dbTransaction) {
+  if (tx.content !== undefined) {
+    const uploadData = format(Object.assign(tx.content));
+    await WASM_TO_CONTENT[tx.content.type].create(uploadData.data);
+    if (VALIDATOR_TRANSACTIONS.includes(tx.content.type)) {
+      events.emit("updateValidators", blockHeight);
+    }
+    if (tx.content.type === "tx_vote_proposal.wasm") {
+      events.emit("updateProposal", tx.content.data.proposalId, blockHeight);
+    }
+    if (tx.content.type === "tx_init_proposal.wasm") {
+      events.emit("createProposal", tx.content.data);
+    }
+  }
+  for (let i = 0; i < tx.sections.length; i++) {
+    const section = tx.sections[i];
+    if (section.type == "ExtraData") {
+      await ExtraData.create(section, { transaction: dbTransaction });
+    }
+    if (section.type == "Code") {
+      await Code.create(section, { transaction: dbTransaction });
+    }
+    if (section.type == "Data") {
+      await Data.create(section, { transaction: dbTransaction });
+    }
+    if (section.type == "Signature") {
+      await Signature.create(section, { transaction: dbTransaction });
+    }
+    if (section.type == "MaspBuilder") {
+      await MaspBuilder.create(section, { transaction: dbTransaction });
+    }
+    if (section.type == "Cipher") {
+      await Cipher.create(section, { transaction: dbTransaction });
+    }
+    if (section.type == "MaspBuilder") {
+      await MaspBuilder.create(section, { transaction: dbTransaction });
+    }
+  }
+  await Transaction.create(tx, { transaction: dbTransaction });
+}
