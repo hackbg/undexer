@@ -23,6 +23,6 @@ RUN pwd && ls -al
 RUN corepack enable && pnpm i --frozen-lockfile
 
 COPY --from=wasm /build/undexer-rust/pkg ./rust/pkg
-COPY --from=wasm /build/fadroma-namada/pkg ./fadroma/packages/namada/pkg
+COPY --from=wasm /build/fadroma-namada/pkg/fadroma_namada_bg.wasm ./fadroma/packages/namada/pkg/fadroma_namada_bg.wasm
 
 RUN pwd && ls -al && ls -al rust/
