@@ -6,7 +6,7 @@ RUN cargo install wasm-pack
 
 WORKDIR /build/fadroma-namada
 ADD ./fadroma/packages/namada .
-RUN PATH=$PATH:~/.cargo/bin wasm-pack build --release --target nodejs \
+RUN PATH=$PATH:~/.cargo/bin wasm-pack build --release --target web \
  && rm -rf target
 
 WORKDIR /build/undexer-rust
