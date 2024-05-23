@@ -5,7 +5,8 @@ RUN rustup target add wasm32-unknown-unknown
 RUN cargo install wasm-pack
 
 WORKDIR /build/fadroma-namada
-ADD ./fadroma/packages/namada .
+COPY ./fadroma/packages/namada/Cargo.toml ./fadroma/packages/namada/Cargo.lock .
+COPY ./fadroma/packages/namada/src ./src
 RUN PATH=$PATH:~/.cargo/bin wasm-pack build --release --target web \
  && rm -rf target
 
