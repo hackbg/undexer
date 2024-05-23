@@ -11,7 +11,7 @@ RUN apk add git
 WORKDIR /app
 ADD . ./
 RUN pwd && ls -al
-RUN git submodule update --init --recursive
+RUN git submodule update --init --recursive && rm -rf .git
 RUN corepack enable && pnpm i --frozen-lockfile
 COPY --from=wasm /build/pkg ./rust/pkg
 RUN pwd && ls -al && ls -al rust/
