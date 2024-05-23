@@ -4,16 +4,16 @@ import {
   NODE_LOWEST_BLOCK_HEIGHT,
   START_FROM_SCRATCH,
   VALIDATOR_UPDATE_INTERVAL,
-  BLOCK_UPDATE_INTERVAL
+  BLOCK_UPDATE_INTERVAL,
+  VALIDATOR_TRANSACTIONS
 } from "./constants.js";
 
 import getRPC from "./connection.js";
 import sequelize from "./db/index.js";
 import EventEmitter from "node:events";
-import { initialize, serialize } from "./utils.js";
+import { initialize, format, serialize } from "./utils.js";
 import { getValidator, getValidatorsFromNode } from "./scripts/validator.js";
 import { Console } from "@hackbg/fadroma";
-import { format } from "./utils.js";
 
 import Block from "./models/Block.js";
 import Proposal from "./models/Proposal.js";
@@ -64,98 +64,52 @@ async function checkForNewBlock() {
 
 async function updateBlocks(startHeight, endHeight) {
   console.log("=> Processing blocks from", startHeight, "to", endHeight);
-  for (let i = startHeight; i <= endHeight; i++) {
-    const { connection } = await getRPC(i);
-    const { id, header, blockRaw, resultsRaw, txs } = await connection.fetchBlock({ height: i });
-    header.height = String(header.height)
-    header.version.block = String(header.version.block)
-    header.version.app = String(header.version.app)
-    const blockData = {
-      id,
-      header,
-      height:      header.height,
-      results:     JSON.parse(resultsRaw),
-      rpcResponse: JSON.parse(blockRaw),
-    }
-    const txsDecoded = []
-    for (const i in txs) {
-      try {
-        txsDecoded[i] = Namada.TX.Transaction.fromDecoded(txs[i])
-      } catch (error) {
-        console.error(error)
-        console.warn(`Failed to decode transaction #${i} in block ${height}, see above for details.`)
-        txsDecoded[i] = new Namada.TX.Transactions.Undecoded({
-          data: txs[i],
-          error: error
-        })
-      }
-    }
-    await sequelize.transaction(async dbTransaction => {
-      await Block.create(blockData, { transaction: dbTransaction });
-      for (let tx of txsDecoded) {
-        tx.txId = tx.id
-        await handleTransaction(i, tx, events, dbTransaction);
-        console.log(i, tx)
-      }
-    })
-    console.log("Added block", i);
+  for (let height = startHeight; height <= endHeight; height++) {
+    await updateBlock(height)
   }
 }
 
-events.on("updateValidators", async () => {
-  const { q, conn } = getRPC(NODE_LOWEST_BLOCK_HEIGHT + 1);
-  console.log("=====================================");
-  console.log("Processing new validator");
-  console.log("=====================================");
-  const validatorsBinary = await getValidatorsFromNode(conn);
-  const validators = []
-  for (const validatorBinary of validatorsBinary) {
-    const validator = await getValidator(q, conn, validatorBinary);
-    const validatorData = JSON.parse(serialize(validator));
-    validators.push(validatorData);
-  }
+async function updateBlock (height) {
+  const { connection } = await getRPC(height);
+  const block = await connection.fetchBlock({ height, raw: true });
+  const blockData = {
+    id:          block.id,
+    header:      block.header,
+    height:      block.header.height,
+    results:     JSON.parse(block.rawResultsResponse),
+    rpcResponse: JSON.parse(block.rawBlockResponse),
+  };
   await sequelize.transaction(async dbTransaction => {
-    for (const validatorData of validators) {
-      await Validator.create(validatorData, { transaction: dbTransaction });
+    await Block.create(blockData, { transaction: dbTransaction });
+    for (const transaction of block.transactions) {
+      transaction.txId = transaction.id
+      await updateTransaction(height, transaction, events, dbTransaction);
     }
   })
-});
+  console.log("++ Added block", height);
+  for (const transaction of block.transactions) {
+    console.log("++ Added transaction", transaction.id);
+  }
+}
 
-events.on("createProposal", async (txData) => {
-  await Proposal.create(txData);
-  // const latestProposal = await Proposal.findOne({ order: [["id", "DESC"]] });
-  /*
-    const { q } = getUndexerRPCUrl(NODE_LOWEST_BLOCK_HEIGHT+1)
-    const proposalChain = await q.query_proposal(BigInt(txData.proposalId));
-    await Proposal.create(proposalChain);
-    */
-});
-
-events.on("updateProposal", async (proposalId, blockHeight) => {
-  const { q } = getRPC(blockHeight);
-  const proposal = await q.query_proposal(BigInt(proposalId));
-  await sequelize.transaction(async dbTransaction => {
-    await Proposal.destroy({ where: { id: proposalId } }, { transaction: dbTransaction });
-    await VoteProposal.create(proposal, { transaction: dbTransaction });
-  })
-});
-
-export async function handleTransaction(blockHeight, tx, events, dbTransaction) {
-  if (tx.content !== undefined) {
-    const uploadData = format(Object.assign(tx.content));
-    await WASM_TO_CONTENT[tx.content.type].create(uploadData.data);
-    if (VALIDATOR_TRANSACTIONS.includes(tx.content.type)) {
-      events.emit("updateValidators", blockHeight);
+export async function updateTransaction(height, transaction, events, dbTransaction) {
+  const console = new Console(`Block ${height}, TX ${transaction.id.slice(0, 8)}`)
+  if (transaction.content !== undefined) {
+    console.log("=> Add content", transaction.content.type);
+    const uploadData = format(Object.assign(transaction.content));
+    await WASM_TO_CONTENT[transaction.content.type].create(uploadData.data);
+    if (VALIDATOR_TRANSACTIONS.includes(transaction.content.type)) {
+      events.emit("updateValidators", height);
     }
-    if (tx.content.type === "tx_vote_proposal.wasm") {
-      events.emit("updateProposal", tx.content.data.proposalId, blockHeight);
+    if (transaction.content.type === "transaction_vote_proposal.wasm") {
+      events.emit("updateProposal", transaction.content.data.proposalId, height);
     }
-    if (tx.content.type === "tx_init_proposal.wasm") {
-      events.emit("createProposal", tx.content.data);
+    if (transaction.content.type === "transaction_init_proposal.wasm") {
+      events.emit("createProposal", transaction.content.data);
     }
   }
-  for (let i = 0; i < tx.sections.length; i++) {
-    const section = tx.sections[i];
+  for (let section of transaction.sections) {
+    console.log("=> Add section", section.type);
     if (section.type == "ExtraData") {
       await ExtraData.create(section, { transaction: dbTransaction });
     }
@@ -174,9 +128,50 @@ export async function handleTransaction(blockHeight, tx, events, dbTransaction) 
     if (section.type == "Cipher") {
       await Cipher.create(section, { transaction: dbTransaction });
     }
-    if (section.type == "MaspBuilder") {
+    if (section.type == "MaspBuilder") { // FIXME
       await MaspBuilder.create(section, { transaction: dbTransaction });
     }
   }
-  await Transaction.create(tx, { transaction: dbTransaction });
+  delete transaction.content
+  delete transaction.sections
+  console.log("=> Add");
+  await Transaction.create(transaction, { transaction: dbTransaction });
 }
+
+events.on("updateValidators", async () => {
+  console.log("=> Updating validators");
+  const { query, connection } = await getRPC(NODE_LOWEST_BLOCK_HEIGHT + 1);
+  const validatorsBinary = await getValidatorsFromNode(connection);
+  const validators = []
+  for (const validatorBinary of validatorsBinary) {
+    const validator = await getValidator(query, connection, validatorBinary);
+    //const validatorData = JSON.parse(serialize(validator));
+    validators.push(validator);
+  }
+  await sequelize.transaction(async dbTransaction => {
+    for (const validatorData of validators) {
+      await Validator.create(validatorData, { transaction: dbTransaction });
+    }
+  })
+});
+
+events.on("createProposal", async (txData) => {
+  console.log("=> Creating proposal", txData);
+  await Proposal.create(txData);
+  // const latestProposal = await Proposal.findOne({ order: [["id", "DESC"]] });
+  /*
+    const { q } = getUndexerRPCUrl(NODE_LOWEST_BLOCK_HEIGHT+1)
+    const proposalChain = await q.query_proposal(BigInt(txData.proposalId));
+    await Proposal.create(proposalChain);
+    */
+});
+
+events.on("updateProposal", async (proposalId, blockHeight) => {
+  console.log("=> Updating proposal");
+  const { query } = await getRPC(blockHeight);
+  const proposal = await q.query_proposal(BigInt(proposalId));
+  await sequelize.transaction(async dbTransaction => {
+    await Proposal.destroy({ where: { id: proposalId } }, { transaction: dbTransaction });
+    await VoteProposal.create(proposal, { transaction: dbTransaction });
+  })
+});

@@ -39,3 +39,8 @@ export const VALIDATOR_TRANSACTIONS = [
   "tx_unjail_validator.wasm",
   "tx_bond.wasm",
 ]
+
+export const GOVERNANCE_TRANSACTIONS = [
+  "tx_vote_proposal.wasm",
+  "tx_init_proposal.wasm"
+]

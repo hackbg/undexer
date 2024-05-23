@@ -8,4 +8,5 @@ export default new Sequelize(DATABASE_URL, {
   dialect: "postgres",
   logging: () => console.log,
   logQueryParameters: true,
+  supportBigNumbers: true,
 });

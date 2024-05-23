@@ -2,19 +2,20 @@ import { readFile, writeFile } from "node:fs/promises";
 import initShared from "./shared/pkg/shared.js";
 import { initDecoder } from "@fadroma/namada";
 import { base64 } from "@hackbg/fadroma";
+import { GOVERNANCE_TRANSACTIONS } from "./constants.js";
 
 export function serialize(data) {
-    return JSON.stringify(data, stringifier);
+  return JSON.stringify(data, stringifier);
 }
 
 export function stringifier(key, value) {
-    if (typeof value === "bigint") {
-        return value.toString();
-    }
-    if (value instanceof Uint8Array) {
-        return base64.encode(value);
-    }
-    return value;
+  if (typeof value === "bigint") {
+    return value.toString();
+  }
+  if (value instanceof Uint8Array) {
+    return base64.encode(value);
+  }
+  return value;
 }
 
 export function waitFor (msec) {
@@ -41,14 +42,12 @@ export async function initialize() {
   ])
 }
 
-export function format(txContent){
-  const result = Object.assign(txContent);
-
-  if(result.type==="tx_vote_proposal.wasm" || result.type==="tx_init_proposal.wasm"){
-    result.data.proposalId = result.data.id;
+export function format (txContent) {
+  const result = { ...txContent }
+  if (GOVERNANCE_TRANSACTIONS.includes(result.type)) {
+    result.data.proposalId = Number(result.data.id);
     delete result.data.id;
   }
-
   return result;
 }
 
