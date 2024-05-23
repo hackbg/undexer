@@ -2,6 +2,7 @@ data
 docker
 .dockerignore
 .drone.yml
+.git
 .gitignore
 docker-compose.yml
 lighttpd.conf
