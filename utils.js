@@ -4,11 +4,15 @@ import { initDecoder } from "@fadroma/namada";
 import { base64 } from "@hackbg/fadroma";
 import { GOVERNANCE_TRANSACTIONS } from "./constants.js";
 
-export function serialize(data) {
+export function cleanup (data) {
+  return JSON.parse(serialize(data))
+}
+
+export function serialize (data) {
   return JSON.stringify(data, stringifier);
 }
 
-export function stringifier(key, value) {
+export function stringifier (key, value) {
   if (typeof value === "bigint") {
     return value.toString();
   }
@@ -33,7 +37,7 @@ export async function retryForever (operation, interval, callback, ...args) {
   }
 }
 
-export async function initialize() {
+export async function initialize () {
   await Promise.all([
     readFile("shared/pkg/shared_bg.wasm")
       .then(wasm=>initShared(wasm)),
@@ -51,7 +55,7 @@ export function format (txContent) {
   return result;
 }
 
-export async function save(path, data) {
+export async function save (path, data) {
   console.log("Writing", path);
   return await writeFile(path, serialize(data));
 }
