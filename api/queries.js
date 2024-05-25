@@ -1,3 +1,5 @@
+import { Op } from 'sequelize';
+
 import Block       from '../models/Block.js';
 import Transaction from '../models/Transaction.js';
 import Validator   from '../models/Validator.js';
@@ -304,7 +306,7 @@ export const getTransfersBy = async (req, res) => {
     limit,
     offset,
     where: {
-      $or: [
+      [Op.or]: [
         { source: req.params.address, },
         { target: req.params.address, },
       ]
