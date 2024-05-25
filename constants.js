@@ -19,7 +19,7 @@ export const UNDEXER_API_URL =
   process.env.UNDEXER_API_URL || "http://v2.namada.undexer.demo.hack.bg";
 
 export const VALIDATOR_UPDATE_INTERVAL =
-  Number(process.env.VALIDATOR_UPDATE_INTERVAL) || 5000
+  Number(process.env.VALIDATOR_UPDATE_INTERVAL) || 30000
 
 export const VALIDATOR_FETCH_PARALLEL =
   Boolean(process.env.VALIDATOR_FETCH_PARALLEL) || false

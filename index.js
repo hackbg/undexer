@@ -35,6 +35,7 @@ checkForNewBlock();
 updateValidators();
 
 async function updateValidators () {
+  const console = new Console(`Validators`)
   const { connection } = await getRPC(NODE_LOWEST_BLOCK_HEIGHT+1);
   const validators = await connection.getValidators({
     details:         true,
@@ -45,6 +46,7 @@ async function updateValidators () {
     await Validator.destroy({ where: {} }, { transaction: dbTransaction });
     await Validator.bulkCreate(validators, { transaction: dbTransaction });
   })
+  console.log('Fetched', Object.keys(validators).length, 'validators')
   setTimeout(updateValidators, VALIDATOR_UPDATE_INTERVAL);
 }
 
