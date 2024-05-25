@@ -7,7 +7,7 @@
 // - https://github.com/nodejs/node/issues/43187#issuecomment-2089813900
 //
 import { fetch, setGlobalDispatcher, Agent } from 'undici'
-setGlobalDispatcher(new Agent({ connect: { timeout: 60_000 } }) )
+setGlobalDispatcher(new Agent({ connect: { timeout: 300_000 } }) )
 globalThis.fetch = fetch
 //
 // This is meant to prevent UND_ERR_CONNECT_TIMEOUT errors.
@@ -60,7 +60,7 @@ async function updateValidators () {
     await Validator.destroy({ where: {} }, { transaction: dbTransaction });
     await Validator.bulkCreate(validators, { transaction: dbTransaction });
   })
-  console.log('Fetched', Object.keys(validators).length, 'validators')
+  console.log('Updated to', Object.keys(validators).length, 'validators')
   setTimeout(updateValidators, VALIDATOR_UPDATE_INTERVAL);
 }
 
@@ -68,9 +68,9 @@ async function checkForNewBlock () {
   // should use newer node for the blockchain height
   const currentBlockOnChain = await connection.height;
   const latestBlockInDb     = await Block.max('height') || Number(NODE_LOWEST_BLOCK_HEIGHT);
+  console.log("=> Current block on chain:", currentBlockOnChain);
+  console.log("=> Latest block in DB:", latestBlockInDb);
   if (currentBlockOnChain > latestBlockInDb) {
-    console.log("=> Current block on chain:", currentBlockOnChain);
-    console.log("=> Latest block in DB:", latestBlockInDb);
     await updateBlocks(latestBlockInDb + 1, currentBlockOnChain);
   } else {
     console.info("=> No new blocks");
