@@ -5,6 +5,15 @@ import Proposal    from '../models/Proposal.js';
 import Voter       from '../models/Voter.js';
 import Transfer    from '../models/Contents/Transfer.js';
 
+const DEFAULT_PAGE_LIMIT = 25
+const DEFAULT_PAGE_OFFSET = 0
+
+const pagination = req => {
+  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
+  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+  return { limit, offset }
+}
+
 export const getLatestBlock = async (req, res) => {
   const latestBlock = await Block.max('height');
   if(latestBlock === null){
@@ -14,8 +23,7 @@ export const getLatestBlock = async (req, res) => {
 }
 
 export const getBlocks = async (req, res) => {
-  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
-  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+  const { limit, offset } = pagination(req)
   if(await Block.count() === 0){
     return res.status(404).send({ error: 'No blocks found' });
   }
@@ -82,8 +90,7 @@ export const getBlockByHash = async (req, res) => {
 }
 
 export const getTransactions = async (req, res) => {
-  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
-  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+  const { limit, offset } = pagination(req)
   if(await Transaction.count() === 0){
     return res.status(404).send({ error: 'No transactions found' });
   }
@@ -114,8 +121,7 @@ export const getTransactionByHash = async (req, res) => {
 }
 
 export const getValidators = async (req, res) => {
-  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
-  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+  const { limit, offset } = pagination(req)
   if(await Validator.count() === 0){
     return res.status(404).send({ error: 'Validator not found' });
   }
@@ -134,8 +140,7 @@ export const getValidatorsByState = async (req, res) => {
   if(await Validator.count() === 0){
     return res.status(404).send({ error: 'Validator not found' });
   }
-  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
-  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+  const { limit, offset } = pagination(req)
   const state = req.params.state
   const { rows, count } = await Validator.findAndCountAll(
     {
@@ -195,8 +200,7 @@ export const getValidatorUptime = async (req, res) => {
 }
 
 export const getProposals = async (req, res) => {
-  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
-  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+  const { limit, offset } = pagination(req)
   const orderBy = req.query.orderBy ?? 'id';
   const orderDirection = req.query.orderDirection ?? 'DESC'
   let where = {}
@@ -256,8 +260,7 @@ export const getProposal = async (req, res) => {
 }
 
 export const getProposalVotes = async (req, res) => {
-  const limit  = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
-  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+  const { limit, offset } = pagination(req)
   const { count, rows } = await Voter.findAndCountAll(
     {
       limit,
@@ -274,8 +277,7 @@ export const getProposalVotes = async (req, res) => {
 }
 
 export const getTransfersFrom = async (req, res) => {
-  const limit  = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
-  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+  const { limit, offset } = pagination(req)
   const { count, rows } = await Transfer.findAndCountAll({
     limit,
     offset,
@@ -286,8 +288,7 @@ export const getTransfersFrom = async (req, res) => {
 }
 
 export const getTransfersTo = async (req, res) => {
-  const limit  = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
-  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+  const { limit, offset } = pagination(req)
   const { count, rows } = await Transfer.findAndCountAll({
     limit,
     offset,
@@ -298,8 +299,7 @@ export const getTransfersTo = async (req, res) => {
 }
 
 export const getTransfersBy = async (req, res) => {
-  const limit  = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
-  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+  const { limit, offset } = pagination(req)
   const { count, rows } = await Transfer.findAndCountAll({
     limit,
     offset,
