@@ -1,5 +1,19 @@
 #!/usr/bin/env -S node --import=@ganesha/esbuild
 
+// And let us begin with this lovely opportunity for deep magic.
+//
+// For more info, see:
+// - https://github.com/nodejs/undici/issues/1531
+// - https://github.com/nodejs/node/issues/43187#issuecomment-2089813900
+//
+import { fetch, setGlobalDispatcher, Agent } from 'undici'
+setGlobalDispatcher(new Agent({ connect: { timeout: 60_000 } }) )
+globalThis.fetch = fetch
+//
+// This is meant to prevent UND_ERR_CONNECT_TIMEOUT errors.
+//
+// We will now resume regular programming.
+
 import {
   BLOCK_UPDATE_INTERVAL,
   NODE_LOWEST_BLOCK_HEIGHT,
@@ -33,7 +47,7 @@ const events = new EventEmitter();
 const { connection, query } = await getRPC();
 
 checkForNewBlock();
-//updateValidators();
+updateValidators();
 
 async function updateValidators () {
   const console = new Console(`Validators`)
