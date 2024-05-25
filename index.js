@@ -30,13 +30,13 @@ await sequelize.sync({ force: Boolean(START_FROM_SCRATCH) });
 
 const console = new Console("Index");
 const events = new EventEmitter();
+const { connection, query } = await getRPC();
 
 checkForNewBlock();
 updateValidators();
 
 async function updateValidators () {
   const console = new Console(`Validators`)
-  const { connection } = await getRPC(NODE_LOWEST_BLOCK_HEIGHT+1);
   const validators = await connection.getValidators({
     details:         true,
     parallel:        VALIDATOR_FETCH_PARALLEL,
@@ -52,7 +52,6 @@ async function updateValidators () {
 
 async function checkForNewBlock () {
   // should use newer node for the blockchain height
-  const { connection }      = await getRPC(NODE_LOWEST_BLOCK_HEIGHT+1);
   const currentBlockOnChain = await connection.height;
   const latestBlockInDb     = await Block.max('height') || Number(NODE_LOWEST_BLOCK_HEIGHT);
   if (currentBlockOnChain > latestBlockInDb) {
@@ -75,7 +74,6 @@ async function updateBlocks (startHeight, endHeight) {
 async function updateBlock (height) {
   const console = new Console(`Block ${height}`)
   const t0 = performance.now()
-  const { connection } = await getRPC(height);
   const block = await connection.fetchBlock({ height, raw: true });
   const blockData = {
     id:          block.id,
@@ -159,7 +157,6 @@ export async function updateTransaction (
 
 events.on("updateValidators", async () => {
   console.log("=> Updating validators");
-  const { query, connection } = await getRPC(NODE_LOWEST_BLOCK_HEIGHT + 1);
   const validatorsBinary = await getValidatorsFromNode(connection);
   const validators = []
   for (const validatorBinary of validatorsBinary) {
@@ -187,7 +184,6 @@ events.on("createProposal", async (txData) => {
 
 events.on("updateProposal", async (proposalId, blockHeight) => {
   console.log("=> Updating proposal");
-  const { query } = await getRPC(blockHeight);
   const proposal = await q.query_proposal(BigInt(proposalId));
   await sequelize.transaction(async dbTransaction => {
     await Proposal.destroy({ where: { id: proposalId } }, { transaction: dbTransaction });
