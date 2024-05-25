@@ -1,11 +1,13 @@
 #!/usr/bin/env -S node --import=@ganesha/esbuild
 
 import {
+  BLOCK_UPDATE_INTERVAL,
   NODE_LOWEST_BLOCK_HEIGHT,
   START_FROM_SCRATCH,
+  VALIDATOR_FETCH_PARALLEL,
+  VALIDATOR_FETCH_DETAILS_PARALLEL,
+  VALIDATOR_TRANSACTIONS,
   VALIDATOR_UPDATE_INTERVAL,
-  BLOCK_UPDATE_INTERVAL,
-  VALIDATOR_TRANSACTIONS
 } from "./constants.js";
 
 import getRPC from "./connection.js";
@@ -34,7 +36,11 @@ updateValidators();
 
 async function updateValidators () {
   const { connection } = await getRPC(NODE_LOWEST_BLOCK_HEIGHT+1);
-  const validators = await connection.getValidators({ details: true });
+  const validators = await connection.getValidators({
+    details:         true,
+    parallel:        VALIDATOR_FETCH_PARALLEL,
+    parallelDetails: VALIDATOR_FETCH_DETAILS_PARALLEL,
+  });
   await sequelize.transaction(async dbTransaction => {
     await Validator.destroy({ where: {} }, { transaction: dbTransaction });
     await Validator.bulkCreate(validators, { transaction: dbTransaction });

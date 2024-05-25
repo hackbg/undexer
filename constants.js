@@ -4,7 +4,7 @@ export const PRE_UNDEXER_RPC_URL =
   process.env.PRE_UNDEXER_RPC_URL || "http://51.159.167.32:26657/";
 
 export const POST_UNDEXER_RPC_URL =
-  process.env.POST_UNDEXER_RPC_URL || "https://namada-rpc.stake-machine.com"; //"https://rpc.namada.info/";
+  process.env.POST_UNDEXER_RPC_URL || "https://rpc.luminara.icu";
 
 export const DATABASE_URL =
   process.env.DATABASE_URL || 'postgres://postgres:insecure@postgres:5432'
@@ -20,6 +20,12 @@ export const UNDEXER_API_URL =
 
 export const VALIDATOR_UPDATE_INTERVAL =
   Number(process.env.VALIDATOR_UPDATE_INTERVAL) || 5000
+
+export const VALIDATOR_FETCH_PARALLEL =
+  Boolean(process.env.VALIDATOR_FETCH_PARALLEL) || false
+
+export const VALIDATOR_FETCH_DETAILS_PARALLEL =
+  Boolean(process.env.VALIDATOR_FETCH_DETAILS_PARALLEL) || false
 
 export const BLOCK_UPDATE_INTERVAL =
   Number(process.env.BLOCK_UPDATE_INTERVAL) || 5000
