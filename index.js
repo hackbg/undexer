@@ -33,7 +33,7 @@ const events = new EventEmitter();
 const { connection, query } = await getRPC();
 
 checkForNewBlock();
-updateValidators();
+//updateValidators();
 
 async function updateValidators () {
   const console = new Console(`Validators`)
