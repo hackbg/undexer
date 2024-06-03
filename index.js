@@ -1,6 +1,12 @@
 #!/usr/bin/env -S node --import=@ganesha/esbuild
 
-// And let us begin with this lovely opportunity for deep magic.
+// Custom console. Report that indexer has started.
+
+import { Console } from "@hackbg/fadroma";
+const console = new Console("Index");
+console.log('Starting at', new Date());
+
+// This patches the global `fetch` to prevent `UND_ERR_CONNECT_TIMEOUT`.
 //
 // For more info, see:
 // - https://github.com/nodejs/undici/issues/1531
@@ -9,10 +15,6 @@
 import { fetch, setGlobalDispatcher, Agent } from 'undici'
 setGlobalDispatcher(new Agent({ connect: { timeout: 300_000 } }) )
 globalThis.fetch = fetch
-//
-// This is meant to prevent UND_ERR_CONNECT_TIMEOUT errors.
-//
-// We will now resume regular programming.
 
 import {
   BLOCK_UPDATE_INTERVAL,
@@ -29,7 +31,6 @@ import sequelize from "./db/index.js";
 import EventEmitter from "node:events";
 import { initialize, format, cleanup } from "./utils.js";
 import { getValidator, getValidatorsFromNode } from "./scripts/validator.js";
-import { Console } from "@hackbg/fadroma";
 
 import { withLogErrorToDB } from './models/ErrorLog.js';
 import Block from "./models/Block.js";
@@ -40,13 +41,28 @@ import { WASM_TO_CONTENT } from './models/Contents/index.js';
 import VoteProposal from "./models/Contents/VoteProposal.js";
 import { Cipher, Code, Data, ExtraData, MaspBuilder, MaspTx, Signature } from './models/Section.js';
 
+// Initialize WASM
+
+console.log('Initializing...')
 await initialize();
+
+// Initialize database schema
+
+console.log('Syncing DB schema...')
 await sequelize.sync({ force: Boolean(START_FROM_SCRATCH) });
 
-const console = new Console("Index");
+// This emits events to update validators and proposals
+
 const events = new EventEmitter();
+
+// Connect to chain:
+
+console.log('Connecting...')
 const { connection, query } = await getRPC();
 
+// Start indexing blocks and validators:
+
+console.log('Begin indexing!')
 checkForNewBlock();
 updateValidators();
 

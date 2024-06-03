@@ -1,5 +1,7 @@
 import { DataTypes } from "sequelize"
 import sequelize from "../db/index.js"
+import { Console } from "@hackbg/fadroma";
+const console = new Console("Error Log");
 
 const ErrorLog = sequelize.define('error_log', {
   id:        { type: DataTypes.INTEGER, allowNull: false, unique: true, primaryKey: true },
@@ -24,6 +26,7 @@ export function withLogErrorToDB (callback, info) {
   try {
     return callback()
   } catch (e) {
+    console.error('Logging error to database', e)
     logErrorToDB(error, info)
   }
 }
