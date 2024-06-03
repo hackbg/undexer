@@ -1,7 +1,8 @@
 import "dotenv/config"
 
 export const PRE_UNDEXER_RPC_URL =
-  process.env.PRE_UNDEXER_RPC_URL || "http://51.159.167.32:26657/";
+  process.env.PRE_UNDEXER_RPC_URL || "https://rpc.luminara.icu" || "http://51.159.167.32:26657/";
+  //process.env.PRE_UNDEXER_RPC_URL || "http://51.159.167.32:26657/";
 
 export const POST_UNDEXER_RPC_URL =
   process.env.POST_UNDEXER_RPC_URL || "https://rpc.luminara.icu";
