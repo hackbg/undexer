@@ -22,7 +22,7 @@ export function logErrorToDB (error, info) {
 
 export function withLogErrorToDB (callback, info) {
   try {
-    await Promise.resolve(callback())
+    return callback()
   } catch (e) {
     logErrorToDB(error, info)
   }

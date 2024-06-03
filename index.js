@@ -31,6 +31,7 @@ import { initialize, format, cleanup } from "./utils.js";
 import { getValidator, getValidatorsFromNode } from "./scripts/validator.js";
 import { Console } from "@hackbg/fadroma";
 
+import { withLogErrorToDB } from './models/ErrorLog.js';
 import Block from "./models/Block.js";
 import Proposal from "./models/Proposal.js";
 import Validator from "./models/Validator.js";
@@ -56,9 +57,11 @@ async function updateValidators () {
     parallel:        VALIDATOR_FETCH_PARALLEL,
     parallelDetails: VALIDATOR_FETCH_DETAILS_PARALLEL,
   });
-  await sequelize.transaction(async dbTransaction => {
+  await withLogErrorToDB(() => sequelize.transaction(async dbTransaction => {
     await Validator.destroy({ where: {} }, { transaction: dbTransaction });
     await Validator.bulkCreate(validators, { transaction: dbTransaction });
+  }), {
+    update: 'validators'
   })
   console.log('Updated to', Object.keys(validators).length, 'validators')
   setTimeout(updateValidators, VALIDATOR_UPDATE_INTERVAL);
@@ -96,12 +99,15 @@ async function updateBlock (height) {
     results:     JSON.parse(block.rawResultsResponse),
     rpcResponse: JSON.parse(block.rawBlockResponse),
   };
-  await sequelize.transaction(async dbTransaction => {
+  await withLogErrorToDB(() => sequelize.transaction(async dbTransaction => {
     await Block.create(blockData, { transaction: dbTransaction });
     for (const transaction of block.transactions) {
       transaction.txId = transaction.id
       await updateTransaction(height, transaction, events, dbTransaction);
     }
+  }), {
+    update: 'block',
+    height
   })
   const t = performance.now() - t0
   for (const transaction of block.transactions) {
@@ -128,7 +134,7 @@ export async function updateTransaction (
         events.emit("updateProposal", transaction.content.data.proposalId, height);
       }
       if (transaction.content.type === "transaction_init_proposal.wasm") {
-        events.emit("createProposal", transaction.content.data);
+        events.emit("createProposal", transaction.content.data, height);
       }
     } else {
       console.warn(`Unsupported content ${transaction.content.type}`)
@@ -169,7 +175,7 @@ export async function updateTransaction (
   await Transaction.create(transaction, { transaction: dbTransaction });
 }
 
-events.on("updateValidators", async () => {
+events.on("updateValidators", async (height) => {
   console.log("=> Updating validators");
   const validatorsBinary = await getValidatorsFromNode(connection);
   const validators = []
@@ -178,16 +184,22 @@ events.on("updateValidators", async () => {
     //const validatorData = JSON.parse(serialize(validator));
     validators.push(validator);
   }
-  await sequelize.transaction(async dbTransaction => {
+  await withLogErrorToDB(() => sequelize.transaction(async dbTransaction => {
     for (const validatorData of validators) {
       await Validator.create(validatorData, { transaction: dbTransaction });
     }
+  }), {
+    update: 'validators',
+    height
   })
 });
 
-events.on("createProposal", async (txData) => {
+events.on("createProposal", async (txData, height) => {
   console.log("=> Creating proposal", txData);
-  await Proposal.create(txData);
+  await withLogErrorToDB(() => Proposal.create(txData), {
+    create: 'proposal',
+    height
+  })
   // const latestProposal = await Proposal.findOne({ order: [["id", "DESC"]] });
   /*
     const { q } = getUndexerRPCUrl(NODE_LOWEST_BLOCK_HEIGHT+1)
@@ -196,11 +208,15 @@ events.on("createProposal", async (txData) => {
     */
 });
 
-events.on("updateProposal", async (proposalId, blockHeight) => {
+events.on("updateProposal", async (proposalId, height) => {
   console.log("=> Updating proposal");
   const proposal = await q.query_proposal(BigInt(proposalId));
-  await sequelize.transaction(async dbTransaction => {
+  await withLogErrorToDB(() => sequelize.transaction(async dbTransaction => {
     await Proposal.destroy({ where: { id: proposalId } }, { transaction: dbTransaction });
     await VoteProposal.create(proposal, { transaction: dbTransaction });
+  }), {
+    update: 'proposal',
+    height,
+    proposalId,
   })
 });
