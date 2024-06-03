@@ -10,7 +10,7 @@ export const DATABASE_URL =
   process.env.DATABASE_URL || 'postgres://postgres:insecure@postgres:5432'
 
 export const NODE_LOWEST_BLOCK_HEIGHT =
-  process.env.NODE_LOWEST_BLOCK_HEIGHT || 237907;
+  process.env.NODE_LOWEST_BLOCK_HEIGHT ?? 0; //237907;
 
 export const START_FROM_SCRATCH =
   process.env.START_FROM_SCRATCH || false;
