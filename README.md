@@ -3,8 +3,19 @@
 This is the Undexer. It decodes historical data from the Namada network, and caches it into
 PostgreSQL, so that you don't have to.
 
+## Quick start
+
+Full development stack with PostgreSQL, PGAdmin, indexer, and API services:
+
 ```bash
 docker compose up
+```
+
+Just launch PostgreSQL and PGAdmin for working on indexer/API outside of container:
+
+```bash
+docker compose up -d postgres pgadmin
+npm start
 ```
 
 ## Overview

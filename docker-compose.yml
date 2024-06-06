@@ -1,12 +1,16 @@
 version: "3"
+
+volumes:
+  undexer-postgres:
+
 services:
 
   postgres:
     image: postgres:16.2-alpine
     ports:
-      - 5432:5432
+      - 127.0.0.1:5432:5432
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+      - undexer-postgres:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=insecure
       - POSTGRES_USER=postgres
@@ -20,7 +24,7 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     ports:
-      - 5050:80
+      - 127.0.0.1:5050:80
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@admin.com
       - PGADMIN_DEFAULT_PASSWORD=password
