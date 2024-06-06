@@ -20,7 +20,7 @@ await db.sync({ force: Boolean(START_FROM_SCRATCH) })
 
 console.log('⏳ Connecting...')
 import { getRPC } from "./config.js"
-const { connection, query } = await getRPC()
+const { chain, query } = await getRPC()
 
 import EventEmitter from "node:events"
 const events = new EventEmitter()
@@ -39,6 +39,6 @@ import { BLOCK_UPDATE_INTERVAL, VALIDATOR_UPDATE_INTERVAL } from "./config.js"
 import { checkForNewBlock } from './block.js'
 import { checkValidators } from './validator.js'
 await Promise.all([
-  runForever(BLOCK_UPDATE_INTERVAL, checkForNewBlock, connection, events),
-  runForever(VALIDATOR_UPDATE_INTERVAL, checkValidators, connection),
+  runForever(BLOCK_UPDATE_INTERVAL, checkForNewBlock, chain, events),
+  runForever(VALIDATOR_UPDATE_INTERVAL, checkValidators, chain),
 ])

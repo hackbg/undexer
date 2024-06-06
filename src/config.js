@@ -55,7 +55,7 @@ export const GOVERNANCE_TRANSACTIONS = [
 ]
 
 const rpcVariant = async (url) => ({
-  connection: await Namada.connect({
+  chain: await Namada.connect({
     url,
     decoder: await readFile(
       "node_modules/@fadroma/namada/pkg/fadroma_namada_bg.wasm"

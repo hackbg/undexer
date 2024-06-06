@@ -69,11 +69,10 @@ export const Validator = db.define('validator', {
 })
 
 export const Block = db.define('block', {
-  height:      IntegerPrimaryKey,
-  id:          { type: DataTypes.TEXT, allowNull: false, },
-  header:      JSONField('header'),
-  results:     JSONField('results'),
-  rpcResponse: JSONField('rpcResponse'),
+  height:    IntegerPrimaryKey,
+  id:        { type: DataTypes.TEXT, allowNull: false, },
+  header:    JSONField('header'),
+  responses: JSONField('responses'),
 })
 
 export const Transaction = db.define('transaction', {

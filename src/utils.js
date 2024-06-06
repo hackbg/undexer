@@ -2,7 +2,6 @@ import { readFile, writeFile } from "node:fs/promises";
 //import initShared from "@namada/shared";
 import { initDecoder } from "@fadroma/namada";
 import { base64 } from "@hackbg/fadroma";
-import { GOVERNANCE_TRANSACTIONS } from "./config.js";
 
 export async function runForever (interval, callback, ...args) {
   await Promise.resolve(callback(...args))
@@ -53,15 +52,6 @@ export async function initialize () {
     //readFile("rust/pkg/shared_bg.wasm")
       //.then(wasm=>initShared(wasm)),
   ])
-}
-
-export function format (txContent) {
-  const result = { ...txContent }
-  if (GOVERNANCE_TRANSACTIONS.includes(result.type)) {
-    result.data.proposalId = Number(result.data.id);
-    delete result.data.id;
-  }
-  return result;
 }
 
 export async function save (path, data) {

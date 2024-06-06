@@ -1,5 +1,8 @@
 import Commands from "@hackbg/cmds"
 import { getRPC } from './src/config.js'
+import { updateBlock } from './src/block.js'
+import db from './src/db.js'
+import EventEmitter from 'node:events'
 
 export default class UndexerCommands extends Commands {
   // see https://github.com/hackbg/fadroma/blob/v2/packages/namada/namada.ts
@@ -25,13 +28,21 @@ export default class UndexerCommands extends Commands {
     info: 'fetch, print, and index a block of transactions',
     args: 'HEIGHT'
   }, async (height: number) => {
-    const { connection } = await getRPC(height)
-    const block = await connection.fetchBlock({ height })
-    console.log(block)
+    const t0 = performance.now()
+    const { chain } = await getRPC(height)
+    // Fetch and decode block
+    const block = await chain.fetchBlock({ height })
+    // Print block and transactions
+    this.log.br().log(block)
     for (const transaction of block.transactions) {
-      console.log()
-      console.log(transaction)
+      this.log.br().log(transaction)
     }
+    // Write block to database
+    this.log.br().log('Syncing database...')
+    await db.sync({ force: true })
+    this.log.br().log('Saving block', height, 'to database...').br()
+    await updateBlock({ chain, height, block, })
+    this.log.info('Done in', performance.now() - t0, 'msec')
   })
 
 }
