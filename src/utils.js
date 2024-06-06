@@ -2,7 +2,12 @@ import { readFile, writeFile } from "node:fs/promises";
 //import initShared from "@namada/shared";
 import { initDecoder } from "@fadroma/namada";
 import { base64 } from "@hackbg/fadroma";
-import { GOVERNANCE_TRANSACTIONS } from "./config/constants.js";
+import { GOVERNANCE_TRANSACTIONS } from "./config.js";
+
+export async function runForever (interval, callback, ...args) {
+  await Promise.resolve(callback(...args))
+  return setTimeout(()=>runForever(interval, callback, ...args), interval)
+}
 
 export function cleanup (data) {
   return JSON.parse(serialize(data))

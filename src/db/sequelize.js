@@ -1,6 +1,6 @@
 import { Sequelize, DataTypes } from "sequelize"
 import { Console } from "@hackbg/logs"
-import { DATABASE_URL } from "../config/index.js"
+import { DATABASE_URL } from "../config.js"
 
 const console = new Console("DB");
 

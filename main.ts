@@ -1,9 +1,5 @@
-import * as Namada from '@fadroma/namada'
 import Commands from "@hackbg/cmds"
-import { pathToFileURL, fileURLToPath } from 'node:url'
-import { resolve, dirname } from 'node:path'
-import { readFileSync } from 'node:fs'
-import getRPC from './src/config/connection.js'
+import { getRPC } from './src/config.js'
 
 export default class UndexerCommands extends Commands {
   // see https://github.com/hackbg/fadroma/blob/v2/packages/namada/namada.ts
