@@ -1,7 +1,4 @@
 import Commands from "@hackbg/cmds"
-import { getRPC } from './src/config.js'
-import { updateBlock } from './src/block.js'
-import db from './src/db.js'
 import EventEmitter from 'node:events'
 
 export default class UndexerCommands extends Commands {
@@ -29,6 +26,8 @@ export default class UndexerCommands extends Commands {
     args: 'HEIGHT'
   }, async (height: number) => {
     const t0 = performance.now()
+    const { getRPC } = await import('./src/config.js')
+    const { updateBlock } = await import('./src/block.js')
     const { chain } = await getRPC(height)
     // Fetch and decode block
     const block = await chain.fetchBlock({ height })
@@ -39,6 +38,7 @@ export default class UndexerCommands extends Commands {
     }
     // Write block to database
     this.log.br().log('Syncing database...')
+    const { default: db } = await import('./src/db.js')
     await db.sync({ force: true })
     this.log.br().log('Saving block', height, 'to database...').br()
     await updateBlock({ chain, height, block, })
