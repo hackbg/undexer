@@ -1,13 +1,8 @@
 import express from 'express';
-import cors from 'cors';
-import sequelize from '../db/index.js';
 import * as Queries from './queries.js';
 
-const DEFAULT_PAGE_LIMIT = 25
-const DEFAULT_PAGE_OFFSET = 0
-const { SERVER_PORT = 8888 } = process.env;
-
 const router = express.Router();
+
 router.get('/block/latest',               Queries.getLatestBlock);
 router.get('/blocks',                     Queries.getBlocks);
 router.get('/block/:height',              Queries.getBlockByHeight);
@@ -26,12 +21,4 @@ router.get('/transfers/from/:address',    Queries.getTransfersFrom);
 router.get('/transfers/to/:address',      Queries.getTransfersTo);
 router.get('/transfers/by/:address',      Queries.getTransfersBy);
 
-const app = express();
-app.use(cors()); // CORS enabled for all origins
-app.use('/v2', router);
-app.listen({
-  port: SERVER_PORT
-}, () => {
-  sequelize.sync();
-  console.log(`🚀 Server ready at http://0.0.0.0:${SERVER_PORT}`);
-});
+export default router

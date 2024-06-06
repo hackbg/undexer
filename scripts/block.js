@@ -6,7 +6,6 @@ import WASM_TO_CONTENT from '../models/Contents/index.js';
 import { format, initialize } from "../utils.js";
 import { POST_UNDEXER_RPC_URL } from '../constants.js'
 
-
 initialize()
 
 export default async function uploadBlocksAndTxs(RPC_URL) {
