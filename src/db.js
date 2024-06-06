@@ -225,7 +225,7 @@ export function logErrorToDB (error, info) {
   })
 }
 
-export function withLogErrorToDB (callback, info) {
+export function withErrorLog (callback, info) {
   try {
     return callback()
   } catch (e) {

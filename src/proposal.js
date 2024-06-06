@@ -4,7 +4,7 @@ import { Proposal } from "./db.js"
 
 export async function createProposal (txData, height) {
   console.log("=> Creating proposal", txData)
-  await withLogErrorToDB(() => Proposal.create(txData), {
+  await withErrorLog(() => Proposal.create(txData), {
     create: 'proposal',
     height
   })
@@ -19,7 +19,7 @@ export async function createProposal (txData, height) {
 export async function updateProposal (proposalId, height) {
   console.log("=> Updating proposal")
   const proposal = await q.query_proposal(BigInt(proposalId))
-  await withLogErrorToDB(() => sequelize.transaction(async dbTransaction => {
+  await withErrorLog(() => sequelize.transaction(async dbTransaction => {
     await Proposal.destroy({ where: { id: proposalId } }, { transaction: dbTransaction })
     await Proposal.create(proposal, { transaction: dbTransaction })
   }), {

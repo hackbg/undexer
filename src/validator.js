@@ -5,7 +5,7 @@ const console = new Namada.Console(`Validators`)
 
 import { deserialize } from "borsh";
 import { retryForever } from "./utils.js";
-import db, { withLogErrorToDB, Validator } from './db.js'
+import db, { withErrorLog, Validator } from './db.js'
 
 import {
   VALIDATOR_FETCH_PARALLEL, 
@@ -17,7 +17,7 @@ export async function checkValidators (connection) {
     parallel:        VALIDATOR_FETCH_PARALLEL,
     parallelDetails: VALIDATOR_FETCH_DETAILS_PARALLEL,
   })
-  await withLogErrorToDB(() => db.transaction(async dbTransaction => {
+  await withErrorLog(() => db.transaction(async dbTransaction => {
     await Validator.destroy({ where: {} }, { transaction: dbTransaction });
     await Validator.bulkCreate(validators, { transaction: dbTransaction });
   }), {
@@ -37,7 +37,7 @@ export async function updateValidators (height) {
     //const validatorData = JSON.parse(serialize(validator));
     validators.push(validator);
   }
-  await withLogErrorToDB(() => db.transaction(async dbTransaction => {
+  await withErrorLog(() => db.transaction(async dbTransaction => {
     for (const validatorData of validators) {
       await Validator.create(validatorData, { transaction: dbTransaction });
     }

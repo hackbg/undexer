@@ -1,5 +1,5 @@
 import { Console } from '@fadroma/namada'
-import db, { Block, withLogErrorToDB } from './db.js'
+import db, { Block, withErrorLog } from './db.js'
 
 const console = new Console('Block')
 
@@ -40,7 +40,7 @@ export async function updateBlock (
     results:     JSON.parse(block.rawResultsResponse),
     rpcResponse: JSON.parse(block.rawBlockResponse),
   };
-  await withLogErrorToDB(() => db.transaction(async dbTransaction => {
+  await withErrorLog(() => db.transaction(async dbTransaction => {
     await Block.create(blockData, { transaction: dbTransaction });
     for (const transaction of block.transactions) {
       transaction.txId = transaction.id
