@@ -1,28 +1,33 @@
 import { Console } from '@fadroma/namada'
 import db, { Block, withLogErrorToDB } from './db/index.js'
 
-export async function checkForNewBlock (connection) {
+export async function checkForNewBlock (connection, events) {
   // should use newer node for the blockchain height
   const currentBlockOnChain = await connection.height;
   const latestBlockInDb     = await Block.max('height') || Number(NODE_LOWEST_BLOCK_HEIGHT);
   console.log("=> Current block on chain:", currentBlockOnChain);
   console.log("=> Latest block in DB:", latestBlockInDb);
   if (currentBlockOnChain > latestBlockInDb) {
-    await updateBlocks(connection, latestBlockInDb + 1, currentBlockOnChain);
+    await updateBlocks(
+      connection, events, latestBlockInDb + 1, currentBlockOnChain
+    );
   } else {
     console.info("=> No new blocks");
   }
-  setTimeout(checkForNewBlock, BLOCK_UPDATE_INTERVAL);
 }
 
-export async function updateBlocks (connection, startHeight, endHeight) {
+export async function updateBlocks (
+  connection, events, startHeight, endHeight
+) {
   console.log("=> Processing blocks from", startHeight, "to", endHeight);
   for (let height = startHeight; height <= endHeight; height++) {
-    await updateBlock(connection, height)
+    await updateBlock(connection, events, height)
   }
 }
 
-export async function updateBlock (connection, height) {
+export async function updateBlock (
+  connection, events, height
+) {
   const console = new Console(`Block ${height}`)
   const t0 = performance.now()
   const block = await connection.fetchBlock({ height, raw: true });
@@ -37,7 +42,9 @@ export async function updateBlock (connection, height) {
     await Block.create(blockData, { transaction: dbTransaction });
     for (const transaction of block.transactions) {
       transaction.txId = transaction.id
-      await updateTransaction(height, transaction, events, dbTransaction);
+      await updateTransaction(
+        events, height, transaction, dbTransaction
+      )
     }
   }), {
     update: 'block',
@@ -52,9 +59,11 @@ export async function updateBlock (connection, height) {
 }
 
 export async function updateTransaction (
-  height, transaction, events, dbTransaction
+  events, height, transaction, dbTransaction
 ) {
-  const console = new Console(`Block ${height}, TX ${transaction.id.slice(0, 8)}`)
+  const console = new Console(
+    `Block ${height}, TX ${transaction.id.slice(0, 8)}`
+  )
   if (transaction.content !== undefined) {
     console.log("=> Add content", transaction.content.type);
     const uploadData = format(Object.assign(transaction.content));
