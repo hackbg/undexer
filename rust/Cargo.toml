@@ -1,6 +1,9 @@
 [package]
 name = "shared"
-authors = ["Heliax AG <hello@heliax.dev>"]
+authors = [
+  "Heliax AG <hello@heliax.dev>",
+  "Hack.bg <hello@hack.bg>"
+]
 version = "0.1.0"
 edition = "2021"
 repository = "https://github.com/anoma/namada-interface/"
