@@ -65,6 +65,10 @@ docker compose logs -f
 
 By default, the API server will listen on `http://localhost:8888`.
 
+> **Note:** You can set `SERVER_PORT` to listen on another port.
+
+> **Note:** `.env` files are supported.
+
 To just launch PostgreSQL and PGAdmin services in Docker, and
 work on indexer/API locally (outside of container):
 
@@ -75,10 +79,6 @@ npm start
 
 This launches the `api` and `indexer` services using [`concurrently`](https://www.npmjs.com/package/concurrently),
 and listens on `http://localhost:8888`.
-
-> **Note:** You can set `SERVER_PORT` to listen on another port.
-
-> **Note:** `.env` files are supported.
 
 ### Compiling the WASM modules
 
