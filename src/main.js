@@ -14,7 +14,7 @@ import { initialize } from './utils.js'
 await initialize()
 
 console.log('⏳ Syncing DB schema...')
-import db from './db/index.js'
+import db from './db.js'
 import { START_FROM_SCRATCH } from './config.js'
 await db.sync({ force: Boolean(START_FROM_SCRATCH) })
 

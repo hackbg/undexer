@@ -1,5 +1,7 @@
 import { Console } from '@fadroma/namada'
-import db, { Block, withLogErrorToDB } from './db/index.js'
+import db, { Block, withLogErrorToDB } from './db.js'
+
+const console = new Console('Block')
 
 export async function checkForNewBlock (connection, events) {
   // should use newer node for the blockchain height

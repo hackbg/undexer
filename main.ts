@@ -22,7 +22,7 @@ export default class UndexerCommands extends Commands {
 
   block = this.command({
     name: 'block',
-    info: 'print block and transactions in block',
+    info: 'fetch, print, and index a block of transactions',
     args: 'HEIGHT'
   }, async (height: number) => {
     const { connection } = await getRPC(height)

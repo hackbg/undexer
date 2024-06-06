@@ -5,7 +5,7 @@ const console = new Namada.Console(`Validators`)
 
 import { deserialize } from "borsh";
 import { retryForever } from "./utils.js";
-import db, { withLogErrorToDB, Validator } from './db/index.js'
+import db, { withLogErrorToDB, Validator } from './db.js'
 
 import {
   VALIDATOR_FETCH_PARALLEL, 

@@ -1,6 +1,6 @@
 import { Query } from "@namada/shared"
 import { deserialize } from "borsh"
-import { Proposal } from "./db/index.js"
+import { Proposal } from "./db.js"
 
 export async function createProposal (txData, height) {
   console.log("=> Creating proposal", txData)
@@ -21,7 +21,7 @@ export async function updateProposal (proposalId, height) {
   const proposal = await q.query_proposal(BigInt(proposalId))
   await withLogErrorToDB(() => sequelize.transaction(async dbTransaction => {
     await Proposal.destroy({ where: { id: proposalId } }, { transaction: dbTransaction })
-    await WASM_TO_CONTENT["tx_vote_proposal.wasm"].create(proposal, { transaction: dbTransaction })
+    await Proposal.create(proposal, { transaction: dbTransaction })
   }), {
     update: 'proposal',
     height,
