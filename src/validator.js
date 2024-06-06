@@ -4,7 +4,7 @@ import { deserialize } from "borsh";
 import { readFileSync } from "node:fs";
 import init, { Query } from "../rust/pkg/shared.js";
 import { retryForever } from "./utils.js";
-import Validator from "./db/Validator.js";
+import Validator from "./db/index.js";
 import { POST_UNDEXER_RPC_URL } from "./config/constants.js";
 
 export const ValidatorSchema = {

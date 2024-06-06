@@ -19,7 +19,7 @@ import sequelize, {
   Validator,
   Transaction,
   WASM_TO_CONTENT,
-  NAME_TO_SECTION,
+  Sections,
 } from "./db/index.js";
 import EventEmitter from "node:events";
 import {
@@ -149,7 +149,7 @@ export async function updateTransaction (
   }
   for (let section of transaction.sections) {
     section = cleanup(section)
-    const Section = NAME_TO_SECTION[section.type]
+    const Section = Sections[section.type]
     if (!Section) {
       throw new Error(`Encountered unsupported transaction section: ${section.type}`)
     }

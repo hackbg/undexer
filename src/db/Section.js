@@ -1,6 +1,6 @@
 import sequelize, { serialize, DataTypes } from './sequelize.js';
 
-const Section = sequelize.define('section');
+export const Section = sequelize.define('section');
 // Section.hasOne(Code);
 // Section.hasOne(Cipher);
 // Section.hasOne(Data);
@@ -8,8 +8,6 @@ const Section = sequelize.define('section');
 // Section.hasOne(Header);
 // Section.hasOne(MaspBuilder);
 // Section.hasOne(Signature);
-
-export default Section;
 
 export const
 
@@ -80,7 +78,7 @@ export const
     signatures: { type: DataTypes.JSON },
   });
 
-export const NAME_TO_SECTION = {
+export default {
   Cipher,
   Code,
   Data,
@@ -89,4 +87,4 @@ export const NAME_TO_SECTION = {
   MaspBuilder,
   MaspTx,
   Signature
-};
+}
