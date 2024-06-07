@@ -1,7 +1,7 @@
 import { Op } from 'sequelize';
 
 import {
-  Block, Transaction, Validator, Proposal, Voter, Content,
+  Block, Transaction, Validator, Proposal, Voter,
 } from '../db/index.js'
 
 const DEFAULT_PAGE_LIMIT = 25
@@ -233,38 +233,41 @@ export const getProposalVotes = async (req, res) => {
 
 export const getTransfersFrom = async (req, res) => {
   const { limit, offset } = pagination(req)
-  const { count, rows } = await Content.Transfer.findAndCountAll({
-    limit,
-    offset,
-    where: { source: req.params.address, },
-    attributes: { exclude: ['createdAt', 'updatedAt'], },
-  });
+  throw new Error('not implemented')
+  //const { count, rows } = await Content.Transfer.findAndCountAll({
+    //limit,
+    //offset,
+    //where: { source: req.params.address, },
+    //attributes: { exclude: ['createdAt', 'updatedAt'], },
+  //});
   res.status(200).send({ count, transfers: rows });
 }
 
 export const getTransfersTo = async (req, res) => {
   const { limit, offset } = pagination(req)
-  const { count, rows } = await Content.Transfer.findAndCountAll({
-    limit,
-    offset,
-    where: { target: req.params.address, },
-    attributes: { exclude: ['createdAt', 'updatedAt'], },
-  });
+  throw new Error('not implemented')
+  //const { count, rows } = await Content.Transfer.findAndCountAll({
+    //limit,
+    //offset,
+    //where: { target: req.params.address, },
+    //attributes: { exclude: ['createdAt', 'updatedAt'], },
+  //});
   res.status(200).send({ count, transfers: rows });
 }
 
 export const getTransfersBy = async (req, res) => {
   const { limit, offset } = pagination(req)
-  const { count, rows } = await Content.Transfer.findAndCountAll({
-    limit,
-    offset,
-    where: {
-      [Op.or]: [
-        { source: req.params.address, },
-        { target: req.params.address, },
-      ]
-    },
-    attributes: { exclude: ['createdAt', 'updatedAt'], },
-  });
+  throw new Error('not implemented')
+  //const { count, rows } = await Content.Transfer.findAndCountAll({
+    //limit,
+    //offset,
+    //where: {
+      //[Op.or]: [
+        //{ source: req.params.address, },
+        //{ target: req.params.address, },
+      //]
+    //},
+    //attributes: { exclude: ['createdAt', 'updatedAt'], },
+  //});
   res.status(200).send({ count, transfers: rows });
 }

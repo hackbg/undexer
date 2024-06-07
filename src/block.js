@@ -1,11 +1,5 @@
 import { Console } from '@fadroma/namada'
-import db, {
-  Block,
-  Transaction,
-  Sections,
-  withErrorLog,
-  WASM_TO_CONTENT
-} from './db.js'
+import db, { Block, Transaction, withErrorLog } from './db.js'
 import { GOVERNANCE_TRANSACTIONS, VALIDATOR_TRANSACTIONS } from './config.js'
 import { cleanup } from './utils.js'
 
@@ -80,40 +74,30 @@ export async function updateTransaction ({
   const console = new Console(
     `Block ${height}, TX ${transaction.id.slice(0, 8)}`
   )
-  if (transaction.content !== undefined) {
+  if (transaction.content) {
     console.log("=> Add content", transaction.content.type);
     const uploadData = { ...transaction.content }
     if (GOVERNANCE_TRANSACTIONS.includes(uploadData.type)) {
       uploadData.data.proposalId = Number(uploadData.data.id);
       delete uploadData.data.id;
     }
-    const TxContent = WASM_TO_CONTENT[transaction.content.type]
-    if (TxContent) {
-      await TxContent.create(uploadData.data);
-      if (VALIDATOR_TRANSACTIONS.includes(transaction.content.type)) {
-        events?.emit("updateValidators", height);
-      }
-      if (transaction.content.type === "transaction_vote_proposal.wasm") {
-        events?.emit("updateProposal", transaction.content.data.proposalId, height);
-      }
-      if (transaction.content.type === "transaction_init_proposal.wasm") {
-        events?.emit("createProposal", transaction.content.data, height);
-      }
-    } else {
-      console.warn(`Unsupported content ${transaction.content.type}`)
+    if (VALIDATOR_TRANSACTIONS.includes(transaction.content.type)) {
+      events?.emit("updateValidators", height);
     }
+    if (transaction.content.type === "transaction_vote_proposal.wasm") {
+      events?.emit("updateProposal", transaction.content.data.proposalId, height);
+    }
+    if (transaction.content.type === "transaction_init_proposal.wasm") {
+      events?.emit("createProposal", transaction.content.data, height);
+    }
+  } else {
+    console.warn(`Unsupported content ${transaction.content.type}`)
   }
   for (let section of transaction.sections) {
-    section = cleanup(section)
-    const Section = Sections[section.type]
-    if (!Section) {
-      throw new Error(`Encountered unsupported transaction section: ${section.type}`)
-    }
-    await Section.create(section, { transaction: dbTransaction });
     console.log("=> Add section", section.type);
   }
-  delete transaction.content
-  delete transaction.sections
   console.log("=> Add");
-  await Transaction.create(transaction, { transaction: dbTransaction });
+  await Transaction.create(transaction, {
+    transaction: dbTransaction
+  });
 }
