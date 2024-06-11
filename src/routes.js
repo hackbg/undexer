@@ -12,6 +12,7 @@ const DEFAULT_PAGE_OFFSET = 0
 const NOT_IMPLEMENTED = (req, res) => { throw new Error('not implemented') }
 
 export const routes = [
+  ['/status',                     getStatus],
   ['/epoch',                      getEpochAndFirstBlock],
   ['/blocks/index',               getBlockIndex],
   ['/blocks',                     getBlocks],
@@ -78,6 +79,16 @@ function pagination (req) {
       ? Number(req.query.offset)
       : DEFAULT_PAGE_OFFSET
   }
+}
+
+export async function getStatus (req, res) {
+  res.status(200).send({
+    blocks:       await Block.count(),
+    validators:   await Validator.count(),
+    transactions: await Transaction.count(),
+    proposals:    await Proposal.count(),
+    votes:        await Voter.count()
+  })
 }
 
 export async function getEpochAndFirstBlock (req, res) {
