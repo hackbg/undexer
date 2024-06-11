@@ -32,6 +32,9 @@ export const routes = [
   ['/transfers/from/:address',    getTransfersFrom],
   ['/transfers/to/:address',      getTransfersTo],
   ['/transfers/by/:address',      getTransfersBy],
+  [`/parameters/staking`,         getStakingParameters],
+  [`/parameters/governance`,      getGovernanceParameters],
+  [`/parameters/pgf`,             getPGFParameters],
 ]
 
 export default addRoutes(express.Router());
@@ -245,14 +248,14 @@ export async function getValidatorsByState (req, res) {
 }
 
 export async function getValidatorByHash (req, res) {
-  const hash = req.params.hash
   const validator = await Validator.findOne({
-    where: { validator: hash },
+    where: { address: req.params.hash },
     attributes: { exclude: ['id', 'createdAt', 'updatedAt'], },
   });
   if (validator === null) {
     return res.status(404).send({ error: 'Validator not found' });
   }
+  validator.metadata ??= {}
   res.status(200).send(validator);
 }
 
@@ -383,4 +386,37 @@ export async function getTransfersBy (req, res) {
     //attributes: { exclude: ['createdAt', 'updatedAt'], },
   //});
   res.status(200).send({ count, transfers: rows });
+}
+
+export async function getStakingParameters (req, res) {
+  const {chain} = await getRPC()
+  const parameters = await chain.fetchStakingParameters()
+  for (const key in parameters) {
+    if (typeof parameters[key] === 'bigint') {
+      parameters[key] = String(parameters[key])
+    }
+  }
+  res.status(200).send(parameters);
+}
+
+export async function getGovernanceParameters (req, res) {
+  const {chain} = await getRPC()
+  const parameters = await chain.fetchGovernanceParameters()
+  for (const key in parameters) {
+    if (typeof parameters[key] === 'bigint') {
+      parameters[key] = String(parameters[key])
+    }
+  }
+  res.status(200).send(parameters);
+}
+
+export async function getPGFParameters (req, res) {
+  const {chain} = await getRPC()
+  const parameters = await chain.fetchPGFParameters()
+  for (const key in parameters) {
+    if (typeof parameters[key] === 'bigint') {
+      parameters[key] = String(parameters[key])
+    }
+  }
+  res.status(200).send(parameters);
 }
