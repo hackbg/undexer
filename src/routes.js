@@ -149,19 +149,29 @@ export async function getLatestBlock (req, res) {
 }
 
 export async function getBlockByHeight (req, res) {
-  const block = await Block.findOne({
-    where: { height: req.params.height, },
-    attributes: { exclude: ['transactionId', 'createdAt', 'updatedAt'] },
-    //include: [{
-      //model: Transaction,
-      //attributes: { exclude: ['id', 'createdAt', 'updatedAt', 'chainId'] },
-    //}],
-  });
+  const [block, transactionCount] = await Promise.all([
+    Block.findOne({
+      where: { height: req.params.height, },
+      attributes: { exclude: ['transactionId', 'createdAt', 'updatedAt'] },
+      //include: [{
+        //model: Transaction,
+        //attributes: { exclude: ['id', 'createdAt', 'updatedAt', 'chainId'] },
+      //}],
+    }),
+    Transaction.count({
+      where: { blockHeight: req.params.height }
+    })
+  ])
   if (block === null) {
     res.status(404).send({ error: 'Block not found' });
     return;
   }
-  res.status(200).send(block);
+  res.status(200).send({
+    hash: block.hash,
+    header: block.header,
+    height: block.height,
+    transactions: transactionCount
+  });
 }
 
 export async function getBlockByHash (req, res) {
