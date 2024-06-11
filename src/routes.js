@@ -130,11 +130,17 @@ export async function getBlocks (req, res) {
 }
 
 export async function getLatestBlock (req, res) {
-  const latestBlock = await Block.max('height');
-  if (latestBlock === null) {
+  //const latestBlock = await Block.max('height');
+  const latestBlock = await Block.findAll({
+    order: [['height', 'DESC']],
+    limit: 1,
+    attributes: ['height', 'hash', 'header'],
+  })
+  if (latestBlock.length === 0) {
     return res.status(404).send({ error: 'Block not found' });
   }
-  return res.status(200).send(latestBlock.toString());
+  const { height, hash, header } = latestBlock[0];
+  return res.status(200).send({ height, hash, header });
 }
 
 export async function getBlockByHeight (req, res) {
