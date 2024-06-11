@@ -66,13 +66,13 @@ export const JSONField = name => ({
   },
 })
 
-export const VALIDATOR_STATES = [
-  "BelowThreshold",
-  "BelowCapacity", 
-  "Jailed",
-  "Consensus",
-  "Inactive"
-]
+export const VALIDATOR_STATES = {
+  "below-threshold": "BelowThreshold",
+  "below-capacity":  "BelowCapacity",
+  "jailed":          "Jailed",
+  "consensus":       "Consensus",
+  "inactive":        "Inactive"
+}
 
 export const Validator = db.define('validator', {
   address:          StringPrimaryKey(),
@@ -83,7 +83,7 @@ export const Validator = db.define('validator', {
   metadata:         { type: DataTypes.JSONB, },
   commission:       { type: DataTypes.JSONB, },
   stake:            { type: DataTypes.TEXT, },
-  state:            DataTypes.ENUM(...VALIDATOR_STATES)
+  state:            DataTypes.ENUM(...Object.values(VALIDATOR_STATES))
 })
 
 export const Block = db.define('block', {

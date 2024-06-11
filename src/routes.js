@@ -1,7 +1,9 @@
 import express from 'express';
 import { Console, bold, colors } from '@hackbg/logs';
 import { Op } from 'sequelize';
-import { Block, Transaction, Validator, Proposal, Voter, } from './db.js'
+import {
+  Block, Transaction, Validator, VALIDATOR_STATES, Proposal, Voter
+} from './db.js'
 import { getRPC } from './rpc.js';
 
 const DEFAULT_PAGE_LIMIT = 25
@@ -232,13 +234,12 @@ export async function getValidators (req, res) {
 }
 
 export async function getValidatorsByState (req, res) {
-  if(await Validator.count() === 0){
-    return res.status(404).send({ error: 'Validator not found' });
+  if (await Validator.count() === 0) {
+    return res.status(404).send({ error: 'No validators' });
   }
   const { limit, offset } = pagination(req)
-  const state = req.params.state
   const { rows, count } = await Validator.findAndCountAll({
-    where: { state },
+    where: { state: VALIDATOR_STATES[req.params.state] },
     order: [['stake', 'DESC']],
     limit,
     offset,
