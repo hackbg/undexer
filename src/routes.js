@@ -19,10 +19,10 @@ export const routes = [
   ['/block',                      NOT_IMPLEMENTED],
   ['/txs',                        getTransactions],
   ['/tx/:txHash',                 getTransactionByHash],
+  ['/total-staked',               getTotalStaked],
+  ['/validator-addresses',        getValidatorAddresses],
   ['/validators',                 getValidators],
   ['/validators/:state',          getValidatorsByState],
-  ['/validators/addresses',       NOT_IMPLEMENTED],
-  ['/validators/stake',           NOT_IMPLEMENTED],
   ['/validator/:hash',            getValidatorByHash],
   ['/validator/uptime/:address',  getValidatorUptime],
   ['/proposals',                  getProposals],
@@ -198,6 +198,20 @@ export async function getTransactionByHash (req, res) {
     return res.status(404).send({ error: 'Transaction not found' });
   }
   res.status(200).send(tx);
+}
+
+export async function getTotalStaked (req, res) {
+  const {chain} = await getRPC()
+  const totalStaked = await chain.fetchTotalStaked()
+  res.status(200).send(String(totalStaked))
+}
+
+export async function getValidatorAddresses (req, res) {
+  const { rows } = await Validator.findAndCountAll({
+    order: [['stake', 'DESC']],
+    attributes: [ 'address', 'namadaAddress' ],
+  });
+  res.status(200).send(rows)
 }
 
 export async function getValidators (req, res) {
