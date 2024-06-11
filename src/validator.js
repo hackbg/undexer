@@ -11,8 +11,9 @@ import {
   VALIDATOR_FETCH_PARALLEL, 
   VALIDATOR_FETCH_DETAILS_PARALLEL
 } from './config.js';
-export async function checkValidators (connection) {
-  const validators = await connection.fetchValidators({
+
+export async function checkValidators (chain) {
+  const validators = await chain.fetchValidators({
     details:         true,
     parallel:        VALIDATOR_FETCH_PARALLEL,
     parallelDetails: VALIDATOR_FETCH_DETAILS_PARALLEL,
@@ -28,12 +29,12 @@ export async function checkValidators (connection) {
   )
 }
 
-export async function updateValidators (height) {
+export async function updateValidators (chain, query, height) {
   console.log("=> Updating validators");
-  const validatorsBinary = await getValidatorsFromNode(connection);
+  const validatorsBinary = await getValidatorsFromNode(chain);
   const validators = []
   for (const validatorBinary of validatorsBinary) {
-    const validator = await getValidator(query, connection, validatorBinary);
+    const validator = await getValidator(query, chain, validatorBinary);
     //const validatorData = JSON.parse(serialize(validator));
     validators.push(validator);
   }
@@ -59,7 +60,7 @@ export async function getValidatorsFromNode(chain) {
 
 export const ValidatorSchema = { set: { array: { type: "u8", len: 21, }, }, }
 
-export async function getValidator(q, chain, validatorBinary) {
+export async function getValidator (q, chain, validatorBinary) {
   const conn = chain.getConnection()
   const validator = await q.get_address_from_u8(validatorBinary)
   const [

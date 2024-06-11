@@ -26,7 +26,8 @@ import EventEmitter from "node:events"
 const events = new EventEmitter()
 
 import { updateValidators } from '../src/validator.js'
-events.on("updateValidators", updateValidators)
+events.on("updateValidators",
+  height => updateValidators(chain, query, height))
 
 import { createProposal, updateProposal } from '../src/proposal.js'
 events.on("createProposal", createProposal)
