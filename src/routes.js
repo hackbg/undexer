@@ -289,13 +289,14 @@ export async function getValidatorUptime (req, res) {
   const blocks = await Block.findAll({
     order: [['height', 'DESC']],
     limit: 100,
-    attributes: ['rpcResponse', 'height'],
+    attributes: ['responses', 'height'],
   });
   const currentHeight = blocks[0].height;
   const countedBlocks = blocks.length;
   const uptime = blocks
     .map((b) => {
-      return JSON.parse(b.rpcResponse).result.block.last_commit.signatures.map(
+      const blockResponse = JSON.parse(b.responses.block.response)
+      return blockResponse.result.block.last_commit.signatures.map(
         (x) => x.validator_address,
       );
     })
