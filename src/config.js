@@ -1,4 +1,4 @@
-import Namada from "@fadroma/namada";
+import * as Namada from "@fadroma/namada";
 import { readFile } from "fs/promises";
 import { Query } from "../rust/pkg/shared.js";
 

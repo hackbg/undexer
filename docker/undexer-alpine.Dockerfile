@@ -6,12 +6,14 @@ RUN cargo install wasm-pack
 
 WORKDIR /build/fadroma-namada
 COPY ./fadroma/packages/namada/Cargo.toml ./fadroma/packages/namada/Cargo.lock .
+RUN cargo fetch
 COPY ./fadroma/packages/namada/src ./src
 RUN PATH=$PATH:~/.cargo/bin wasm-pack build --release --target web \
  && rm -rf target
 
 WORKDIR /build/undexer-rust
 ADD ./rust .
+RUN cargo fetch
 RUN PATH=$PATH:~/.cargo/bin wasm-pack build --release --target nodejs \
  && rm -rf target
 

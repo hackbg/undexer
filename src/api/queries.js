@@ -2,7 +2,7 @@ import { Op } from 'sequelize';
 
 import {
   Block, Transaction, Validator, Proposal, Voter,
-} from '../db/index.js'
+} from '../db.js'
 
 const DEFAULT_PAGE_LIMIT = 25
 const DEFAULT_PAGE_OFFSET = 0

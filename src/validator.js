@@ -12,7 +12,7 @@ import {
   VALIDATOR_FETCH_DETAILS_PARALLEL
 } from './config.js';
 export async function checkValidators (connection) {
-  const validators = await connection.getValidators({
+  const validators = await connection.fetchValidators({
     details:         true,
     parallel:        VALIDATOR_FETCH_PARALLEL,
     parallelDetails: VALIDATOR_FETCH_DETAILS_PARALLEL,
@@ -101,7 +101,7 @@ export const StakeSchema = "u64";
 /*
 TODO: Save Consenssus validators to db
 async function saveConsensusValidatorsToJSON() {
-  const consensusValidators = await connection.getValidatorsConsensus();
+  const consensusValidators = await connection.fetchValidatorsConsensus();
   await save(
   'consensus_validators.json',
   consensusValidators.sort((a, b) => b.bondedStake - a.bondedStake)

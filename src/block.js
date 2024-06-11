@@ -1,13 +1,20 @@
 import { Console } from '@fadroma/namada'
 import db, { Block, Transaction, withErrorLog } from './db.js'
-import { GOVERNANCE_TRANSACTIONS, VALIDATOR_TRANSACTIONS } from './config.js'
+import {
+  GOVERNANCE_TRANSACTIONS,
+  VALIDATOR_TRANSACTIONS,
+  NODE_LOWEST_BLOCK_HEIGHT
+} from './config.js'
 import { cleanup } from './utils.js'
 
 const console = new Console('Block')
 
-export async function checkForNewBlock (chain, events) {
+export async function checkForNewBlock (
+  chain,
+  events
+) {
   // should use newer node for the blockchain height
-  const currentBlockOnChain = await chain.height;
+  const currentBlockOnChain = await chain.fetchHeight();
   const latestBlockInDb     = await Block.max('height') || Number(NODE_LOWEST_BLOCK_HEIGHT);
   console.log("=> Current block on chain:", currentBlockOnChain);
   console.log("=> Latest block in DB:", latestBlockInDb);
@@ -21,16 +28,22 @@ export async function checkForNewBlock (chain, events) {
 }
 
 export async function updateBlocks (
-  chain, events, startHeight, endHeight
+  chain,
+  events,
+  startHeight,
+  endHeight
 ) {
   console.log("=> Processing blocks from", startHeight, "to", endHeight);
   for (let height = startHeight; height <= endHeight; height++) {
-    await updateBlock(chain, events, height)
+    await updateBlock({ chain, events, height })
   }
 }
 
 export async function updateBlock ({
-  chain, events, height, block = chain.fetchBlock({ height, raw: true })
+  chain,
+  events,
+  height,
+  block = chain.fetchBlock({ height, raw: true })
 }) {
   const t0 = performance.now()
   block = await Promise.resolve(block)

@@ -1,7 +1,7 @@
 #!/usr/bin/env -S node --import @ganesha/esbuild
 
 import app from './app.js';
-import sequelize from '../db/index.js';
+import sequelize from '../db.js';
 
 console.log('⏳ Syncing DB schema...')
 await sequelize.sync();
