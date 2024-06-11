@@ -49,7 +49,7 @@ export async function updateBlock ({
   block = await Promise.resolve(block)
   await withErrorLog(() => db.transaction(async dbTransaction => {
     await Block.create({
-      id:        block.id,
+      hash:      block.id,
       header:    block.header,
       height:    block.header.height,
       responses: block.responses

@@ -14,15 +14,15 @@ const db = new Sequelize(DATABASE_URL, {
 
 export default db
 
-export const IntegerPrimaryKey = {
+export const IntegerPrimaryKey = () => ({
   type:       DataTypes.INTEGER,
   allowNull:  false,
   unique:     true,
   primaryKey: true,
-}
+})
 
 export const ErrorLog = db.define('error_log', {
-  id:        IntegerPrimaryKey,
+  id:        IntegerPrimaryKey(),
   timestamp: { type: DataTypes.DATE },
   message:   { type: DataTypes.TEXT },
   stack:     { type: DataTypes.JSONB },
@@ -47,12 +47,12 @@ export function withErrorLog (callback, info) {
   }
 }
 
-export const StringPrimaryKey = {
+export const StringPrimaryKey = () => ({
   type:       DataTypes.TEXT,
   allowNull:  false,
   unique:     true,
   primaryKey: true,
-}
+})
 
 import { serialize } from './utils.js'
 export const JSONField = name => ({
@@ -75,7 +75,7 @@ export const VALIDATOR_STATES = [
 ]
 
 export const Validator = db.define('validator', {
-  address:          StringPrimaryKey,
+  address:          StringPrimaryKey(),
   publicKey:        { type: DataTypes.TEXT, },
   votingPower:      { type: DataTypes.TEXT, },
   proposerPriority: { type: DataTypes.TEXT, },
@@ -87,14 +87,14 @@ export const Validator = db.define('validator', {
 })
 
 export const Block = db.define('block', {
-  height:    IntegerPrimaryKey,
-  id:        { type: DataTypes.TEXT, allowNull: false, },
+  height:    IntegerPrimaryKey(),
+  hash:      { type: DataTypes.TEXT, allowNull: false, },
   header:    JSONField('header'),
   responses: JSONField('responses'),
 })
 
 export const Transaction = db.define('transaction', {
-  txId:                StringPrimaryKey,
+  txId:                StringPrimaryKey(),
   blockId:             { type: DataTypes.TEXT, },
   blockHeight:         { type: DataTypes.INTEGER, },
   chainId:             { type: DataTypes.TEXT, },
@@ -130,7 +130,7 @@ export const PROPOSAL_TALLY_TYPE = [
 ]
 
 export const Proposal = db.define('proposal', {
-  id:                IntegerPrimaryKey,
+  id:                IntegerPrimaryKey(),
   proposalType:      { type: DataTypes.TEXT, },
   author:            { type: DataTypes.TEXT, },
   startEpoch:        { type: DataTypes.INTEGER, },
@@ -147,7 +147,7 @@ export const Proposal = db.define('proposal', {
 })
 
 export const Voter = db.define("voter", {
-  id:         IntegerPrimaryKey,
+  id:         IntegerPrimaryKey(),
   vote:       { type: DataTypes.ENUM("yay", "nay", "abstain"), },
   power:      { type: DataTypes.TEXT, },
   voter:      { type: DataTypes.TEXT, },

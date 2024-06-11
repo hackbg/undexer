@@ -1,11 +1,47 @@
 import express from 'express';
 import { Console, bold, colors } from '@hackbg/logs';
 import { Op } from 'sequelize';
-import { Block, Transaction, Validator, Proposal, Voter, } from '../db.js'
-import { getRPC } from '../rpc.js';
+import { Block, Transaction, Validator, Proposal, Voter, } from './db.js'
+import { getRPC } from './rpc.js';
 
 const DEFAULT_PAGE_LIMIT = 25
 const DEFAULT_PAGE_OFFSET = 0
+
+const NOT_IMPLEMENTED = (req, res) => { throw new Error('not implemented') }
+
+export const routes = [
+  ['/epoch',                      getEpochAndFirstBlock],
+  ['/blocks/index',               getBlockIndex],
+  ['/blocks',                     getBlocks],
+  ['/block/latest',               getLatestBlock],
+  ['/block/:height',              getBlockByHeight],
+  ['/block/hash/:hash',           getBlockByHash],
+  ['/block',                      NOT_IMPLEMENTED],
+  ['/txs',                        getTransactions],
+  ['/tx/:txHash',                 getTransactionByHash],
+  ['/validators',                 getValidators],
+  ['/validators/:state',          getValidatorsByState],
+  ['/validators/addresses',       NOT_IMPLEMENTED],
+  ['/validators/stake',           NOT_IMPLEMENTED],
+  ['/validator/:hash',            getValidatorByHash],
+  ['/validator/uptime/:address',  getValidatorUptime],
+  ['/proposals',                  getProposals],
+  ['/proposals/stats',            getProposalStats],
+  ['/proposal/:id',               getProposal],
+  ['/proposal/votes/:proposalId', getProposalVotes],
+  ['/transfers/from/:address',    getTransfersFrom],
+  ['/transfers/to/:address',      getTransfersTo],
+  ['/transfers/by/:address',      getTransfersBy],
+]
+
+export default addRoutes(express.Router());
+
+export function addRoutes (router) {
+  for (const [route, handler] of routes) {
+    router.get(route, withConsole(handler))
+  }
+  return router
+}
 
 export function withConsole (handler) {
   return async function withConsoleHandler (req, res) {
@@ -27,21 +63,50 @@ export function withConsole (handler) {
   }
 }
 
-const pagination = req => {
-  const limit = req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
-  const offset = req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
-  return { limit, offset }
-}
-
-export const getLatestBlock = async (req, res) => {
-  const latestBlock = await Block.max('height');
-  if (latestBlock === null) {
-    return res.status(404).send({ error: 'Block not found' });
+// Read limit/offset from query parameters and apply defaults
+function pagination (req) {
+  return {
+    limit: req.query.limit
+      ? Number(req.query.limit)
+      : DEFAULT_PAGE_LIMIT,
+    offset: req.query.offset
+      ? Number(req.query.offset)
+      : DEFAULT_PAGE_OFFSET
   }
-  return res.status(200).send(latestBlock.toString());
 }
 
-export const getBlocks = async (req, res) => {
+export async function getEpochAndFirstBlock (req, res) {
+  const {chain} = await getRPC()
+  const timestamp = new Date().toISOString()
+  const [epoch, firstBlock] = await Promise.all([
+    chain.fetchEpoch(),
+    chain.fetchEpochFirstBlock(),
+  ])
+  res.status(200).send({
+    timestamp,
+    epoch:      String(epoch),
+    firstBlock: String(firstBlock),
+  })
+}
+
+export async function getBlockIndex (req, res) {
+  const {chain} = await getRPC()
+  const timestamp = new Date().toISOString()
+  const [latestOnChain, latestIndexed, oldestIndexed] = await Promise.all([
+    chain.fetchHeight(),
+    Block.max('height'),
+    Block.min('height')
+  ])
+  res.status(200).send({
+    timestamp,
+    latestOnChain,
+    latestIndexed,
+    oldestIndexed,
+    pages: []
+  })
+}
+
+export async function getBlocks (req, res) {
   const { limit, offset } = pagination(req)
   if (await Block.count() === 0) {
     return res.status(404).send({ error: 'No blocks found' });
@@ -50,21 +115,29 @@ export const getBlocks = async (req, res) => {
     order: [['height', 'DESC']],
     limit,
     offset,
-    attributes: ['height', 'id', 'header'],
+    attributes: ['height', 'hash', 'header'],
   });
   const blocks = await Promise.all(
-    rows.map(async (block) => {
-      const txs = await Transaction.findAll({
+    rows.map(block=>Transaction
+      .findAll({
         where: { blockHeight: block.height },
         attributes: ['txId'],
-      });
-      return { ...block.get(), txs };
-    }),
-  );
+      })
+      .then(txs=>({
+        ...block.get(), txs
+      }))));
   res.status(200).send({ count, blocks });
 }
 
-export const getBlockByHeight = async (req, res) => {
+export async function getLatestBlock (req, res) {
+  const latestBlock = await Block.max('height');
+  if (latestBlock === null) {
+    return res.status(404).send({ error: 'Block not found' });
+  }
+  return res.status(200).send(latestBlock.toString());
+}
+
+export async function getBlockByHeight (req, res) {
   const block = await Block.findOne({
     where: { height: req.params.height, },
     attributes: { exclude: ['transactionId', 'createdAt', 'updatedAt'] },
@@ -80,7 +153,7 @@ export const getBlockByHeight = async (req, res) => {
   res.status(200).send(block);
 }
 
-export const getBlockByHash = async (req, res) => {
+export async function getBlockByHash (req, res) {
   const block = await Block.findOne({
     where: { id: req.params.hash, },
     attributes: { exclude: ['transactionId', 'createdAt', 'updatedAt'] },
@@ -96,7 +169,7 @@ export const getBlockByHash = async (req, res) => {
   res.status(200).send(block);
 }
 
-export const getTransactions = async (req, res) => {
+export async function getTransactions (req, res) {
   const { limit, offset } = pagination(req)
   if (await Transaction.count() === 0) {
     return res.status(404).send({ error: 'No transactions found' });
@@ -110,7 +183,7 @@ export const getTransactions = async (req, res) => {
   res.status(200).send({ count, txs: rows })
 }
 
-export const getTransactionByHash = async (req, res) => {
+export async function getTransactionByHash (req, res) {
   const tx = await Transaction.findOne({
     where: { txId: req.params.txHash },
     attributes: { exclude: ['id', 'createdAt', 'updatedAt'], },
@@ -121,7 +194,7 @@ export const getTransactionByHash = async (req, res) => {
   res.status(200).send(tx);
 }
 
-export const getValidators = async (req, res) => {
+export async function getValidators (req, res) {
   const { limit, offset } = pagination(req)
   if (await Validator.count() === 0) {
     return res.status(404).send({ error: 'Validator not found' });
@@ -135,7 +208,7 @@ export const getValidators = async (req, res) => {
   res.status(200).send({ count, validators: rows })
 }
 
-export const getValidatorsByState = async (req, res) => {
+export async function getValidatorsByState (req, res) {
   if(await Validator.count() === 0){
     return res.status(404).send({ error: 'Validator not found' });
   }
@@ -151,7 +224,7 @@ export const getValidatorsByState = async (req, res) => {
   res.status(200).send({ count, validators: rows })
 }
 
-export const getValidatorByHash = async (req, res) => {
+export async function getValidatorByHash (req, res) {
   const hash = req.params.hash
   const validator = await Validator.findOne({
     where: { validator: hash },
@@ -163,7 +236,7 @@ export const getValidatorByHash = async (req, res) => {
   res.status(200).send(validator);
 }
 
-export const getValidatorUptime = async (req, res) => {
+export async function getValidatorUptime (req, res) {
   if (await Validator.count() === 0) {
     return res.status(404).send({ error: 'Validator not found' });
   }
@@ -186,7 +259,7 @@ export const getValidatorUptime = async (req, res) => {
   res.status(200).send({ uptime, currentHeight, countedBlocks });
 }
 
-export const getProposals = async (req, res) => {
+export async function getProposals (req, res) {
   const { limit, offset } = pagination(req)
   const orderBy = req.query.orderBy ?? 'id';
   const orderDirection = req.query.orderDirection ?? 'DESC'
@@ -217,7 +290,7 @@ export const getProposals = async (req, res) => {
   res.status(200).send({ count, proposals })
 }
 
-export const getProposalStats = async (req, res) => {
+export async function getProposalStats (req, res) {
   const all      = (await Proposal.findAll()).length
   const ongoing  = (await Proposal.findAll({ where: { status: 'ongoing' } })).length
   const upcoming = (await Proposal.findAll({ where: { status: 'upcoming' } })).length
@@ -227,7 +300,7 @@ export const getProposalStats = async (req, res) => {
   res.status(200).send({ all, ongoing, upcoming, finished, passed, rejected })
 }
 
-export const getProposal = async (req, res) => {
+export async function getProposal (req, res) {
   const id = req.params.id
   const result = await Proposal.findOne({
     where: { id },
@@ -240,7 +313,7 @@ export const getProposal = async (req, res) => {
   res.status(200).send({ ...proposal, ...JSON.parse(contentJSON) });
 }
 
-export const getProposalVotes = async (req, res) => {
+export async function getProposalVotes (req, res) {
   const { limit, offset } = pagination(req)
   const { count, rows } = await Voter.findAndCountAll({
     limit,
@@ -251,7 +324,7 @@ export const getProposalVotes = async (req, res) => {
   res.status(200).send({ count, votes: rows });
 }
 
-export const getTransfersFrom = async (req, res) => {
+export async function getTransfersFrom (req, res) {
   const { limit, offset } = pagination(req)
   throw new Error('not implemented')
   //const { count, rows } = await Content.Transfer.findAndCountAll({
@@ -263,7 +336,7 @@ export const getTransfersFrom = async (req, res) => {
   res.status(200).send({ count, transfers: rows });
 }
 
-export const getTransfersTo = async (req, res) => {
+export async function getTransfersTo (req, res) {
   const { limit, offset } = pagination(req)
   throw new Error('not implemented')
   //const { count, rows } = await Content.Transfer.findAndCountAll({
@@ -275,7 +348,7 @@ export const getTransfersTo = async (req, res) => {
   res.status(200).send({ count, transfers: rows });
 }
 
-export const getTransfersBy = async (req, res) => {
+export async function getTransfersBy (req, res) {
   const { limit, offset } = pagination(req)
   throw new Error('not implemented')
   //const { count, rows } = await Content.Transfer.findAndCountAll({
@@ -290,51 +363,4 @@ export const getTransfersBy = async (req, res) => {
     //attributes: { exclude: ['createdAt', 'updatedAt'], },
   //});
   res.status(200).send({ count, transfers: rows });
-}
-
-export const routes = [
-  ['/block/latest',               getLatestBlock],
-  ['/blocks',                     getBlocks],
-  ['/block/:height',              getBlockByHeight],
-  ['/block/hash/:hash',           getBlockByHash],
-  ['/txs',                        getTransactions],
-  ['/tx/:txHash',                 getTransactionByHash],
-  ['/validators',                 getValidators],
-  ['/validators/:state',          getValidatorsByState],
-  ['/validator/:hash',            getValidatorByHash],
-  ['/validator/uptime/:address',  getValidatorUptime],
-  ['/proposals',                  getProposals],
-  ['/proposals/stats',            getProposalStats],
-  ['/proposal/:id',               getProposal],
-  ['/proposal/votes/:proposalId', getProposalVotes],
-  ['/transfers/from/:address',    getTransfersFrom],
-  ['/transfers/to/:address',      getTransfersTo],
-  ['/transfers/by/:address',      getTransfersBy],
-
-  ['/epoch', async (req, res) => {
-    const {chain} = await getRPC()
-    const timestamp = new Date().toISOString()
-    const [epoch, firstBlock] = await Promise.all([
-      chain.fetchEpoch(),
-      chain.fetchEpochFirstBlock(),
-    ])
-    res.status(200).send({
-      timestamp,
-      epoch:      String(epoch),
-      firstBlock: String(firstBlock),
-    })
-  }],
-  ['/epoch/firstBlock',     (req, res) => { throw new Error('not implemented') }],
-  ['/block',                (req, res) => { throw new Error('not implemented') }],
-  ['/validators/addresses', (req, res) => { throw new Error('not implemented') }],
-  ['/validators/stake',     (req, res) => { throw new Error('not implemented') }],
-]
-
-export default addRoutes(express.Router());
-
-export function addRoutes (router) {
-  for (const [route, handler] of routes) {
-    router.get(route, withConsole(handler))
-  }
-  return router
 }

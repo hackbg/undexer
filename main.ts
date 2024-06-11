@@ -11,8 +11,8 @@ export default class UndexerCommands extends Commands {
   }
 
   sync = this.command({
-    name: "sync",
-    info: "sync the database schema"
+    name: "unsafe-sync",
+    info: "delete database and recreate with up-to-date schema"
   }, async () => {
     this.log.br().log('Synchronizing database...')
     const { default: db } = await import('./src/db.js')
@@ -23,12 +23,12 @@ export default class UndexerCommands extends Commands {
   api = this.command({
     name: "api",
     info: "run the API server"
-  }, () => import('./src/api/main.js'))
+  }, () => import('./bin/api.js'))
 
   indexer = this.command({
     name: "indexer",
     info: "run the indexer"
-  }, () => import('./src/main.js'))
+  }, () => import('./bin/indexer.js'))
 
   block = this.command({
     name: 'block',

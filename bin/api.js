@@ -1,7 +1,14 @@
 #!/usr/bin/env -S node --import @ganesha/esbuild
 
-import app from './app.js';
-import sequelize from '../db.js';
+import express from 'express';
+const app = express();
+
+import cors from 'cors';
+app.use(cors()); // CORS enabled for all origins
+
+import router from '../src/routes.js';
+app.use('/v2', router);
+import sequelize from '../src/db.js';
 
 console.log('⏳ Syncing DB schema...')
 await sequelize.sync();
