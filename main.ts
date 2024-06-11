@@ -10,6 +10,16 @@ export default class UndexerCommands extends Commands {
     this.log.label = ''
   }
 
+  sync = this.command({
+    name: "sync",
+    info: "sync the database schema"
+  }, async () => {
+    this.log.br().log('Synchronizing database...')
+    const { default: db } = await import('./src/db.js')
+    await db.sync({ force: true })
+    this.log.br().log('Done.')
+  })
+
   api = this.command({
     name: "api",
     info: "run the API server"
