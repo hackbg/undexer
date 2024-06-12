@@ -100,9 +100,6 @@ export const Transaction = db.define('transaction', {
   chainId:             { type: DataTypes.TEXT, },
   expiration:          { type: DataTypes.DATE, },
   timestamp:           { type: DataTypes.DATE, },
-  codeHash:            { type: DataTypes.TEXT, },
-  dataHash:            { type: DataTypes.TEXT, },
-  memoHash:            { type: DataTypes.TEXT, },
   type:                { type: DataTypes.TEXT, },
   feeAmountPerGasUnit: { type: DataTypes.TEXT, },
   feeToken:            { type: DataTypes.TEXT, },
@@ -110,6 +107,7 @@ export const Transaction = db.define('transaction', {
   gasLimitMultiplier:  { type: DataTypes.TEXT, },
   sections:            { type: DataTypes.JSONB, },
   content:             { type: DataTypes.JSONB, },
+  batch:               { type: DataTypes.JSONB, },
 })
 
 export const PROPOSAL_STATUS = [

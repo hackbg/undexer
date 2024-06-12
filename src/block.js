@@ -109,8 +109,23 @@ export async function updateTransaction ({
   for (let section of transaction.sections) {
     console.log("=> Add section", section.type);
   }
-  console.log("=> Add");
-  await Transaction.create(transaction, {
+  console.log("=> Adding transaction");
+  await Transaction.create({
+    txId:                transaction.id,
+    blockId:             undefined,
+    blockHeight:         height,
+    chainId:             transaction.chainId,
+    expiration:          transaction.expiration,
+    timestamp:           transaction.timestamp,
+    feeToken:            transaction.feeToken,
+    feeAmountPerGasUnit: transaction.feeAmountPerGasUnit,
+    multiplier:          String(transaction.multiplier),
+    gasLimitMultiplier:  String(transaction.gasLimitMultiplier),
+    type:                transaction.txType,
+    sections:            transaction.sections,
+    content:             transaction.content,
+    batch:               transaction.batch
+  }, {
     transaction: dbTransaction
   });
 }
