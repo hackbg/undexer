@@ -59,6 +59,7 @@ export async function updateBlock ({
     for (const transaction of block.transactions) {
       transaction.txId = transaction.id
       await updateTransaction({
+        block,
         events,
         height,
         transaction,
@@ -79,6 +80,7 @@ export async function updateBlock ({
 }
 
 export async function updateTransaction ({
+  block,
   events,
   height,
   transaction,
@@ -112,19 +114,11 @@ export async function updateTransaction ({
   console.log("=> Adding transaction");
   await Transaction.create({
     txId:                transaction.id,
-    blockId:             undefined,
-    blockHeight:         height,
     chainId:             transaction.chainId,
-    expiration:          transaction.expiration,
+    blockId:             block.id,
+    blockHeight:         height,
     timestamp:           transaction.timestamp,
-    feeToken:            transaction.feeToken,
-    feeAmountPerGasUnit: transaction.feeAmountPerGasUnit,
-    multiplier:          String(transaction.multiplier),
-    gasLimitMultiplier:  String(transaction.gasLimitMultiplier),
-    type:                transaction.txType,
-    sections:            transaction.sections,
-    content:             transaction.content,
-    batch:               transaction.batch
+    data:                transaction,
   }, {
     transaction: dbTransaction
   });

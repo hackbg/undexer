@@ -95,19 +95,11 @@ export const Block = db.define('block', {
 
 export const Transaction = db.define('transaction', {
   txId:                StringPrimaryKey(),
+  chainId:             { type: DataTypes.TEXT, },
   blockId:             { type: DataTypes.TEXT, },
   blockHeight:         { type: DataTypes.INTEGER, },
-  chainId:             { type: DataTypes.TEXT, },
-  expiration:          { type: DataTypes.DATE, },
   timestamp:           { type: DataTypes.DATE, },
-  type:                { type: DataTypes.TEXT, },
-  feeAmountPerGasUnit: { type: DataTypes.TEXT, },
-  feeToken:            { type: DataTypes.TEXT, },
-  multiplier:          { type: DataTypes.TEXT, },
-  gasLimitMultiplier:  { type: DataTypes.TEXT, },
-  sections:            { type: DataTypes.JSONB, },
-  content:             { type: DataTypes.JSONB, },
-  batch:               { type: DataTypes.JSONB, },
+  data:                { type: DataTypes.JSONB, },
 })
 
 export const PROPOSAL_STATUS = [
