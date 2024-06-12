@@ -203,9 +203,6 @@ export async function getBlockByHash (req, res) {
 
 export async function getTransactions (req, res) {
   const { limit, offset } = pagination(req)
-  if (await Transaction.count() === 0) {
-    return res.status(404).send({ error: 'No transactions found' });
-  }
   const { rows, count } = await Transaction.findAndCountAll({
     order: [['timestamp', 'DESC']],
     limit,
