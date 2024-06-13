@@ -1,3 +1,9 @@
+export const DEFAULT_PAGE_LIMIT = 25
+export const DEFAULT_PAGE_OFFSET = 0
+
+export const CHAIN_ID =
+  process.env.CHAIN_ID
+
 export const PRE_UNDEXER_RPC_URL =
   process.env.PRE_UNDEXER_RPC_URL || "https://rpc.luminara.icu" || "http://51.159.167.32:26657/";
   //process.env.PRE_UNDEXER_RPC_URL || "http://51.159.167.32:26657/";

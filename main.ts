@@ -41,6 +41,7 @@ export default class UndexerCommands extends Commands {
     const { chain } = await getRPC(height)
     // Fetch and decode block
     const block = await chain.fetchBlock({ height })
+    height ??= block.height
     // Print block and transactions
     this.log.br().log(block)
     for (const transaction of block.transactions) {

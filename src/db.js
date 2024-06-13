@@ -3,6 +3,7 @@ const console = new Console("DB");
 
 import { Sequelize, DataTypes } from "sequelize"
 export { DataTypes }
+const { DATE, TEXT, JSONB, INTEGER, ENUM } = DataTypes
 
 import { DATABASE_URL } from "./config.js"
 const db = new Sequelize(DATABASE_URL, {
@@ -15,40 +16,41 @@ const db = new Sequelize(DATABASE_URL, {
 export default db
 
 export const IntegerPrimaryKey = () => ({
-  type:       DataTypes.INTEGER,
+  type:       INTEGER,
   allowNull:  false,
   unique:     true,
   primaryKey: true,
 })
 
 export const ErrorLog = db.define('error_log', {
-  id:        IntegerPrimaryKey(),
-  timestamp: { type: DataTypes.DATE },
-  message:   { type: DataTypes.TEXT },
-  stack:     { type: DataTypes.JSONB },
-  info:      { type: DataTypes.JSONB, allowNull: true },
+  id:        { ...IntegerPrimaryKey(), autoIncrement: true },
+  timestamp: { type: DATE },
+  message:   { type: TEXT },
+  stack:     { type: JSONB },
+  info:      { type: JSONB, allowNull: true },
 })
 
 export function logErrorToDB (error, info) {
   return ErrorLog.create({
     timestamp: new Date(),
-    message:   error.message,
-    stack:     error.stack,
+    message:   error?.message,
+    stack:     error?.stack,
     info
   })
 }
 
-export function withErrorLog (callback, info) {
+export async function withErrorLog (callback, info) {
   try {
-    return callback()
-  } catch (e) {
-    console.error('Logging error to database', e)
-    logErrorToDB(error, info)
+    return Promise.resolve(callback())
+  } catch (error) {
+    console.error('Logging error to database:', error)
+    await logErrorToDB(error, info)
+    throw error
   }
 }
 
 export const StringPrimaryKey = () => ({
-  type:       DataTypes.TEXT,
+  type:       TEXT,
   allowNull:  false,
   unique:     true,
   primaryKey: true,
@@ -57,7 +59,7 @@ export const StringPrimaryKey = () => ({
 import { serialize } from './utils.js'
 
 export const JSONField = name => ({
-  type: DataTypes.JSONB,
+  type: JSONB,
   allowNull: false,
   get() {
     return JSON.parse(this.getDataValue(name));
@@ -68,7 +70,7 @@ export const JSONField = name => ({
 })
 
 export const NullableJSONField = name => ({
-  type: DataTypes.JSONB,
+  type: JSONB,
   allowNull: true,
   get() {
     return JSON.parse(this.getDataValue(name));
@@ -88,30 +90,36 @@ export const VALIDATOR_STATES = {
 
 export const Validator = db.define('validator', {
   address:          StringPrimaryKey(),
-  publicKey:        { type: DataTypes.TEXT, },
-  votingPower:      { type: DataTypes.TEXT, },
-  proposerPriority: { type: DataTypes.TEXT, },
-  namadaAddress:    { type: DataTypes.TEXT, },
+  publicKey:        { type: TEXT, },
+  votingPower:      { type: TEXT, },
+  proposerPriority: { type: TEXT, },
+  namadaAddress:    { type: TEXT, },
   metadata:         JSONField('metadata'),
   commission:       JSONField('commission'),
-  stake:            { type: DataTypes.TEXT, },
-  state:            DataTypes.ENUM(...Object.values(VALIDATOR_STATES))
+  stake:            { type: TEXT, },
+  state:            ENUM(...Object.values(VALIDATOR_STATES))
 })
 
+const blockMeta = {
+  chainId:      { type: TEXT,    allowNull: false },
+  blockHash:    { type: TEXT,    allowNull: false },
+  blockHeight:  { type: INTEGER, allowNull: false },
+  blockTime:    { type: DATE },
+}
+
 export const Block = db.define('block', {
-  height:    IntegerPrimaryKey(),
-  hash:      { type: DataTypes.TEXT, allowNull: false, },
-  header:    JSONField('header'),
-  responses: JSONField('responses'),
+  ...blockMeta,
+  blockHash:    StringPrimaryKey(),
+  blockHeader:  JSONField('blockHeader'),
+  rpcResponses: JSONField('rpcResponses'),
 })
 
 export const Transaction = db.define('transaction', {
-  txId:                StringPrimaryKey(),
-  chainId:             { type: DataTypes.TEXT, },
-  blockId:             { type: DataTypes.TEXT, },
-  blockHeight:         { type: DataTypes.INTEGER, },
-  timestamp:           { type: DataTypes.DATE, },
-  data:                JSONField('data'),
+  ...blockMeta,
+  txHash:      StringPrimaryKey(),
+  txHeader:    JSONField('txHeader'),
+  txTime:      { type: DATE },
+  data:        JSONField('data'),
 })
 
 export const PROPOSAL_STATUS = [
@@ -133,194 +141,45 @@ export const PROPOSAL_TALLY_TYPE = [
 
 export const Proposal = db.define('proposal', {
   id:                IntegerPrimaryKey(),
-  proposalType:      { type: DataTypes.TEXT, },
-  author:            { type: DataTypes.TEXT, },
-  startEpoch:        { type: DataTypes.INTEGER, },
-  endEpoch:          { type: DataTypes.INTEGER, },
-  graceEpoch:        { type: DataTypes.INTEGER, },
+  proposalType:      { type: TEXT, },
+  author:            { type: TEXT, },
+  startEpoch:        { type: INTEGER, },
+  endEpoch:          { type: INTEGER, },
+  graceEpoch:        { type: INTEGER, },
   contentJSON:       JSONField('contentJSON'),
-  status:            { type: DataTypes.ENUM(...PROPOSAL_STATUS), },
-  result:            { type: DataTypes.ENUM(...PROPOSAL_RESULT), },
-  totalVotingPower:  { type: DataTypes.TEXT, },
-  totalYayPower:     { type: DataTypes.TEXT, },
-  totalNayPower:     { type: DataTypes.TEXT, },
-  totalAbstainPower: { type: DataTypes.TEXT, },
-  tallyType:         { type: DataTypes.ENUM(...PROPOSAL_TALLY_TYPE) }
+  status:            { type: ENUM(...PROPOSAL_STATUS), },
+  result:            { type: ENUM(...PROPOSAL_RESULT), },
+  totalVotingPower:  { type: TEXT, },
+  totalYayPower:     { type: TEXT, },
+  totalNayPower:     { type: TEXT, },
+  totalAbstainPower: { type: TEXT, },
+  tallyType:         { type: ENUM(...PROPOSAL_TALLY_TYPE) }
 })
 
 export const Voter = db.define("voter", {
   id:         IntegerPrimaryKey(),
-  vote:       { type: DataTypes.ENUM("yay", "nay", "abstain"), },
-  power:      { type: DataTypes.TEXT, },
-  voter:      { type: DataTypes.TEXT, },
-  proposalId: { type: DataTypes.INTEGER, },
+  vote:       { type: ENUM("yay", "nay", "abstain"), },
+  power:      { type: TEXT, },
+  voter:      { type: TEXT, },
+  proposalId: { type: INTEGER, },
 })
 
-//export const Contents = {
-
-  //BecomeValidator: db.define("content_become_validator", {
-    //address:                 { type: DataTypes.TEXT, },
-    //consensusKey:            { type: DataTypes.TEXT, },
-    //ethColdKey:              { type: DataTypes.TEXT, },
-    //ethHotKey:               { type: DataTypes.TEXT, },
-    //protocolKey:             { type: DataTypes.TEXT, },
-    //commissionRate:          { type: DataTypes.TEXT, },
-    //maxCommissionRateChange: { type: DataTypes.TEXT, },
-    //website:                 { type: DataTypes.TEXT, },
-    //email:                   { type: DataTypes.TEXT, },
-    //discordHandle:           { type: DataTypes.TEXT, },
-    //avatar:                  { type: DataTypes.TEXT, },
-    //description:             { type: DataTypes.TEXT, },
-  //}),
-
-  //Bond: db.define("content_bond", {
-    //validator: { type: DataTypes.TEXT, },
-    //amount:    { type: DataTypes.TEXT, },
-    //source:    { type: DataTypes.TEXT, },
-  //}),
-
-  //ChangeConsensusKey: db.define("content_change_consensus_key", {
-    //consensusKey: { type: DataTypes.TEXT, },
-    //validator:    { type: DataTypes.TEXT, },
-  //}),
-
-  //ChangeValidatorComission: db.define("content_change_validator_comission", {
-    //validator: { type: DataTypes.TEXT, },
-    //newRate:   { type: DataTypes.TEXT, },
-  //}),
-
-  //ChangeValidatorMetadata: db.define('content_change_validator_metadata', {
-    //validator:      { type: DataTypes.TEXT, },
-    //commissionRate: { type: DataTypes.TEXT, },
-    //website:        { type: DataTypes.TEXT, },
-    //email:          { type: DataTypes.TEXT, },
-    //discordHandle:  { type: DataTypes.TEXT, },
-    //avatar:         { type: DataTypes.TEXT, },
-    //description:    { type: DataTypes.TEXT, },
-  //}),
-
-  //ClaimRewards: db.define('content_claim_rewards', {
-    //validator: { type: DataTypes.TEXT, },
-    //source:    { type: DataTypes.TEXT, },
-  //}),
-
-  //DeactivateValidator: db.define('content_deactivate_validator', {
-    //address: { type: DataTypes.TEXT, },
-  //}),
-
-  //IBC: db.define('content_ibc', {
-    //'IBC': { type: DataTypes.TEXT, },
-  //}),
-
-  //InitAccount: db.define("content_init_account", {
-    //publicKeys: { type: DataTypes.ARRAY(DataTypes.TEXT), },
-    //vpCodeHash: { type: DataTypes.TEXT, },
-    //threshold:  { type: DataTypes.INTEGER, },
-  //}),
-
-  //InitProposal: db.define("content_init_proposal", {
-    //content:          { type: DataTypes.TEXT, },
-    //author:           { type: DataTypes.TEXT, },
-    //type:             { type: DataTypes.JSONB, },
-    //votingStartEpoch: { type: DataTypes.INTEGER, },
-    //votingEndEpoch:   { type: DataTypes.INTEGER, },
-    //graceEpoch:       { type: DataTypes.INTEGER, },
-    //proposalId:       { type:DataTypes.INTEGER, }
-  //}),
-
-  //ReactivateValidator: db.define("content_reactivate_validator", {
-    //address: { type: DataTypes.TEXT, },
-  //}),
-
-  //Redelegate: db.define("content_redelegate", {
-    //srcValidator: { type: DataTypes.TEXT, },
-    //dstValidator: { type: DataTypes.TEXT, },
-    //owner:        { type: DataTypes.TEXT, },
-    //amount:       { type: DataTypes.TEXT, },
-  //}),
-
-  //ResignSteward: db.define("content_resign_steward", {
-    //address: { type: DataTypes.TEXT, },
-  //}),
-
-  //RevealPK: db.define("content_reveal_pk", {
-    //pk: { type: DataTypes.JSONB },
-  //}),
-
-  //Transfer: db.define("content_transfer", {
-    //source:   { type: DataTypes.TEXT, },
-    //target:   { type: DataTypes.TEXT, },
-    //token:    { type: DataTypes.TEXT, },
-    //amount:   { type: DataTypes.TEXT, },
-    //key:      { type: DataTypes.TEXT, },
-    //shielded: { type: DataTypes.TEXT, },
-  //}),
-
-  //Unbond: db.define("content_unbond", {
-    //validator: { type: DataTypes.TEXT, },
-    //amount:    { type: DataTypes.TEXT, },
-    //source:    { type: DataTypes.TEXT, },
-  //}),
-
-  //UnjailValidator: db.define("content_unjail_validator", {
-    //address: { type: DataTypes.TEXT, },
-  //}),
-
-  //UpdateAccount: db.define("content_update_account", {
-    //address:    { type: DataTypes.TEXT, },
-    //vpCodeHash: { type: DataTypes.TEXT, },
-    //publicKeys: { type: DataTypes.ARRAY(DataTypes.TEXT), },
-    //threshold:  { type: DataTypes.TEXT, },
-  //}),
-
-  //UpdateStewardCommission: db.define("content_update_steward_commission", {
-    //steward:    { type: DataTypes.TEXT, },
-    //commission: { type: DataTypes.JSONB, },
-  //}),
-
-  //VoteProposal: db.define("content_vote_proposal", {
-    //id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, },
-    //proposalId: {
-      //type: DataTypes.INTEGER,
-      //get () {
-        //return JSON.parse(this.getDataValue('proposalId'));
-      //},
-      //set (value) {
-        //return this.setDataValue('proposalId', serialize(value));
-      //},
-    //},
-    //vote:        { type: DataTypes.TEXT, },
-    //voter:       { type: DataTypes.TEXT, },
-    //delegations: { type: DataTypes.ARRAY(DataTypes.TEXT), },
-  //}),
-
-  //Withdraw: db.define("content_withdraw", {
-    //validator: { type: DataTypes.TEXT, },
-    //source:    { type: DataTypes.TEXT, },
-  //}),
-
-//};
-
-//export const WASM_TO_CONTENT = {
-  //'tx_become_validator.wasm': Contents.BecomeValidator,
-  //'tx_bond.wasm': Contents.Bond,
-  //'tx_change_consensus_key.wasm': Contents.ChangeConsensusKey,
-  //'tx_change_validator_commission.wasm': Contents.ChangeValidatorComission,
-  //'tx_change_validator_metadata.wasm': Contents.ChangeValidatorMetadata,
-  //'tx_claim_rewards.wasm': Contents.ClaimRewards,
-  //'tx_deactivate_validator.wasm': Contents.DeactivateValidator,
-  //'tx_ibc.wasm': Contents.IBC,
-  //'tx_init_account.wasm': Contents.InitAccount,
-  //'tx_init_proposal.wasm': Contents.InitProposal,
-  //'tx_reactivate_validator.wasm': Contents.ReactivateValidator,
-  //'tx_resign_steward.wasm': Contents.ResignSteward,
-  //'tx_redelegate.wasm': Contents.Redelegate,
-  //'tx_reveal_pk.wasm': Contents.RevealPK,
-  //'tx_transfer.wasm': Contents.Transfer,
-  //'tx_unbond.wasm': Contents.Unbond,
-  //'tx_unjail_validator.wasm': Contents.UnjailValidator,
-  //'tx_update_account.wasm': Contents.UpdateAccount,
-  //'tx_update_steward_commission.wasm': Contents.UpdateStewardCommission,
-  //'tx_vote_proposal.wasm': Contents.VoteProposal,
-  //'tx_withdraw.wasm': Contents.Withdraw,
-//}
+export const countBlocks = () => Block.count()
+export const latestBlock = () => Block.max('blockHeight')
+export const oldestBlock = () => Block.min('blockHeight')
+export const latestBlocks = limit => Block.findAll({
+  order: [['height', 'DESC']],
+  limit: 10,
+  offset: 0,
+  attributes: ['height', 'hash', 'header'],
+}).then(blocks=>Promise.all(blocks.map(block=>
+  Transaction.count({
+    where: { blockHeight: block.height },
+  }).then(transactionCount=>Object.assign(block, {
+    transactionCount
+  }))
+)))
+export const countTransactions = () => Transaction.count()
+export const countValidators = () => Validator.count()
+export const countProposals = () => Proposal.count()
+export const countVotes = () => Voter.count()

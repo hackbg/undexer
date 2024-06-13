@@ -1,5 +1,5 @@
 import { Console } from '@fadroma/namada'
-import db, { Block, Transaction, withErrorLog } from './db.js'
+import * as DB from './db.js';
 import {
   GOVERNANCE_TRANSACTIONS,
   VALIDATOR_TRANSACTIONS,
@@ -15,7 +15,7 @@ export async function checkForNewBlock (
 ) {
   // should use newer node for the blockchain height
   const currentBlockOnChain = await chain.fetchHeight();
-  const latestBlockInDb     = await Block.max('height') || Number(NODE_LOWEST_BLOCK_HEIGHT);
+  const latestBlockInDb     = await DB.latestBlock() || Number(NODE_LOWEST_BLOCK_HEIGHT);
   console.log("=> Current block on chain:", currentBlockOnChain);
   console.log("=> Latest block in DB:", latestBlockInDb);
   if (currentBlockOnChain > latestBlockInDb) {
@@ -47,17 +47,17 @@ export async function updateBlock ({
 }) {
   const t0 = performance.now()
   block = await Promise.resolve(block)
-  await withErrorLog(() => db.transaction(async dbTransaction => {
-    await Block.create({
-      hash:      block.id,
-      header:    block.header,
-      height:    block.header.height,
-      responses: block.responses
-    }, {
-      transaction: dbTransaction
-    });
+  await DB.withErrorLog(() => DB.default.transaction(async dbTransaction => {
+    const data = {
+      chainId:      block.header.chainId,
+      blockTime:    block.time,
+      blockHeight:  block.height,
+      blockHash:    block.hash,
+      blockHeader:  block.header,
+      rpcResponses: block.responses,
+    }
+    await DB.Block.create(data, { transaction: dbTransaction });
     for (const transaction of block.transactions) {
-      transaction.txId = transaction.id
       await updateTransaction({
         block,
         events,
@@ -66,10 +66,7 @@ export async function updateBlock ({
         dbTransaction,
       })
     }
-  }), {
-    update: 'block',
-    height
-  })
+  }), { update: 'block', height })
   const t = performance.now() - t0
   const console = new Console(`Block ${height}`)
   for (const transaction of block.transactions) {
@@ -112,13 +109,15 @@ export async function updateTransaction ({
     console.log("=> Add section", section.type);
   }
   console.log("=> Adding transaction");
-  await Transaction.create({
-    txId:                transaction.id,
-    chainId:             transaction.chainId,
-    blockId:             block.id,
-    blockHeight:         height,
-    timestamp:           transaction.timestamp,
-    data:                transaction,
+  await DB.Transaction.create({
+    chainId:     transaction.block.chain.id,
+    blockHash:   transaction.block.hash,
+    blockTime:   transaction.block.time,
+    blockHeight: transaction.block.height,
+    txHash:      transaction.hash,
+    txHeader:    transaction.header,
+    txTime:      transaction.time,
+    data:        transaction
   }, {
     transaction: dbTransaction
   });

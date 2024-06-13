@@ -1,19 +1,14 @@
 import express from 'express';
 import { Console, bold, colors } from '@hackbg/logs';
 import { Op } from 'sequelize';
-import {
-  Block, Transaction, Validator, VALIDATOR_STATES, Proposal, Voter
-} from './db.js'
+import * as DB from './db.js';
 import { getRPC } from './rpc.js';
-
-const DEFAULT_PAGE_LIMIT = 25
-const DEFAULT_PAGE_OFFSET = 0
+import { CHAIN_ID, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET } from './config.js';
 
 const NOT_IMPLEMENTED = (req, res) => { throw new Error('not implemented') }
 
 export const routes = [
-  ['/status',                     dbStatus],
-  ['/blocks/index',               dbBlockIndex],
+  ['/',                           dbOverview],
   ['/blocks',                     dbBlocks],
   ['/block/latest',               dbLatestBlock],
   ['/block/:height',              dbBlockByHeight],
@@ -34,7 +29,7 @@ export const routes = [
   ['/transfers/to/:address',      dbTransfersTo],
   ['/transfers/by/:address',      dbTransfersBy],
 
-  ['/epoch',                      rpcEpochAndFirstBlock],
+  //['/epoch',                      rpcEpochAndFirstBlock],
   ['/total-staked',               rpcTotalStaked],
   [`/parameters/staking`,         rpcStakingParameters],
   [`/parameters/governance`,      rpcGovernanceParameters],
@@ -73,46 +68,81 @@ export function withConsole (handler) {
 // Read limit/offset from query parameters and apply defaults
 function pagination (req) {
   return {
-    limit: req.query.limit
-      ? Number(req.query.limit)
-      : DEFAULT_PAGE_LIMIT,
-    offset: req.query.offset
-      ? Number(req.query.offset)
-      : DEFAULT_PAGE_OFFSET
+    offset: Math.max(
+      0, req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
+    )
+    limit: Math.min(
+      100, req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
+    ),
   }
 }
 
-export async function dbStatus (req, res) {
-  res.status(200).send({
-    blocks:       await Block.count(),
-    validators:   await Validator.count(),
-    transactions: await Transaction.count(),
-    proposals:    await Proposal.count(),
-    votes:        await Voter.count()
-  })
-}
-
-export async function dbBlockIndex (req, res) {
+export async function dbOverview (req, res) {
   const timestamp = new Date().toISOString()
-  const [latestOnChain, latestIndexed, oldestIndexed] = await Promise.all([
-    chain.fetchHeight(),
-    Block.max('height'),
-    Block.min('height')
+  const [
+    totalBlocks,
+    latestBlock,
+    oldestBlock,
+    latestBlocks,
+    totalTransactions,
+    totalValidators,
+    totalProposals,
+    totalVotes
+  ] = await Promise.all([
+    DB.countBlocks(),
+    DB.latestBlock(),
+    DB.oldestBlock(),
+    DB.latestBlocks(10),
+    DB.countTransaction(),
+    DB.countValidators(),
+    DB.countProposals(),
+    DB.countVotes()
   ])
   res.status(200).send({
     timestamp,
-    latestOnChain,
-    latestIndexed,
-    oldestIndexed,
-    pages: []
+    chainId: CHAIN_ID,
+
+    totalBlocks,
+    oldestBlock,
+    latestBlock,
+    latestBlocks,
+
+    totalTransactions,
+    latestTransactions: [],
+
+    totalValidators,
+    topValidators: [],
+
+    totalProposals,
+    totalVotes,
+  })
+}
+
+export async function rpcOverview (req, res) {
+  const {chain} = await getRPC()
+  const timestamp = new Date().toISOString()
+  const [epoch, epochFirstBlock, totalStaked] = await Promise.all([
+    chain.fetchEpoch(),
+    chain.fetchEpochFirstBlock(),
+    chain.fetchTotalStaked()
+  ])
+  res.status(200).send({
+    timestamp,
+    chainId: CHAIN_ID,
+
+    epoch,
+    epochFirstBlock,
+    totalStaked
   })
 }
 
 export async function dbBlocks (req, res) {
   const { limit, offset } = pagination(req)
-  if (await Block.count() === 0) {
-    return res.status(404).send({ error: 'No blocks found' });
-  }
+  const [ totalBlocks, latestBlock, oldestBlock ] = await Promise.all([
+    await Block.count(),
+    Block.max('height'),
+    Block.min('height'),
+  ])
   const { rows, count } = await Block.findAndCountAll({
     order: [['height', 'DESC']],
     limit,
@@ -128,7 +158,13 @@ export async function dbBlocks (req, res) {
       .then(txs=>({
         ...block.get(), txs
       }))));
-  res.status(200).send({ count, blocks });
+  res.status(200).send({
+    totalBlocks,
+    latestBlock,
+    oldestBlock,
+    count,
+    blocks,
+  });
 }
 
 export async function dbLatestBlock (req, res) {
@@ -155,7 +191,7 @@ export async function dbBlockByHeight (req, res) {
         //attributes: { exclude: ['id', 'createdAt', 'updatedAt', 'chainId'] },
       //}],
     }),
-    Transaction.count({
+    DB.Transaction.count({
       where: { blockHeight: req.params.height }
     })
   ])
@@ -172,7 +208,7 @@ export async function dbBlockByHeight (req, res) {
 }
 
 export async function dbBlockByHash (req, res) {
-  const block = await Block.findOne({
+  const block = await DB.Block.findOne({
     where: { id: req.params.hash, },
     attributes: { exclude: ['transactionId', 'createdAt', 'updatedAt'] },
     //include: [{
@@ -189,7 +225,7 @@ export async function dbBlockByHash (req, res) {
 
 export async function dbTransactions (req, res) {
   const { limit, offset } = pagination(req)
-  const { rows, count } = await Transaction.findAndCountAll({
+  const { rows, count } = await DB.Transaction.findAndCountAll({
     order: [['timestamp', 'DESC']],
     limit,
     offset,
@@ -199,7 +235,7 @@ export async function dbTransactions (req, res) {
 }
 
 export async function dbTransactionByHash (req, res) {
-  const tx = await Transaction.findOne({
+  const tx = await DB.Transaction.findOne({
     where: { txId: req.params.txHash },
     attributes: { exclude: ['id', 'createdAt', 'updatedAt'], },
   });
@@ -210,7 +246,7 @@ export async function dbTransactionByHash (req, res) {
 }
 
 export async function dbValidatorAddresses (req, res) {
-  const { rows } = await Validator.findAndCountAll({
+  const { rows } = await DB.Validator.findAndCountAll({
     order: [['stake', 'DESC']],
     attributes: [ 'address', 'namadaAddress' ],
   });
@@ -219,10 +255,10 @@ export async function dbValidatorAddresses (req, res) {
 
 export async function dbValidators (req, res) {
   const { limit, offset } = pagination(req)
-  if (await Validator.count() === 0) {
+  if (await DB.Validator.count() === 0) {
     return res.status(404).send({ error: 'Validator not found' });
   }
-  const { rows, count } = await Validator.findAndCountAll({
+  const { rows, count } = await DB.Validator.findAndCountAll({
     order: [['stake', 'DESC']],
     limit,
     offset,
@@ -232,12 +268,12 @@ export async function dbValidators (req, res) {
 }
 
 export async function dbValidatorsByState (req, res) {
-  if (await Validator.count() === 0) {
+  if (await DB.Validator.count() === 0) {
     return res.status(404).send({ error: 'No validators' });
   }
   const { limit, offset } = pagination(req)
-  const { rows, count } = await Validator.findAndCountAll({
-    where: { state: VALIDATOR_STATES[req.params.state] },
+  const { rows, count } = await DB.Validator.findAndCountAll({
+    where: { state: DB.VALIDATOR_STATES[req.params.state] },
     order: [['stake', 'DESC']],
     limit,
     offset,
@@ -247,7 +283,7 @@ export async function dbValidatorsByState (req, res) {
 }
 
 export async function dbValidatorByHash (req, res) {
-  const validator = await Validator.findOne({
+  const validator = await DB.Validator.findOne({
     where: { address: req.params.hash },
     attributes: { exclude: ['id', 'createdAt', 'updatedAt'], },
   });
@@ -259,11 +295,11 @@ export async function dbValidatorByHash (req, res) {
 }
 
 export async function dbValidatorUptime (req, res) {
-  if (await Validator.count() === 0) {
+  if (await DB.Validator.count() === 0) {
     return res.status(404).send({ error: 'Validator not found' });
   }
   const address = req.params.address;
-  const blocks = await Block.findAll({
+  const blocks = await DB.Block.findAll({
     order: [['height', 'DESC']],
     limit: 100,
     attributes: ['responses', 'height'],
@@ -297,7 +333,7 @@ export async function dbProposals (req, res) {
   if (result) {
     where.result = result
   }
-  const { rows, count } = await Proposal.findAndCountAll({
+  const { rows, count } = await DB.Proposal.findAndCountAll({
     order: [[orderBy, orderDirection]],
     limit,
     offset,
@@ -314,18 +350,18 @@ export async function dbProposals (req, res) {
 }
 
 export async function dbProposalStats (req, res) {
-  const all      = (await Proposal.findAll()).length
-  const ongoing  = (await Proposal.findAll({ where: { status: 'ongoing' } })).length
-  const upcoming = (await Proposal.findAll({ where: { status: 'upcoming' } })).length
-  const finished = (await Proposal.findAll({ where: { status: 'finished' } })).length
-  const passed   = (await Proposal.findAll({ where: { result: 'passed' } })).length
-  const rejected = (await Proposal.findAll({ where: { result: 'rejected' } })).length
+  const all      = (await DB.Proposal.findAll()).length
+  const ongoing  = (await DB.Proposal.findAll({ where: { status: 'ongoing' } })).length
+  const upcoming = (await DB.Proposal.findAll({ where: { status: 'upcoming' } })).length
+  const finished = (await DB.Proposal.findAll({ where: { status: 'finished' } })).length
+  const passed   = (await DB.Proposal.findAll({ where: { result: 'passed' } })).length
+  const rejected = (await DB.Proposal.findAll({ where: { result: 'rejected' } })).length
   res.status(200).send({ all, ongoing, upcoming, finished, passed, rejected })
 }
 
 export async function dbProposal (req, res) {
   const id = req.params.id
-  const result = await Proposal.findOne({
+  const result = await DB.Proposal.findOne({
     where: { id },
     attributes: { exclude: ['createdAt', 'updatedAt'], },
   });
@@ -338,7 +374,7 @@ export async function dbProposal (req, res) {
 
 export async function dbProposalVotes (req, res) {
   const { limit, offset } = pagination(req)
-  const { count, rows } = await Voter.findAndCountAll({
+  const { count, rows } = await DB.Voter.findAndCountAll({
     limit,
     offset,
     where: { proposalId: req.params.proposalId, },
@@ -419,20 +455,6 @@ export async function rpcPGFParameters (req, res) {
     }
   }
   res.status(200).send(parameters);
-}
-
-export async function rpcEpochAndFirstBlock (req, res) {
-  const {chain} = await getRPC()
-  const timestamp = new Date().toISOString()
-  const [epoch, firstBlock] = await Promise.all([
-    chain.fetchEpoch(),
-    chain.fetchEpochFirstBlock(),
-  ])
-  res.status(200).send({
-    timestamp,
-    epoch:      String(epoch),
-    firstBlock: String(firstBlock),
-  })
 }
 
 export async function rpcHeight (req, res) {
