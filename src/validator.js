@@ -31,13 +31,7 @@ export async function checkValidators (chain) {
 
 export async function updateValidators (chain, query, height) {
   console.log("=> Updating validators");
-  const validatorsBinary = await getValidatorsFromNode(chain);
-  const validators = []
-  for (const validatorBinary of validatorsBinary) {
-    const validator = await getValidator(query, chain, validatorBinary);
-    //const validatorData = JSON.parse(serialize(validator));
-    validators.push(validator);
-  }
+  const validators = await getValidators(chain, query)
   await withErrorLog(() => db.transaction(async dbTransaction => {
     for (const validatorData of validators) {
       await Validator.create(validatorData, { transaction: dbTransaction });
@@ -46,6 +40,17 @@ export async function updateValidators (chain, query, height) {
     update: 'validators',
     height
   })
+}
+
+export async function getValidators (chain, query) {
+  const validatorsBinary = await getValidatorsFromNode(chain);
+  const validators = []
+  for (const validatorBinary of validatorsBinary) {
+    const validator = await getValidator(query, chain, validatorBinary);
+    //const validatorData = JSON.parse(serialize(validator));
+    validators.push(validator);
+  }
+  return validators
 }
 
 export async function getValidatorsFromNode(chain) {

@@ -36,8 +36,8 @@ export default class UndexerCommands extends Commands {
     args: 'HEIGHT'
   }, async (height: number) => {
     const t0 = performance.now()
-    const { getRPC } = await import('./src/config.js')
     const { updateBlock } = await import('./src/block.js')
+    const { getRPC } = await import('./src/rpc.js')
     const { chain } = await getRPC(height)
     // Fetch and decode block
     const block = await chain.fetchBlock({ height })
@@ -53,6 +53,16 @@ export default class UndexerCommands extends Commands {
     this.log.br().log('Saving block', height, 'to database...').br()
     await updateBlock({ chain, height, block, })
     this.log.info('Done in', performance.now() - t0, 'msec')
+  })
+
+  validators = this.command({
+    name: 'validators',
+    info: 'fetch current info about validators'
+  }, async (height: number) => {
+    const { getValidators } = await import('./src/validator.js')
+    const { getRPC } = await import('./src/rpc.js')
+    const { chain, query } = await getRPC(height)
+    console.log(await getValidators(chain, query))
   })
 
 }
