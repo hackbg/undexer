@@ -55,9 +55,21 @@ export const StringPrimaryKey = () => ({
 })
 
 import { serialize } from './utils.js'
+
 export const JSONField = name => ({
   type: DataTypes.JSONB,
   allowNull: false,
+  get() {
+    return JSON.parse(this.getDataValue(name));
+  },
+  set(value) {
+    return this.setDataValue(name, serialize(value));
+  },
+})
+
+export const NullableJSONField = name => ({
+  type: DataTypes.JSONB,
+  allowNull: true,
   get() {
     return JSON.parse(this.getDataValue(name));
   },
@@ -80,8 +92,8 @@ export const Validator = db.define('validator', {
   votingPower:      { type: DataTypes.TEXT, },
   proposerPriority: { type: DataTypes.TEXT, },
   namadaAddress:    { type: DataTypes.TEXT, },
-  metadata:         { type: DataTypes.JSONB, },
-  commission:       { type: DataTypes.JSONB, },
+  metadata:         JSONField('metadata'),
+  commission:       JSONField('commission'),
   stake:            { type: DataTypes.TEXT, },
   state:            DataTypes.ENUM(...Object.values(VALIDATOR_STATES))
 })
@@ -99,7 +111,7 @@ export const Transaction = db.define('transaction', {
   blockId:             { type: DataTypes.TEXT, },
   blockHeight:         { type: DataTypes.INTEGER, },
   timestamp:           { type: DataTypes.DATE, },
-  data:                { type: DataTypes.JSONB, },
+  data:                JSONField('data'),
 })
 
 export const PROPOSAL_STATUS = [
@@ -126,7 +138,7 @@ export const Proposal = db.define('proposal', {
   startEpoch:        { type: DataTypes.INTEGER, },
   endEpoch:          { type: DataTypes.INTEGER, },
   graceEpoch:        { type: DataTypes.INTEGER, },
-  contentJSON:       { type: DataTypes.JSONB, },
+  contentJSON:       JSONField('contentJSON'),
   status:            { type: DataTypes.ENUM(...PROPOSAL_STATUS), },
   result:            { type: DataTypes.ENUM(...PROPOSAL_RESULT), },
   totalVotingPower:  { type: DataTypes.TEXT, },
