@@ -29,7 +29,8 @@ export const routes = [
   ['/transfers/to/:address',      dbTransfersTo],
   ['/transfers/by/:address',      dbTransfersBy],
 
-  //['/epoch',                      rpcEpochAndFirstBlock],
+  //['/height',                     RPC.rpcHeight],
+  ['/epoch',                      RPC.rpcEpochAndFirstBlock],
   ['/total-staked',               RPC.rpcTotalStaked],
   [`/parameters/staking`,         RPC.rpcStakingParameters],
   [`/parameters/governance`,      RPC.rpcGovernanceParameters],
@@ -91,16 +92,16 @@ export async function dbOverview (req, res) {
     totalProposals,
     totalVotes
   ] = await Promise.all([
-    DB.countBlocks(),
+    DB.totalBlocks(),
     DB.latestBlock(),
     DB.oldestBlock(),
     DB.latestBlocks(10),
-    DB.countTransactions(),
+    DB.totalTransactions(),
     DB.latestTransactions(10),
-    DB.countValidators(),
+    DB.totalValidators(),
     DB.topValidators(10),
-    DB.countProposals(),
-    DB.countVotes()
+    DB.totalProposals(),
+    DB.totalVotes()
   ])
   res.status(200).send({
     timestamp,
@@ -130,7 +131,7 @@ export async function dbBlocks (req, res) {
     oldestBlock,
     { rows, count }
   ] = await Promise.all([
-    await Block.count(),
+    await DB.totalBlocks(),
     DB.latestBlock(),
     DB.oldestBlock(),
     DB.Block.findAndCountAll({
@@ -140,21 +141,14 @@ export async function dbBlocks (req, res) {
       attributes: [
         'blockHeight',
         'blockHash',
-        'blockHeader',
         'blockTime'
       ],
     })
   ])
-  console.log({rows})
-  const blocks = await Promise.all(
-    rows.map(block=>Transaction
-      .findAll({
-        where: { blockHeight: block.blockHeight },
-        attributes: ['txId'],
-      })
-      .then(txs=>({
-        ...block.get(), txs
-      }))));
+  const blocks = await Promise.all(rows.map(block=>
+    DB.Transaction
+      .count({ where: { blockHeight: block.blockHeight } })
+      .then(transactionCount=>({ ...block.dataValues, transactionCount }))))
   res.status(200).send({
     totalBlocks,
     latestBlock,
@@ -179,28 +173,27 @@ export async function dbLatestBlock (req, res) {
 }
 
 export async function dbBlockByHeight (req, res) {
-  const [block, transactionCount] = await Promise.all([
-    Block.findOne({
-      where: { height: req.params.height, },
-      attributes: { exclude: ['transactionId', 'createdAt', 'updatedAt'] },
-      //include: [{
-        //model: Transaction,
-        //attributes: { exclude: ['id', 'createdAt', 'updatedAt', 'chainId'] },
-      //}],
+  const blockHeight = req.params.height
+  const [block, { count, rows }] = await Promise.all([
+    DB.Block.findOne({
+      where: { blockHeight, },
+      attributes: { exclude: ['createdAt', 'updatedAt'] },
     }),
-    DB.Transaction.count({
-      where: { blockHeight: req.params.height }
-    })
+    DB.Transaction.findAndCountAll({
+      where: { blockHeight }
+    }),
   ])
   if (block === null) {
     res.status(404).send({ error: 'Block not found' });
     return;
   }
   res.status(200).send({
-    hash: block.hash,
-    header: block.header,
-    height: block.height,
-    transactions: transactionCount
+    blockHash:        block.blockHash,
+    blockHeader:      block.blockHeader,
+    blockHeight:      block.blockHeight,
+    blockTime:        block.blockTime,
+    transactionCount: count,
+    transactions:     rows,
   });
 }
 
@@ -233,7 +226,7 @@ export async function dbTransactions (req, res) {
 
 export async function dbTransactionByHash (req, res) {
   const tx = await DB.Transaction.findOne({
-    where: { txId: req.params.txHash },
+    where: { txHash: req.params.txHash },
     attributes: { exclude: ['id', 'createdAt', 'updatedAt'], },
   });
   if (tx === null) {

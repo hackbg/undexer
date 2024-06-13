@@ -163,7 +163,7 @@ export const Voter = db.define("voter", {
   proposalId: { type: INTEGER, },
 })
 
-export const countBlocks = () => Block.count()
+export const totalBlocks = () => Block.count()
 
 export const latestBlock = () => Block.max('blockHeight')
 
@@ -184,7 +184,7 @@ export const latestBlocks = limit => Block.findAll({
     .then(transactionCount=>({ ...block.dataValues, transactionCount }))
 )))
 
-export const countTransactions = () => Transaction.count()
+export const totalTransactions = () => Transaction.count()
 
 export const latestTransactions = limit => Transaction.findAll({
   order: [['blockHeight', 'DESC']],
@@ -199,7 +199,7 @@ export const latestTransactions = limit => Transaction.findAll({
   ],
 })
 
-export const countValidators = () => Validator.count()
+export const totalValidators = () => Validator.count()
 
 export const topValidators = limit => Validator.findAll({
   order: [['stake', 'DESC']],
@@ -207,6 +207,6 @@ export const topValidators = limit => Validator.findAll({
   offset: 0,
 })
 
-export const countProposals = () => Proposal.count()
+export const totalProposals = () => Proposal.count()
 
-export const countVotes = () => Voter.count()
+export const totalVotes = () => Voter.count()

@@ -2,6 +2,7 @@ import * as Namada from "@fadroma/namada";
 import { readFile } from "fs/promises";
 import { Query } from "../rust/pkg/shared.js";
 import {
+  CHAIN_ID,
   PRE_UNDEXER_RPC_URL,
   POST_UNDEXER_RPC_URL,
   NODE_LOWEST_BLOCK_HEIGHT
@@ -55,22 +56,35 @@ export function getRPC (height = Infinity) {
   throw new Error(`Could not find suitable RPC for height ${height}`)
 }
 
-
-export async function rpcOverview (req, res) {
+export async function rpcHeight (req, res) {
   const {chain} = await getRPC()
-  const timestamp = new Date().toISOString()
-  const [epoch, epochFirstBlock, totalStaked] = await Promise.all([
+  res.status(200).send({
+    timestamp: new Date().toISOString(),
+    chainId:   CHAIN_ID,
+    height:    await chain.fetchHeight()
+  })
+}
+
+export async function rpcTotalStaked (req, res) {
+  const {chain} = await getRPC()
+  res.status(200).send({
+    timestamp:   new Date().toISOString(),
+    chainId:     CHAIN_ID,
+    totalStaked: String(await chain.fetchTotalStaked())
+  })
+}
+
+export async function rpcEpochAndFirstBlock (req, res) {
+  const {chain} = await getRPC()
+  const [epoch, firstBlock] = await Promise.all([
     chain.fetchEpoch(),
     chain.fetchEpochFirstBlock(),
-    chain.fetchTotalStaked()
   ])
   res.status(200).send({
-    timestamp,
-    chainId: CHAIN_ID,
-
-    epoch,
-    epochFirstBlock,
-    totalStaked
+    timestamp:  new Date().toISOString(),
+    chainId:    CHAIN_ID,
+    epoch:      String(epoch),
+    firstBlock: String(firstBlock),
   })
 }
 
@@ -105,17 +119,4 @@ export async function rpcPGFParameters (req, res) {
     }
   }
   res.status(200).send(parameters);
-}
-
-export async function rpcHeight (req, res) {
-  const {chain} = await getRPC()
-  res.status(200).send({
-    height: await chain.fetchHeight()
-  })
-}
-
-export async function rpcTotalStaked (req, res) {
-  const {chain} = await getRPC()
-  const totalStaked = await chain.fetchTotalStaked()
-  res.status(200).send(String(totalStaked))
 }
