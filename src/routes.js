@@ -12,32 +12,33 @@ const DEFAULT_PAGE_OFFSET = 0
 const NOT_IMPLEMENTED = (req, res) => { throw new Error('not implemented') }
 
 export const routes = [
-  ['/status',                     getStatus],
-  ['/epoch',                      getEpochAndFirstBlock],
-  ['/blocks/index',               getBlockIndex],
-  ['/blocks',                     getBlocks],
-  ['/block/latest',               getLatestBlock],
-  ['/block/:height',              getBlockByHeight],
-  ['/block/hash/:hash',           getBlockByHash],
+  ['/status',                     dbStatus],
+  ['/blocks/index',               dbBlockIndex],
+  ['/blocks',                     dbBlocks],
+  ['/block/latest',               dbLatestBlock],
+  ['/block/:height',              dbBlockByHeight],
+  ['/block/hash/:hash',           dbBlockByHash],
   ['/block',                      NOT_IMPLEMENTED],
-  ['/txs',                        getTransactions],
-  ['/tx/:txHash',                 getTransactionByHash],
-  ['/total-staked',               getTotalStaked],
-  ['/validator-addresses',        getValidatorAddresses],
-  ['/validators',                 getValidators],
-  ['/validators/:state',          getValidatorsByState],
-  ['/validator/:hash',            getValidatorByHash],
-  ['/validator/uptime/:address',  getValidatorUptime],
-  ['/proposals',                  getProposals],
-  ['/proposals/stats',            getProposalStats],
-  ['/proposal/:id',               getProposal],
-  ['/proposal/votes/:proposalId', getProposalVotes],
-  ['/transfers/from/:address',    getTransfersFrom],
-  ['/transfers/to/:address',      getTransfersTo],
-  ['/transfers/by/:address',      getTransfersBy],
-  [`/parameters/staking`,         getStakingParameters],
-  [`/parameters/governance`,      getGovernanceParameters],
-  [`/parameters/pgf`,             getPGFParameters],
+  ['/txs',                        dbTransactions],
+  ['/tx/:txHash',                 dbTransactionByHash],
+  ['/validator-addresses',        dbValidatorAddresses],
+  ['/validators',                 dbValidators],
+  ['/validators/:state',          dbValidatorsByState],
+  ['/validator/:hash',            dbValidatorByHash],
+  ['/validator/uptime/:address',  dbValidatorUptime],
+  ['/proposals',                  dbProposals],
+  ['/proposals/stats',            dbProposalStats],
+  ['/proposal/:id',               dbProposal],
+  ['/proposal/votes/:proposalId', dbProposalVotes],
+  ['/transfers/from/:address',    dbTransfersFrom],
+  ['/transfers/to/:address',      dbTransfersTo],
+  ['/transfers/by/:address',      dbTransfersBy],
+
+  ['/epoch',                      rpcEpochAndFirstBlock],
+  ['/total-staked',               rpcTotalStaked],
+  [`/parameters/staking`,         rpcStakingParameters],
+  [`/parameters/governance`,      rpcGovernanceParameters],
+  [`/parameters/pgf`,             rpcPGFParameters],
 ]
 
 export default addRoutes(express.Router());
@@ -81,7 +82,7 @@ function pagination (req) {
   }
 }
 
-export async function getStatus (req, res) {
+export async function dbStatus (req, res) {
   res.status(200).send({
     blocks:       await Block.count(),
     validators:   await Validator.count(),
@@ -91,22 +92,7 @@ export async function getStatus (req, res) {
   })
 }
 
-export async function getEpochAndFirstBlock (req, res) {
-  const {chain} = await getRPC()
-  const timestamp = new Date().toISOString()
-  const [epoch, firstBlock] = await Promise.all([
-    chain.fetchEpoch(),
-    chain.fetchEpochFirstBlock(),
-  ])
-  res.status(200).send({
-    timestamp,
-    epoch:      String(epoch),
-    firstBlock: String(firstBlock),
-  })
-}
-
-export async function getBlockIndex (req, res) {
-  const {chain} = await getRPC()
+export async function dbBlockIndex (req, res) {
   const timestamp = new Date().toISOString()
   const [latestOnChain, latestIndexed, oldestIndexed] = await Promise.all([
     chain.fetchHeight(),
@@ -122,7 +108,7 @@ export async function getBlockIndex (req, res) {
   })
 }
 
-export async function getBlocks (req, res) {
+export async function dbBlocks (req, res) {
   const { limit, offset } = pagination(req)
   if (await Block.count() === 0) {
     return res.status(404).send({ error: 'No blocks found' });
@@ -145,7 +131,7 @@ export async function getBlocks (req, res) {
   res.status(200).send({ count, blocks });
 }
 
-export async function getLatestBlock (req, res) {
+export async function dbLatestBlock (req, res) {
   //const latestBlock = await Block.max('height');
   const latestBlock = await Block.findAll({
     order: [['height', 'DESC']],
@@ -159,7 +145,7 @@ export async function getLatestBlock (req, res) {
   return res.status(200).send({ height, hash, header });
 }
 
-export async function getBlockByHeight (req, res) {
+export async function dbBlockByHeight (req, res) {
   const [block, transactionCount] = await Promise.all([
     Block.findOne({
       where: { height: req.params.height, },
@@ -185,7 +171,7 @@ export async function getBlockByHeight (req, res) {
   });
 }
 
-export async function getBlockByHash (req, res) {
+export async function dbBlockByHash (req, res) {
   const block = await Block.findOne({
     where: { id: req.params.hash, },
     attributes: { exclude: ['transactionId', 'createdAt', 'updatedAt'] },
@@ -201,7 +187,7 @@ export async function getBlockByHash (req, res) {
   res.status(200).send(block);
 }
 
-export async function getTransactions (req, res) {
+export async function dbTransactions (req, res) {
   const { limit, offset } = pagination(req)
   const { rows, count } = await Transaction.findAndCountAll({
     order: [['timestamp', 'DESC']],
@@ -212,7 +198,7 @@ export async function getTransactions (req, res) {
   res.status(200).send({ count, txs: rows })
 }
 
-export async function getTransactionByHash (req, res) {
+export async function dbTransactionByHash (req, res) {
   const tx = await Transaction.findOne({
     where: { txId: req.params.txHash },
     attributes: { exclude: ['id', 'createdAt', 'updatedAt'], },
@@ -223,13 +209,7 @@ export async function getTransactionByHash (req, res) {
   res.status(200).send(tx);
 }
 
-export async function getTotalStaked (req, res) {
-  const {chain} = await getRPC()
-  const totalStaked = await chain.fetchTotalStaked()
-  res.status(200).send(String(totalStaked))
-}
-
-export async function getValidatorAddresses (req, res) {
+export async function dbValidatorAddresses (req, res) {
   const { rows } = await Validator.findAndCountAll({
     order: [['stake', 'DESC']],
     attributes: [ 'address', 'namadaAddress' ],
@@ -237,7 +217,7 @@ export async function getValidatorAddresses (req, res) {
   res.status(200).send(rows)
 }
 
-export async function getValidators (req, res) {
+export async function dbValidators (req, res) {
   const { limit, offset } = pagination(req)
   if (await Validator.count() === 0) {
     return res.status(404).send({ error: 'Validator not found' });
@@ -251,7 +231,7 @@ export async function getValidators (req, res) {
   res.status(200).send({ count, validators: rows })
 }
 
-export async function getValidatorsByState (req, res) {
+export async function dbValidatorsByState (req, res) {
   if (await Validator.count() === 0) {
     return res.status(404).send({ error: 'No validators' });
   }
@@ -266,7 +246,7 @@ export async function getValidatorsByState (req, res) {
   res.status(200).send({ count, validators: rows })
 }
 
-export async function getValidatorByHash (req, res) {
+export async function dbValidatorByHash (req, res) {
   const validator = await Validator.findOne({
     where: { address: req.params.hash },
     attributes: { exclude: ['id', 'createdAt', 'updatedAt'], },
@@ -278,7 +258,7 @@ export async function getValidatorByHash (req, res) {
   res.status(200).send(validator);
 }
 
-export async function getValidatorUptime (req, res) {
+export async function dbValidatorUptime (req, res) {
   if (await Validator.count() === 0) {
     return res.status(404).send({ error: 'Validator not found' });
   }
@@ -302,7 +282,7 @@ export async function getValidatorUptime (req, res) {
   res.status(200).send({ uptime, currentHeight, countedBlocks });
 }
 
-export async function getProposals (req, res) {
+export async function dbProposals (req, res) {
   const { limit, offset } = pagination(req)
   const orderBy = req.query.orderBy ?? 'id';
   const orderDirection = req.query.orderDirection ?? 'DESC'
@@ -333,7 +313,7 @@ export async function getProposals (req, res) {
   res.status(200).send({ count, proposals })
 }
 
-export async function getProposalStats (req, res) {
+export async function dbProposalStats (req, res) {
   const all      = (await Proposal.findAll()).length
   const ongoing  = (await Proposal.findAll({ where: { status: 'ongoing' } })).length
   const upcoming = (await Proposal.findAll({ where: { status: 'upcoming' } })).length
@@ -343,7 +323,7 @@ export async function getProposalStats (req, res) {
   res.status(200).send({ all, ongoing, upcoming, finished, passed, rejected })
 }
 
-export async function getProposal (req, res) {
+export async function dbProposal (req, res) {
   const id = req.params.id
   const result = await Proposal.findOne({
     where: { id },
@@ -356,7 +336,7 @@ export async function getProposal (req, res) {
   res.status(200).send({ ...proposal, ...JSON.parse(contentJSON) });
 }
 
-export async function getProposalVotes (req, res) {
+export async function dbProposalVotes (req, res) {
   const { limit, offset } = pagination(req)
   const { count, rows } = await Voter.findAndCountAll({
     limit,
@@ -367,7 +347,7 @@ export async function getProposalVotes (req, res) {
   res.status(200).send({ count, votes: rows });
 }
 
-export async function getTransfersFrom (req, res) {
+export async function dbTransfersFrom (req, res) {
   const { limit, offset } = pagination(req)
   throw new Error('not implemented')
   //const { count, rows } = await Content.Transfer.findAndCountAll({
@@ -379,7 +359,7 @@ export async function getTransfersFrom (req, res) {
   res.status(200).send({ count, transfers: rows });
 }
 
-export async function getTransfersTo (req, res) {
+export async function dbTransfersTo (req, res) {
   const { limit, offset } = pagination(req)
   throw new Error('not implemented')
   //const { count, rows } = await Content.Transfer.findAndCountAll({
@@ -391,7 +371,7 @@ export async function getTransfersTo (req, res) {
   res.status(200).send({ count, transfers: rows });
 }
 
-export async function getTransfersBy (req, res) {
+export async function dbTransfersBy (req, res) {
   const { limit, offset } = pagination(req)
   throw new Error('not implemented')
   //const { count, rows } = await Content.Transfer.findAndCountAll({
@@ -408,7 +388,7 @@ export async function getTransfersBy (req, res) {
   res.status(200).send({ count, transfers: rows });
 }
 
-export async function getStakingParameters (req, res) {
+export async function rpcStakingParameters (req, res) {
   const {chain} = await getRPC()
   const parameters = await chain.fetchStakingParameters()
   for (const key in parameters) {
@@ -419,7 +399,7 @@ export async function getStakingParameters (req, res) {
   res.status(200).send(parameters);
 }
 
-export async function getGovernanceParameters (req, res) {
+export async function rpcGovernanceParameters (req, res) {
   const {chain} = await getRPC()
   const parameters = await chain.fetchGovernanceParameters()
   for (const key in parameters) {
@@ -430,7 +410,7 @@ export async function getGovernanceParameters (req, res) {
   res.status(200).send(parameters);
 }
 
-export async function getPGFParameters (req, res) {
+export async function rpcPGFParameters (req, res) {
   const {chain} = await getRPC()
   const parameters = await chain.fetchPGFParameters()
   for (const key in parameters) {
@@ -439,4 +419,31 @@ export async function getPGFParameters (req, res) {
     }
   }
   res.status(200).send(parameters);
+}
+
+export async function rpcEpochAndFirstBlock (req, res) {
+  const {chain} = await getRPC()
+  const timestamp = new Date().toISOString()
+  const [epoch, firstBlock] = await Promise.all([
+    chain.fetchEpoch(),
+    chain.fetchEpochFirstBlock(),
+  ])
+  res.status(200).send({
+    timestamp,
+    epoch:      String(epoch),
+    firstBlock: String(firstBlock),
+  })
+}
+
+export async function rpcHeight (req, res) {
+  const {chain} = await getRPC()
+  res.status(200).send({
+    height: await chain.fetchHeight()
+  })
+}
+
+export async function rpcTotalStaked (req, res) {
+  const {chain} = await getRPC()
+  const totalStaked = await chain.fetchTotalStaked()
+  res.status(200).send(String(totalStaked))
 }
