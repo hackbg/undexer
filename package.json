@@ -5,12 +5,12 @@
   "version": "2.0.0",
   "description": "Namada indexer to file.",
   "packageManager": "pnpm@8.15.6+sha256.01c01eeb990e379b31ef19c03e9d06a14afa5250b82e81303f88721c99ff2e6f",
-  "bin": { "undexer": "main.mjs" },
+  "bin": { "undexer": "./undexer" },
   "scripts": {
     "start": "concurrently --raw src/main.js src/api/main.js",
     "api": "node src/api/main.js",
     "indexer": "node src/main.js",
-    "cli": "node main.mjs",
+    "cli": "node undexer",
     "build:rust": "cd rust && wasm-pack build --dev --target nodejs"
   },
   "dependencies": {
