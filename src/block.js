@@ -34,8 +34,14 @@ export async function updateBlocks (
   endHeight
 ) {
   console.log("=> Processing blocks from", startHeight, "to", endHeight);
-  for (let height = startHeight; height <= endHeight; height++) {
-    await updateBlock({ chain, events, height })
+  let height = startHeight
+  try {
+    for (; height <= endHeight; height++) {
+      await updateBlock({ chain, events, height })
+    }
+  } catch (e) {
+    console.error('Failed to index block', height)
+    console.error(e)
   }
 }
 
@@ -86,39 +92,38 @@ export async function updateTransaction ({
   const console = new Console(
     `Block ${height}, TX ${transaction.id.slice(0, 8)}`
   )
-  if (transaction.content) {
-    console.log("=> Add content", transaction.content.type);
-    const uploadData = { ...transaction.content }
+  const { content, sections } = transaction.data
+  if (content) {
+    console.log("=> Add content", content.type);
+    const uploadData = { ...content }
     if (GOVERNANCE_TRANSACTIONS.includes(uploadData.type)) {
       uploadData.data.proposalId = Number(uploadData.data.id);
       delete uploadData.data.id;
     }
-    if (VALIDATOR_TRANSACTIONS.includes(transaction.content.type)) {
+    if (VALIDATOR_TRANSACTIONS.includes(content.type)) {
       events?.emit("updateValidators", height);
     }
-    if (transaction.content.type === "transaction_vote_proposal.wasm") {
-      events?.emit("updateProposal", transaction.content.data.proposalId, height);
+    if (content.type === "transaction_vote_proposal.wasm") {
+      events?.emit("updateProposal", content.data.proposalId, height);
     }
-    if (transaction.content.type === "transaction_init_proposal.wasm") {
-      events?.emit("createProposal", transaction.content.data, height);
+    if (content.type === "transaction_init_proposal.wasm") {
+      events?.emit("createProposal", content.data, height);
     }
   } else {
-    console.warn(`Unsupported content ${transaction.content.type}`)
+    console.warn(`Unsupported content ${content?.type}`)
   }
-  for (let section of transaction.sections) {
+  for (let section of sections) {
     console.log("=> Add section", section.type);
   }
-  console.log("=> Adding transaction");
-  await DB.Transaction.create({
-    chainId:     transaction.block.chain.id,
+  const data = {
+    chainId:     transaction.data.chainId,
     blockHash:   transaction.block.hash,
     blockTime:   transaction.block.time,
     blockHeight: transaction.block.height,
-    txHash:      transaction.hash,
-    txHeader:    transaction.header,
-    txTime:      transaction.time,
-    data:        transaction
-  }, {
-    transaction: dbTransaction
-  });
+    txHash:      transaction.id,
+    txTime:      transaction.data.timestamp,
+    txData:      transaction,
+  }
+  console.log("=> Adding transaction", data);
+  await DB.Transaction.create(data, { transaction: dbTransaction });
 }

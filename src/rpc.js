@@ -55,3 +55,67 @@ export function getRPC (height = Infinity) {
   throw new Error(`Could not find suitable RPC for height ${height}`)
 }
 
+
+export async function rpcOverview (req, res) {
+  const {chain} = await getRPC()
+  const timestamp = new Date().toISOString()
+  const [epoch, epochFirstBlock, totalStaked] = await Promise.all([
+    chain.fetchEpoch(),
+    chain.fetchEpochFirstBlock(),
+    chain.fetchTotalStaked()
+  ])
+  res.status(200).send({
+    timestamp,
+    chainId: CHAIN_ID,
+
+    epoch,
+    epochFirstBlock,
+    totalStaked
+  })
+}
+
+export async function rpcStakingParameters (req, res) {
+  const {chain} = await getRPC()
+  const parameters = await chain.fetchStakingParameters()
+  for (const key in parameters) {
+    if (typeof parameters[key] === 'bigint') {
+      parameters[key] = String(parameters[key])
+    }
+  }
+  res.status(200).send(parameters);
+}
+
+export async function rpcGovernanceParameters (req, res) {
+  const {chain} = await getRPC()
+  const parameters = await chain.fetchGovernanceParameters()
+  for (const key in parameters) {
+    if (typeof parameters[key] === 'bigint') {
+      parameters[key] = String(parameters[key])
+    }
+  }
+  res.status(200).send(parameters);
+}
+
+export async function rpcPGFParameters (req, res) {
+  const {chain} = await getRPC()
+  const parameters = await chain.fetchPGFParameters()
+  for (const key in parameters) {
+    if (typeof parameters[key] === 'bigint') {
+      parameters[key] = String(parameters[key])
+    }
+  }
+  res.status(200).send(parameters);
+}
+
+export async function rpcHeight (req, res) {
+  const {chain} = await getRPC()
+  res.status(200).send({
+    height: await chain.fetchHeight()
+  })
+}
+
+export async function rpcTotalStaked (req, res) {
+  const {chain} = await getRPC()
+  const totalStaked = await chain.fetchTotalStaked()
+  res.status(200).send(String(totalStaked))
+}

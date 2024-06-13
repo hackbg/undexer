@@ -2,7 +2,7 @@ import express from 'express';
 import { Console, bold, colors } from '@hackbg/logs';
 import { Op } from 'sequelize';
 import * as DB from './db.js';
-import { getRPC } from './rpc.js';
+import * as RPC from './rpc.js';
 import { CHAIN_ID, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET } from './config.js';
 
 const NOT_IMPLEMENTED = (req, res) => { throw new Error('not implemented') }
@@ -30,10 +30,10 @@ export const routes = [
   ['/transfers/by/:address',      dbTransfersBy],
 
   //['/epoch',                      rpcEpochAndFirstBlock],
-  ['/total-staked',               rpcTotalStaked],
-  [`/parameters/staking`,         rpcStakingParameters],
-  [`/parameters/governance`,      rpcGovernanceParameters],
-  [`/parameters/pgf`,             rpcPGFParameters],
+  ['/total-staked',               RPC.rpcTotalStaked],
+  [`/parameters/staking`,         RPC.rpcStakingParameters],
+  [`/parameters/governance`,      RPC.rpcGovernanceParameters],
+  [`/parameters/pgf`,             RPC.rpcPGFParameters],
 ]
 
 export default addRoutes(express.Router());
@@ -85,7 +85,9 @@ export async function dbOverview (req, res) {
     oldestBlock,
     latestBlocks,
     totalTransactions,
+    latestTransactions,
     totalValidators,
+    topValidators,
     totalProposals,
     totalVotes
   ] = await Promise.all([
@@ -93,8 +95,10 @@ export async function dbOverview (req, res) {
     DB.latestBlock(),
     DB.oldestBlock(),
     DB.latestBlocks(10),
-    DB.countTransaction(),
+    DB.countTransactions(),
+    DB.latestTransactions(10),
     DB.countValidators(),
+    DB.topValidators(10),
     DB.countProposals(),
     DB.countVotes()
   ])
@@ -108,51 +112,44 @@ export async function dbOverview (req, res) {
     latestBlocks,
 
     totalTransactions,
-    latestTransactions: [],
+    latestTransactions,
 
     totalValidators,
-    topValidators: [],
+    topValidators,
 
     totalProposals,
     totalVotes,
   })
 }
 
-export async function rpcOverview (req, res) {
-  const {chain} = await getRPC()
-  const timestamp = new Date().toISOString()
-  const [epoch, epochFirstBlock, totalStaked] = await Promise.all([
-    chain.fetchEpoch(),
-    chain.fetchEpochFirstBlock(),
-    chain.fetchTotalStaked()
-  ])
-  res.status(200).send({
-    timestamp,
-    chainId: CHAIN_ID,
-
-    epoch,
-    epochFirstBlock,
-    totalStaked
-  })
-}
-
 export async function dbBlocks (req, res) {
   const { limit, offset } = pagination(req)
-  const [ totalBlocks, latestBlock, oldestBlock ] = await Promise.all([
+  const [
+    totalBlocks,
+    latestBlock,
+    oldestBlock,
+    { rows, count }
+  ] = await Promise.all([
     await Block.count(),
-    Block.max('height'),
-    Block.min('height'),
+    DB.latestBlock(),
+    DB.oldestBlock(),
+    DB.Block.findAndCountAll({
+      order: [['blockHeight', 'DESC']],
+      limit,
+      offset,
+      attributes: [
+        'blockHeight',
+        'blockHash',
+        'blockHeader',
+        'blockTime'
+      ],
+    })
   ])
-  const { rows, count } = await Block.findAndCountAll({
-    order: [['height', 'DESC']],
-    limit,
-    offset,
-    attributes: ['height', 'hash', 'header'],
-  });
+  console.log({rows})
   const blocks = await Promise.all(
     rows.map(block=>Transaction
       .findAll({
-        where: { blockHeight: block.height },
+        where: { blockHeight: block.blockHeight },
         attributes: ['txId'],
       })
       .then(txs=>({
@@ -170,9 +167,9 @@ export async function dbBlocks (req, res) {
 export async function dbLatestBlock (req, res) {
   //const latestBlock = await Block.max('height');
   const latestBlock = await Block.findAll({
-    order: [['height', 'DESC']],
+    order: [['blockHeight', 'DESC']],
     limit: 1,
-    attributes: ['height', 'hash', 'header'],
+    attributes: ['blockHeight', 'blockHash', 'blockHeader'],
   })
   if (latestBlock.length === 0) {
     return res.status(404).send({ error: 'Block not found' });
@@ -300,9 +297,9 @@ export async function dbValidatorUptime (req, res) {
   }
   const address = req.params.address;
   const blocks = await DB.Block.findAll({
-    order: [['height', 'DESC']],
+    order: [['blockHeight', 'DESC']],
     limit: 100,
-    attributes: ['responses', 'height'],
+    attributes: ['responses', 'blockHeight'],
   });
   const currentHeight = blocks[0].height;
   const countedBlocks = blocks.length;
@@ -422,50 +419,4 @@ export async function dbTransfersBy (req, res) {
     //attributes: { exclude: ['createdAt', 'updatedAt'], },
   //});
   res.status(200).send({ count, transfers: rows });
-}
-
-export async function rpcStakingParameters (req, res) {
-  const {chain} = await getRPC()
-  const parameters = await chain.fetchStakingParameters()
-  for (const key in parameters) {
-    if (typeof parameters[key] === 'bigint') {
-      parameters[key] = String(parameters[key])
-    }
-  }
-  res.status(200).send(parameters);
-}
-
-export async function rpcGovernanceParameters (req, res) {
-  const {chain} = await getRPC()
-  const parameters = await chain.fetchGovernanceParameters()
-  for (const key in parameters) {
-    if (typeof parameters[key] === 'bigint') {
-      parameters[key] = String(parameters[key])
-    }
-  }
-  res.status(200).send(parameters);
-}
-
-export async function rpcPGFParameters (req, res) {
-  const {chain} = await getRPC()
-  const parameters = await chain.fetchPGFParameters()
-  for (const key in parameters) {
-    if (typeof parameters[key] === 'bigint') {
-      parameters[key] = String(parameters[key])
-    }
-  }
-  res.status(200).send(parameters);
-}
-
-export async function rpcHeight (req, res) {
-  const {chain} = await getRPC()
-  res.status(200).send({
-    height: await chain.fetchHeight()
-  })
-}
-
-export async function rpcTotalStaked (req, res) {
-  const {chain} = await getRPC()
-  const totalStaked = await chain.fetchTotalStaked()
-  res.status(200).send(String(totalStaked))
 }

@@ -97,7 +97,7 @@ export const Validator = db.define('validator', {
   metadata:         JSONField('metadata'),
   commission:       JSONField('commission'),
   stake:            { type: TEXT, },
-  state:            ENUM(...Object.values(VALIDATOR_STATES))
+  state:            JSONField('state')
 })
 
 const blockMeta = {
@@ -116,10 +116,9 @@ export const Block = db.define('block', {
 
 export const Transaction = db.define('transaction', {
   ...blockMeta,
-  txHash:      StringPrimaryKey(),
-  txHeader:    JSONField('txHeader'),
-  txTime:      { type: DATE },
-  data:        JSONField('data'),
+  txHash: StringPrimaryKey(),
+  txTime: { type: DATE },
+  txData: JSONField('txData'),
 })
 
 export const PROPOSAL_STATUS = [
@@ -165,21 +164,49 @@ export const Voter = db.define("voter", {
 })
 
 export const countBlocks = () => Block.count()
+
 export const latestBlock = () => Block.max('blockHeight')
+
 export const oldestBlock = () => Block.min('blockHeight')
+
 export const latestBlocks = limit => Block.findAll({
-  order: [['height', 'DESC']],
-  limit: 10,
+  order: [['blockHeight', 'DESC']],
+  limit,
   offset: 0,
-  attributes: ['height', 'hash', 'header'],
+  attributes: [
+    'blockHeight',
+    'blockHash',
+    'blockTime'
+  ],
 }).then(blocks=>Promise.all(blocks.map(block=>
-  Transaction.count({
-    where: { blockHeight: block.height },
-  }).then(transactionCount=>Object.assign(block, {
-    transactionCount
-  }))
+  Transaction
+    .count({ where: { blockHeight: block.blockHeight }, })
+    .then(transactionCount=>({ ...block.dataValues, transactionCount }))
 )))
+
 export const countTransactions = () => Transaction.count()
+
+export const latestTransactions = limit => Transaction.findAll({
+  order: [['blockHeight', 'DESC']],
+  limit,
+  offset: 0,
+  attributes: [
+    'blockHeight',
+    'blockHash',
+    'blockTime',
+    'txHash',
+    'txTime',
+  ],
+})
+
 export const countValidators = () => Validator.count()
+
+export const topValidators = limit => Validator.findAll({
+  order: [['stake', 'DESC']],
+  limit,
+  offset: 0,
+})
+
 export const countProposals = () => Proposal.count()
+
 export const countVotes = () => Voter.count()

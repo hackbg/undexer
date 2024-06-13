@@ -26,7 +26,7 @@ export default class UndexerCommands extends Commands {
   }, () => import('./bin/api.js'))
 
   indexer = this.command({
-    name: "indexer",
+    name: "index",
     info: "run the indexer"
   }, () => import('./bin/indexer.js'))
 
@@ -56,14 +56,27 @@ export default class UndexerCommands extends Commands {
     this.log.info('Done in', performance.now() - t0, 'msec')
   })
 
-  validators = this.command({
-    name: 'validators',
+  validators1 = this.command({
+    name: 'validators-1',
     info: 'fetch current info about validators'
   }, async (height: number) => {
-    const { getValidators } = await import('./src/validator.js')
+    const { updateValidators, getValidators, getValidatorsFromNode } = await import('./src/validator.js')
     const { getRPC } = await import('./src/rpc.js')
     const { chain, query } = await getRPC(height)
-    console.log(await getValidators(chain, query))
+    await updateValidators(chain, query)
+    //console.log(await getValidators(chain, query))
+    //console.log(await getValidatorsFromNode(chain, query))
+  })
+
+  validators2 = this.command({
+    name: 'validators-2',
+    info: 'fetch current info about validators'
+  }, async (height: number) => {
+    const { fetchValidators } = await import('./src/validator.js')
+    const { getRPC } = await import('./src/rpc.js')
+    const { chain, query } = await getRPC(height)
+    console.log(await fetchValidators(chain, query))
+    console.log(await chain.fetchValidatorAddresses())
   })
 
 }

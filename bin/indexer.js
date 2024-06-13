@@ -25,9 +25,9 @@ const { chain, query } = await getRPC()
 import EventEmitter from "node:events"
 const events = new EventEmitter()
 
-import { updateValidators } from '../src/validator.js'
+import { tryUpdateValidators } from '../src/validator.js'
 events.on("updateValidators",
-  height => updateValidators(chain, query, height))
+  height => tryUpdateValidators(chain, query, height))
 
 import { createProposal, updateProposal } from '../src/proposal.js'
 events.on("createProposal", createProposal)
@@ -38,8 +38,7 @@ console.log('🚀 Begin indexing!')
 import { runForever } from '../src/utils.js'
 import { BLOCK_UPDATE_INTERVAL, VALIDATOR_UPDATE_INTERVAL } from "../src/config.js"
 import { checkForNewBlock } from '../src/block.js'
-import { checkValidators } from '../src/validator.js'
 await Promise.all([
   runForever(BLOCK_UPDATE_INTERVAL, checkForNewBlock, chain, events),
-  runForever(VALIDATOR_UPDATE_INTERVAL, checkValidators, chain),
+  runForever(VALIDATOR_UPDATE_INTERVAL, tryUpdateValidators, chain, query),
 ])
