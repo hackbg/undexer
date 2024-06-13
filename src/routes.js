@@ -70,7 +70,7 @@ function pagination (req) {
   return {
     offset: Math.max(
       0, req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
-    )
+    ),
     limit: Math.min(
       100, req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
     ),

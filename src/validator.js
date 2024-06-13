@@ -8,7 +8,7 @@ import { retryForever } from "./utils.js";
 import db, { withErrorLog, Validator } from './db.js'
 
 import {
-  VALIDATOR_FETCH_PARALLEL, 
+  VALIDATOR_FETCH_PARALLEL,
   VALIDATOR_FETCH_DETAILS_PARALLEL
 } from './config.js';
 
@@ -68,37 +68,52 @@ export const ValidatorSchema = { set: { array: { type: "u8", len: 21, }, }, }
 export async function getValidator (q, chain, validatorBinary) {
   const conn = chain.getConnection()
   const validator = await q.get_address_from_u8(validatorBinary)
+  const timestamp = new Date().toISOString()
   const [
-    validatorMetadata,
-    stakeBinary,
-    commissionBinary,
-    stateBinary,
+    metadata,
+    stake,
+    commission,
+    state,
     publicKey,
   ] = await Promise.all([
+
     retryForever(
       "get metadata",   5000, (x) => conn.abciQuery(x), `/vp/pos/validator/metadata/${validator}`
-    ),
+    ).then(metadata=>{
+      return conn.decode.pos_validator_metadata(metadata.slice(1))
+    }),
+
     retryForever(
       "get stake",      5000, (x) => conn.abciQuery(x), `/vp/pos/validator/stake/${validator}`
-    ),
+    ).then(stake=>{
+      return deserialize(StakeSchema, stake)
+    }),
+
     retryForever(
       "get commission", 5000, (x) => conn.abciQuery(x), `/vp/pos/validator/commission/${validator}`
-    ),
+    ).then(commission=>{
+      return conn.decode.pos_commission_pair(commission)
+    }),
+
     retryForever(
       "get state",      5000, (x) => conn.abciQuery(x), `/vp/pos/validator/state/${validator}`
-    ),
+    ).then(state=>{
+      return conn.decode.pos_validator_state(state)
+    }),
+
     retryForever(
       "get pk",         5000, (x) => q.query_public_key(x), validator
     ),
+
   ])
   return {
-    timestamp: +new Date(),
+    timestamp,
     validator,
     publicKey,
-    metadata:   conn.decode.pos_validator_metadata(validatorMetadata.slice(1)),
-    stake:      deserialize(StakeSchema, stakeBinary),
-    commission: conn.decode.pos_commission_pair(commissionBinary.slice(1)),
-    state:      conn.decode.pos_validator_state(stateBinary.slice(1)),
+    metadata,
+    stake,
+    commission,
+    state,
   }
 }
 
