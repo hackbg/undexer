@@ -157,7 +157,12 @@ export async function dbBlocks (req, res) {
 }
 
 export async function dbBlock (req, res) {
+  const attributes = {
+    include: ['blockHeight', 'blockHash', 'blockHeader'],
+    exclude: ['createdAt', 'updatedAt']
+  }
   const { height, hash } = req.query
+  let block, transactionCount, transactions
   if (height || hash) {
     const where = {}
     if (height) {
@@ -166,38 +171,22 @@ export async function dbBlock (req, res) {
     if (hash) {
       where['blockHash'] = hash
     }
-    const block = await DB.Block.findOne({
-      where,
-      attributes: { exclude: ['createdAt', 'updatedAt'] },
-    })
-    const { count, rows } = await DB.transactionsAtHeight(block.blockHeight)
-    return res.status(200).send({
-      blockHeight:      block.blockHeight,
-      blockHash:        block.blockHash,
-      blockHeader:      block.blockHeader,
-      blockTime:        block.blockTime,
-      transactionCount: count,
-      transactions:     rows.map(row=>row.toJSON()),
-    })
+    block = await DB.Block.findOne({attributes, where})
+  } else {
+    block = await DB.Block.findOne({attributes, order: [['blockHeight', 'DESC']]})
   }
-  //const latestBlock = await Block.max('height');
-  const latestBlock = await DB.Block.findAll({
-    order: [['blockHeight', 'DESC']],
-    limit: 1,
-    attributes: ['blockHeight', 'blockHash', 'blockHeader'],
-  })
-  if (latestBlock.length === 0) {
+  if (!block) {
     return res.status(404).send({ error: 'Block not found' });
   }
-  const { count, rows } = await DB.transactionsAtHeight(latestBlock[0].blockHeight)
+  const { count, rows } = await DB.transactionsAtHeight(block.blockHeight)
   return res.status(200).send({
-    blockHeight:      latestBlock[0].blockHeight,
-    blockHash:        latestBlock[0].blockHash,
-    blockHeader:      latestBlock[0].blockHeader,
-    blockTime:        latestBlock[0].blockTime,
+    blockHeight:      block.blockHeight,
+    blockHash:        block.blockHash,
+    blockHeader:      block.blockHeader,
+    blockTime:        block.blockTime,
     transactionCount: count,
     transactions:     rows.map(row=>row.toJSON()),
-  });
+  })
 }
 
 export async function dbBlockByHeight (req, res) {
@@ -244,7 +233,7 @@ export async function dbBlockByHash (req, res) {
 export async function dbTransactions (req, res) {
   const { limit, offset } = pagination(req)
   const { rows, count } = await DB.Transaction.findAndCountAll({
-    order: [['timestamp', 'DESC']],
+    order: [['txTime', 'DESC']],
     limit,
     offset,
     attributes: { exclude: ['id', 'createdAt', 'updatedAt'], },
