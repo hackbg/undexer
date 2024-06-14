@@ -6,7 +6,7 @@ RUN cargo install wasm-pack
 
 WORKDIR /build/fadroma-namada
 COPY ./fadroma/packages/namada/Cargo.toml ./fadroma/packages/namada/Cargo.lock .
-RUN cargo fetch
+RUN cat Cargo.toml && touch src/lib.rs && cargo fetch
 COPY ./fadroma/packages/namada/src ./src
 RUN PATH=$PATH:~/.cargo/bin wasm-pack build --release --target web \
  && rm -rf target
