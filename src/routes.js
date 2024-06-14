@@ -12,7 +12,7 @@ export const routes = [
   ['/blocks',                     dbBlocks],
   ['/block',                      dbBlock],
   ['/txs',                        dbTransactions],
-  ['/tx/:txHash',                 dbTransactionByHash],
+  ['/tx/:txHash',                 dbTransaction],
   ['/validator-addresses',        dbValidatorAddresses],
   ['/validator-states',           dbValidatorStates],
   ['/validators',                 dbValidators],
@@ -252,7 +252,7 @@ export async function dbTransactions (req, res) {
   res.status(200).send({ count, txs: rows })
 }
 
-export async function dbTransactionByHash (req, res) {
+export async function dbTransaction (req, res) {
   const tx = await DB.Transaction.findOne({
     where: { txHash: req.params.txHash },
     attributes: { exclude: ['id', 'createdAt', 'updatedAt'], },
