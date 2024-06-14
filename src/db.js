@@ -1,8 +1,8 @@
 import { Console } from "@hackbg/logs"
 const console = new Console("DB");
 
-import { Sequelize, DataTypes } from "sequelize"
-export { DataTypes }
+import { Sequelize, DataTypes, Op } from "sequelize"
+export { Sequelize, DataTypes, Op }
 const { DATE, TEXT, JSONB, INTEGER, ENUM } = DataTypes
 
 import { DATABASE_URL } from "./config.js"
@@ -61,10 +61,10 @@ import { serialize } from './utils.js'
 export const JSONField = name => ({
   type: JSONB,
   allowNull: false,
-  get() {
+  get () {
     return JSON.parse(this.getDataValue(name));
   },
-  set(value) {
+  set (value) {
     return this.setDataValue(name, serialize(value));
   },
 })
@@ -72,10 +72,10 @@ export const JSONField = name => ({
 export const NullableJSONField = name => ({
   type: JSONB,
   allowNull: true,
-  get() {
+  get () {
     return JSON.parse(this.getDataValue(name));
   },
-  set(value) {
+  set (value) {
     return this.setDataValue(name, serialize(value));
   },
 })
@@ -100,6 +100,14 @@ export const Validator = db.define('validator', {
   state:            JSONField('state')
 })
 
+export const totalValidators = () => Validator.count()
+
+export const topValidators = limit => Validator.findAll({
+  order: [['stake', 'DESC']],
+  limit,
+  offset: 0,
+})
+
 const blockMeta = {
   chainId:      { type: TEXT,    allowNull: false },
   blockHash:    { type: TEXT,    allowNull: false },
@@ -114,12 +122,51 @@ export const Block = db.define('block', {
   rpcResponses: JSONField('rpcResponses'),
 })
 
+export const totalBlocks = () => Block.count()
+
+export const latestBlock = () => Block.max('blockHeight')
+
+export const oldestBlock = () => Block.min('blockHeight')
+
+export const latestBlocks = limit => Block.findAll({
+  order: [['blockHeight', 'DESC']],
+  limit,
+  offset: 0,
+  attributes: [
+    'blockHeight',
+    'blockHash',
+    'blockTime'
+  ],
+}).then(blocks=>Promise.all(blocks.map(block=>
+  Transaction
+    .count({ where: { blockHeight: block.blockHeight }, })
+    .then(transactionCount=>({ ...block.dataValues, transactionCount }))
+)))
+
 export const Transaction = db.define('transaction', {
   ...blockMeta,
   txHash: StringPrimaryKey(),
   txTime: { type: DATE },
   txData: JSONField('txData'),
 })
+
+export const totalTransactions = () => Transaction.count()
+
+export const latestTransactions = limit => Transaction.findAll({
+  order: [['blockHeight', 'DESC']],
+  limit,
+  offset: 0,
+  attributes: [
+    'blockHeight',
+    'blockHash',
+    'blockTime',
+    'txHash',
+    'txTime',
+  ],
+})
+
+export const transactionsAtHeight = blockHeight =>
+  Transaction.findAndCountAll({ where: { blockHeight } })
 
 export const PROPOSAL_STATUS = [
   "ongoing",
@@ -155,6 +202,8 @@ export const Proposal = db.define('proposal', {
   tallyType:         { type: ENUM(...PROPOSAL_TALLY_TYPE) }
 })
 
+export const totalProposals = () => Proposal.count()
+
 export const Voter = db.define("voter", {
   id:         IntegerPrimaryKey(),
   vote:       { type: ENUM("yay", "nay", "abstain"), },
@@ -162,51 +211,5 @@ export const Voter = db.define("voter", {
   voter:      { type: TEXT, },
   proposalId: { type: INTEGER, },
 })
-
-export const totalBlocks = () => Block.count()
-
-export const latestBlock = () => Block.max('blockHeight')
-
-export const oldestBlock = () => Block.min('blockHeight')
-
-export const latestBlocks = limit => Block.findAll({
-  order: [['blockHeight', 'DESC']],
-  limit,
-  offset: 0,
-  attributes: [
-    'blockHeight',
-    'blockHash',
-    'blockTime'
-  ],
-}).then(blocks=>Promise.all(blocks.map(block=>
-  Transaction
-    .count({ where: { blockHeight: block.blockHeight }, })
-    .then(transactionCount=>({ ...block.dataValues, transactionCount }))
-)))
-
-export const totalTransactions = () => Transaction.count()
-
-export const latestTransactions = limit => Transaction.findAll({
-  order: [['blockHeight', 'DESC']],
-  limit,
-  offset: 0,
-  attributes: [
-    'blockHeight',
-    'blockHash',
-    'blockTime',
-    'txHash',
-    'txTime',
-  ],
-})
-
-export const totalValidators = () => Validator.count()
-
-export const topValidators = limit => Validator.findAll({
-  order: [['stake', 'DESC']],
-  limit,
-  offset: 0,
-})
-
-export const totalProposals = () => Proposal.count()
 
 export const totalVotes = () => Voter.count()

@@ -10,13 +10,11 @@ const NOT_IMPLEMENTED = (req, res) => { throw new Error('not implemented') }
 export const routes = [
   ['/',                           dbOverview],
   ['/blocks',                     dbBlocks],
-  ['/block/latest',               dbLatestBlock],
-  ['/block/:height',              dbBlockByHeight],
-  ['/block/hash/:hash',           dbBlockByHash],
-  ['/block',                      NOT_IMPLEMENTED],
+  ['/block',                      dbBlock],
   ['/txs',                        dbTransactions],
   ['/tx/:txHash',                 dbTransactionByHash],
   ['/validator-addresses',        dbValidatorAddresses],
+  ['/validator-states',           dbValidatorStates],
   ['/validators',                 dbValidators],
   ['/validators/:state',          dbValidatorsByState],
   ['/validator/:hash',            dbValidatorByHash],
@@ -158,9 +156,32 @@ export async function dbBlocks (req, res) {
   });
 }
 
-export async function dbLatestBlock (req, res) {
+export async function dbBlock (req, res) {
+  const { height, hash } = req.query
+  if (height || hash) {
+    const where = {}
+    if (height) {
+      where['blockHeight'] = height
+    }
+    if (hash) {
+      where['blockHash'] = hash
+    }
+    const block = await DB.Block.findOne({
+      where,
+      attributes: { exclude: ['createdAt', 'updatedAt'] },
+    })
+    const { count, rows } = await DB.transactionsAtHeight(block.blockHeight)
+    return res.status(200).send({
+      blockHeight:      block.blockHeight,
+      blockHash:        block.blockHash,
+      blockHeader:      block.blockHeader,
+      blockTime:        block.blockTime,
+      transactionCount: count,
+      transactions:     rows.map(row=>row.toJSON()),
+    })
+  }
   //const latestBlock = await Block.max('height');
-  const latestBlock = await Block.findAll({
+  const latestBlock = await DB.Block.findAll({
     order: [['blockHeight', 'DESC']],
     limit: 1,
     attributes: ['blockHeight', 'blockHash', 'blockHeader'],
@@ -168,8 +189,15 @@ export async function dbLatestBlock (req, res) {
   if (latestBlock.length === 0) {
     return res.status(404).send({ error: 'Block not found' });
   }
-  const { height, hash, header } = latestBlock[0];
-  return res.status(200).send({ height, hash, header });
+  const { count, rows } = await DB.transactionsAtHeight(latestBlock[0].blockHeight)
+  return res.status(200).send({
+    blockHeight:      latestBlock[0].blockHeight,
+    blockHash:        latestBlock[0].blockHash,
+    blockHeader:      latestBlock[0].blockHeader,
+    blockTime:        latestBlock[0].blockTime,
+    transactionCount: count,
+    transactions:     rows.map(row=>row.toJSON()),
+  });
 }
 
 export async function dbBlockByHeight (req, res) {
@@ -245,16 +273,30 @@ export async function dbValidatorAddresses (req, res) {
 
 export async function dbValidators (req, res) {
   const { limit, offset } = pagination(req)
+  const { state } = req.query
   if (await DB.Validator.count() === 0) {
     return res.status(404).send({ error: 'Validator not found' });
   }
-  const { rows, count } = await DB.Validator.findAndCountAll({
-    order: [['stake', 'DESC']],
-    limit,
-    offset,
+  const where = {}
+  if (state) where['state.state'] = state
+  const { rows: validators, count } = await DB.Validator.findAndCountAll({
+    order: [['stake', 'DESC']], limit, offset,
     attributes: { exclude: ['id', 'createdAt', 'updatedAt'], },
   });
-  res.status(200).send({ count, validators: rows })
+  const result = { count, validators: validators.map(v=>v.toJSON()) };
+  console.log({where}, result);
+  res.status(200).send(result);
+}
+
+export async function dbValidatorStates (req, res) {
+  const states = {}
+  for (const validator of await DB.Validator.findAll({
+    attributes: { include: [ 'state' ] }
+  })) {
+    states[validator?.state?.state] ??= 0
+    states[validator?.state?.state] ++
+  }
+  res.status(200).send(states)
 }
 
 export async function dbValidatorsByState (req, res) {
@@ -413,3 +455,10 @@ export async function dbTransfersBy (req, res) {
   //});
   res.status(200).send({ count, transfers: rows });
 }
+
+export const callRoute = (route, req = {}) =>
+  new Promise(async resolve=>
+    await route(req, {
+      status () { return this },
+      send (data) { resolve(data) }
+    }))

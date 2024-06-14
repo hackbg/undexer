@@ -50,7 +50,7 @@ export default class UndexerCommands extends Commands {
     // Write block to database
     this.log.br().log('Syncing database...')
     const { default: db } = await import('./src/db.js')
-    await db.sync({ force: true })
+    await db.sync()
     this.log.br().log('Saving block', height, 'to database...').br()
     await updateBlock({ chain, height, block, })
     this.log.info('Done in', performance.now() - t0, 'msec')
@@ -77,6 +77,15 @@ export default class UndexerCommands extends Commands {
     const { chain, query } = await getRPC(height)
     console.log(await fetchValidators(chain, query))
     console.log(await chain.fetchValidatorAddresses())
+  })
+
+  validatorStates = this.command({
+    name: 'validator-states',
+    info: 'count validators in database by state'
+  }, async (height: number) => {
+    const { callRoute, dbValidatorStates } = await import('./src/routes.js')
+    const states = await callRoute(dbValidatorStates)
+    console.log({states})
   })
 
 }
