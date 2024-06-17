@@ -12,6 +12,7 @@ steps:
   - ls -al $HOME
   - printf $(git rev-parse --abbrev-ref HEAD) > BRANCH
   - cat BRANCH
+  - git submodule update --init --recursive --depth 1
 - name: build-undexer
   image: docker:24.0.7-alpine3.18
   volumes: [ { name: cache, path: /cache/docker } ]
@@ -32,27 +33,5 @@ steps:
   - export IMAGE="$NAME:$(cat BRANCH | tr '/' '_' | tr '\n' ' ')"
   - 'printf "Name: $NAME\nImage: $IMAGE\n"'
   - docker pull "$IMAGE" || true
-  - docker build --network=host --cache-to=type=inline --cache-from="$IMAGE" -t "$IMAGE" -f docker/undexer.Dockerfile .
-  - docker push "$IMAGE"
-- name: build-lighttpd
-  image: docker:24.0.7-alpine3.18
-  volumes: [ { name: cache, path: /cache/docker } ]
-  privileged: true
-  environment:
-    NAME: "oci.hack.bg/lighttpd"
-    USER: { from_secret: "oci-user" }
-    PASS: { from_secret: "oci-pass" }
-    MIRROR: "http://127.0.0.1:5000"
-    DOCKER_DATA: "/cache/docker"
-    DOCKER_HOST: "tcp://127.0.0.1:2375"
-  commands:
-  - nohup dockerd --tls=false --dns 1.1.1.1 --rootless=true --bridge=none --iptables=false --data-root "$DOCKER_DATA" --host="$DOCKER_HOST" --registry-mirror "$MIRROR" &
-  - sleep 10
-  - docker version; docker info
-  - echo "\nLooking around...\n"; whoami; pwd; ls -al
-  - echo "$PASS" | docker login -u "$USER" --password-stdin https://oci.hack.bg
-  - export IMAGE="$NAME:$(cat BRANCH | tr '/' '_' | tr '\n' ' ')"
-  - 'printf "Name: $NAME\nImage: $IMAGE\n"'
-  - docker pull "$IMAGE" || true
-  - docker build --network=host --cache-to=type=inline --cache-from="$IMAGE" -t "$IMAGE" -f docker/lighttpd.Dockerfile .
+  - docker build --network=host --cache-to=type=inline --cache-from="$IMAGE" -t "$IMAGE" -f docker/undexer-alpine.Dockerfile .
   - docker push "$IMAGE"

@@ -1,14 +1,34 @@
 version: "3"
+
+volumes:
+  undexer-postgres:
+
 services:
-  indexer:
-    image: node:21-alpine
-    depends_on:
-      - postgres
-    restart: unless-stopped
+
+  postgres:
+    image: postgres:16.2-alpine
+    ports:
+      - 127.0.0.1:5432:5432
     volumes:
-      - .:/app
-    working_dir: /app
-    command: --import @ganesha/esbuild-wasm index-backwards.js
+      - undexer-postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=insecure
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U postgres -d postgres'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - 127.0.0.1:5050:80
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=password
+
   api:
     image: node:21-alpine
     ports:
@@ -19,37 +39,21 @@ services:
     volumes:
       - .:/app
     working_dir: /app
-    command: api/index.js
-  server:
-    image: hackbg/undexer-lighttpd
-    build:
-      context: ./docker
-      dockerfile: lighttpd.Dockerfile
-    volumes:
-      - ./data:/data:ro
-      - ./lighttpd.conf:/lighttpd.conf:ro
-    command: lighttpd -D -f /lighttpd.conf
-    ports:
-      - 8080
-  postgres:
-    image: postgres:16.2-alpine
-    ports:
-      - 5432:5432
-    volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+    command: --import @ganesha/esbuild-wasm api/index.js
     environment:
-      - POSTGRES_PASSWORD=insecure
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=postgres
-    healthcheck:
-      test: ["CMD-SHELL", "sh -c 'pg_isready -U postgres -d postgres'"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-  pgadmin:
-    image: dpage/pgadmin4
-    ports:
-      - 5050:80
+      DATABASE_URL: postgresql://postgres:insecure@postgres/postgres
+
+  indexer:
+    image: node:21-alpine
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: --import @ganesha/esbuild-wasm index.js
     environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
-      - PGADMIN_DEFAULT_PASSWORD=password
+      DATABASE_URL: postgresql://postgres:insecure@postgres/postgres
+      UNDEXER_RPC_URL: https://namada-testnet-rpc.itrocket.net
+      PRE_UNDEXER_RPC_URL: https://namada-testnet-rpc.itrocket.net
+      POST_UNDEXER_RPC_URL: https://namada-testnet-rpc.itrocket.net

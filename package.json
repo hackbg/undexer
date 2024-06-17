@@ -1,30 +1,37 @@
 {
   "name": "@hackbg/undexer",
   "type": "module",
-  "main": "index.js",
-  "version": "0.0.0",
+  "main": "main.ts",
+  "version": "2.0.0-beta.1",
   "description": "Namada indexer to file.",
   "packageManager": "pnpm@8.15.6+sha256.01c01eeb990e379b31ef19c03e9d06a14afa5250b82e81303f88721c99ff2e6f",
+  "bin": { "undexer": "./undexer" },
   "scripts": {
-    "api": "node api/index.js"
+    "start": "concurrently --raw src/main.js src/api/main.js",
+    "api": "node src/api/main.js",
+    "indexer": "node src/main.js",
+    "cli": "node undexer",
+    "build:rust": "cd rust && wasm-pack build --dev --target nodejs"
   },
   "dependencies": {
-    "@cosmjs/encoding": "^0.32.3",
-    "@dao-xyz/borsh": "^5.2.1",
     "@fadroma/namada": "workspace:./fadroma/packages/namada",
     "@ganesha/esbuild": "^1.0.0-rc.3",
     "@ganesha/esbuild-wasm": "^1.0.0-rc.1",
-    "@hackbg/cmds": "^4.0.0-rc.5",
+    "@hackbg/cmds": "workspace:./fadroma/toolbox/cmds",
+    "@hackbg/fadroma": "workspace:./fadroma",
     "@hackbg/logs": "^2.3.2",
-    "@namada/shared": "./shared",
+    "@namada/shared": "workspace:./rust/pkg",
     "borsh": "^2.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "mkdirp": "^3.0.1",
-    "pg": "^8.11.3",
-    "pg-hstore": "^2.3.4",
-    "postgresql": "^0.0.1",
-    "sequelize": "^6.37.1"
+    "pg": "^8.11.5",
+    "sequelize": "^6.37.1",
+    "undici": "^6.18.1"
+  },
+  "devDependencies": {
+    "concurrently": "7.2.2",
+    "tsx": "^4.7.2"
   }
 }
