@@ -68,22 +68,26 @@ export function withConsole (handler) {
 // Read limit/offset from query parameters and apply defaults
 function pagination (req) {
   return {
-    offset: Math.max(
-      0, req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET
-    ),
-    limit: Math.min(
-      100, req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT
-    ),
+    offset: Math.max(0,   req.query.offset ? Number(req.query.offset) : DEFAULT_PAGE_OFFSET),
+    limit:  Math.min(100, req.query.limit  ? Number(req.query.limit)  : DEFAULT_PAGE_LIMIT),
+  }
+}
+
+// Read limit/before/after from query parameters and apply defaults
+function relativePagination (req) {
+  return {
+    before: Math.max(0,   req.query.before || 0),
+    after:  Math.max(0,   req.query.after  || 0),
+    limit:  Math.min(100, req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT),
   }
 }
 
 export async function dbOverview (req, res) {
   const timestamp = new Date().toISOString()
   const [
-    totalBlocks,
     latestBlock,
     oldestBlock,
-    latestBlocks,
+    { count: totalBlocks, rows: latestBlocks },
     totalTransactions,
     latestTransactions,
     totalValidators,
@@ -91,14 +95,13 @@ export async function dbOverview (req, res) {
     totalProposals,
     totalVotes
   ] = await Promise.all([
-    DB.totalBlocks(),
     DB.latestBlock(),
     DB.oldestBlock(),
-    DB.latestBlocks(10),
+    DB.blocksLatest(10),
     DB.totalTransactions(),
-    DB.latestTransactions(10),
+    DB.transactionsLatest(10),
     DB.totalValidators(),
-    DB.topValidators(10),
+    DB.validatorsTop(10),
     DB.totalProposals(),
     DB.totalVotes()
   ])
@@ -155,26 +158,18 @@ export async function dbStatus (req, res) {
 }
 
 export async function dbBlocks (req, res) {
-  const { limit, offset } = pagination(req)
-  const [
-    totalBlocks,
-    latestBlock,
-    oldestBlock,
-    { rows, count }
-  ] = await Promise.all([
+  const { limit, before, after } = relativePagination(req)
+  if (before && after) {
+    res.status(400).send({ error: "Don't use before and after together" })
+    return
+  }
+  const [ totalBlocks, latestBlock, oldestBlock, { rows, count } ] = await Promise.all([
     await DB.totalBlocks(),
     DB.latestBlock(),
     DB.oldestBlock(),
-    DB.Block.findAndCountAll({
-      order: [['blockHeight', 'DESC']],
-      limit,
-      offset,
-      attributes: [
-        'blockHeight',
-        'blockHash',
-        'blockTime'
-      ],
-    })
+    before ? DB.blocksBefore(before, limit) :
+    after  ? DB.blocksAfter(after, limit) :
+             DB.blocksLatest(limit)
   ])
   const blocks = await Promise.all(rows.map(block=>
     DB.Transaction

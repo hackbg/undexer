@@ -102,7 +102,7 @@ export const Validator = db.define('validator', {
 
 export const totalValidators = () => Validator.count()
 
-export const topValidators = limit => Validator.findAll({
+export const validatorsTop = limit => Validator.findAll({
   order: [['stake', 'DESC']],
   limit,
   offset: 0,
@@ -128,20 +128,27 @@ export const latestBlock = () => Block.max('blockHeight')
 
 export const oldestBlock = () => Block.min('blockHeight')
 
-export const latestBlocks = limit => Block.findAll({
+const BLOCK_LIST_ATTRIBUTES = [ 'blockHeight', 'blockHash', 'blockTime' ]
+
+export const blocksLatest = limit => Block.findAndCountAll({
+  attributes: BLOCK_LIST_ATTRIBUTES,
   order: [['blockHeight', 'DESC']],
   limit,
-  offset: 0,
-  attributes: [
-    'blockHeight',
-    'blockHash',
-    'blockTime'
-  ],
-}).then(blocks=>Promise.all(blocks.map(block=>
-  Transaction
-    .count({ where: { blockHeight: block.blockHeight }, })
-    .then(transactionCount=>({ ...block.dataValues, transactionCount }))
-)))
+})
+
+export const blocksBefore = (before, limit = 15) => Block.findAndCountAll({
+  attributes: BLOCK_LIST_ATTRIBUTES,
+  order: [['blockHeight', 'DESC']],
+  limit,
+  where: { blockHeight: { [Op.lte]: before } }
+})
+
+export const blocksAfter = (after, limit = 15) => DB.Block.findAndCountAll({
+  attributes: BLOCK_LIST_ATTRIBUTES,
+  order: [['blockHeight', 'ASC']],
+  limit,
+  where: { blockHeight: { [Op.gte]: after } }
+})
 
 export const Transaction = db.define('transaction', {
   ...blockMeta,
@@ -152,7 +159,7 @@ export const Transaction = db.define('transaction', {
 
 export const totalTransactions = () => Transaction.count()
 
-export const latestTransactions = limit => Transaction.findAll({
+export const transactionsLatest = limit => Transaction.findAll({
   order: [['blockHeight', 'DESC']],
   limit,
   offset: 0,
