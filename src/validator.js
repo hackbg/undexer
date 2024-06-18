@@ -13,17 +13,17 @@ import {
   VALIDATOR_FETCH_DETAILS_PARALLEL
 } from './config.js';
 
-export async function tryUpdateValidators (chain, query) {
+export async function tryUpdateValidators (chain) {
   try {
-    await updateValidators(chain, query)
+    await updateValidators(chain)
   } catch (e) {
     console.error('Failed to update validators.')
   }
 }
 
-export async function updateValidators (chain, query, height) {
+export async function updateValidators (chain, height) {
   console.log("=> Updating validators");
-  const validators = await getValidators(chain, query)
+  const validators = await getValidators(chain)
   await withErrorLog(() => db.transaction(async dbTransaction => {
     await Validator.destroy({ where: {} }, { transaction: dbTransaction });
     for (const validatorData of validators) {
@@ -37,17 +37,27 @@ export async function updateValidators (chain, query, height) {
   console.log(
     'Updated to', Object.keys(validators).length, 'validators'
   )
+  return validators
 }
 
-export async function getValidators (chain, query) {
+export async function getValidators (chain) {
   const validators = []
   for (const address of await chain.fetchValidatorAddresses()) {
-    validators.push(await getValidator(chain, query, address));
+    validators.push(await getValidator(chain, address));
   }
   return validators
 }
 
-export async function getValidator (chain, query, namadaAddress) {
+export function fetchValidators (chain) {
+  return chain.fetchValidators({
+    details:         true,
+    allStates:       true,
+    parallel:        VALIDATOR_FETCH_PARALLEL,
+    parallelDetails: VALIDATOR_FETCH_DETAILS_PARALLEL,
+  })
+}
+
+export async function getValidator (chain, namadaAddress) {
   const conn = chain.getConnection()
   const timestamp = new Date().toISOString()
   const [
@@ -65,7 +75,7 @@ export async function getValidator (chain, query, namadaAddress) {
       "get stake", 5000,
       () => conn.abciQuery(`/vp/pos/validator/stake/${namadaAddress}`),
     ).then(stake=>{
-      return deserialize(StakeSchema, stake)
+      return deserialize("u64", stake)
     }),
 
     retryForever(
@@ -82,12 +92,9 @@ export async function getValidator (chain, query, namadaAddress) {
       return conn.decode.pos_validator_state(state)
     }),
 
-    //retryForever(
-      //"get pk",         5000, () => query.query_public_key(namadaAddress),
-    //),
-
     retryForever(
       "get public key", 5000,
+      // was query_public_key from namada-shared
       () => conn.abciQuery(`/vp/pos/validator/consensus_key/${namadaAddress}`),
     ).then(binary=>{
       if (!binary[0]) return null
@@ -107,38 +114,3 @@ export async function getValidator (chain, query, namadaAddress) {
     state,
   }
 }
-
-export const StakeSchema = "u64";
-
-/*
-TODO: Save Consenssus validators to db
-async function saveConsensusValidatorsToJSON() {
-  const consensusValidators = await connection.fetchValidatorsConsensus();
-  await save(
-  'consensus_validators.json',
-  consensusValidators.sort((a, b) => b.bondedStake - a.bondedStake)
-);
-}
-*/
-
-export function fetchValidators (chain) {
-  return chain.fetchValidators({
-    details:         true,
-    allStates:       true,
-    parallel:        VALIDATOR_FETCH_PARALLEL,
-    parallelDetails: VALIDATOR_FETCH_DETAILS_PARALLEL,
-  })
-}
-
-export async function getValidatorsFromNode (chain, query) {
-  const conn = chain.getConnection();
-  const validatorsQuery = await conn.abciQuery("/vp/pos/validator/addresses");
-  const validatorsDeserialized = deserialize(
-    ValidatorSchema,
-    validatorsQuery
-  );
-  return await Promise.all([...validatorsDeserialized]
-    .map(bytes=>query.get_address_from_u8(bytes)));
-}
-
-export const ValidatorSchema = { set: { array: { type: "u8", len: 21, }, }, }

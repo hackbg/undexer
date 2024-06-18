@@ -60,12 +60,10 @@ export default class UndexerCommands extends Commands {
     name: 'validators-1',
     info: 'fetch current info about validators'
   }, async (height: number) => {
-    const { updateValidators, getValidators, getValidatorsFromNode } = await import('./src/validator.js')
+    const { updateValidators } = await import('./src/validator.js')
     const { getRPC } = await import('./src/rpc.js')
     const { chain, query } = await getRPC(height)
-    await updateValidators(chain, query)
-    //console.log(await getValidators(chain, query))
-    //console.log(await getValidatorsFromNode(chain, query))
+    console.log(await updateValidators(chain, query))
   })
 
   validators2 = this.command({
