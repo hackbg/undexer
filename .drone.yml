@@ -33,5 +33,5 @@ steps:
   - export IMAGE="$NAME:$(cat BRANCH | tr '/' '_' | tr '\n' ' ')"
   - 'printf "Name: $NAME\nImage: $IMAGE\n"'
   - docker pull "$IMAGE" || true
-  - docker build --network=host --cache-to=type=inline --cache-from="$IMAGE" -t "$IMAGE" -f docker/undexer-alpine.Dockerfile .
+  - docker build --network=host --cache-to=type=inline --cache-from="$IMAGE" -t "$IMAGE" .
   - docker push "$IMAGE"

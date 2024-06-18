@@ -1,6 +1,5 @@
 import * as Namada from "@fadroma/namada";
 import { readFile } from "fs/promises";
-import { Query } from "../rust/pkg/shared.js";
 import {
   CHAIN_ID,
   PRE_UNDEXER_RPC_URL,
@@ -15,7 +14,6 @@ const rpcVariant = async (url) => ({
       "node_modules/@fadroma/namada/pkg/fadroma_namada_bg.wasm"
     )
   }),
-  query: new Query(url),
 })
 
 /** Map of first block number that uses a certain RPC URL

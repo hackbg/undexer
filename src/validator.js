@@ -65,14 +65,14 @@ export async function getValidator (chain, namadaAddress) {
   ] = await Promise.all([
 
     retryForever(
-      "get metadata", 5000,
+      "get metadata",   5000,
       () => conn.abciQuery(`/vp/pos/validator/metadata/${namadaAddress}`),
     ).then(metadata=>{
       return conn.decode.pos_validator_metadata(metadata.slice(1))
     }),
 
     retryForever(
-      "get stake", 5000,
+      "get stake",      5000,
       () => conn.abciQuery(`/vp/pos/validator/stake/${namadaAddress}`),
     ).then(stake=>{
       return deserialize("u64", stake)
@@ -86,7 +86,7 @@ export async function getValidator (chain, namadaAddress) {
     }),
 
     retryForever(
-      "get state", 5000,
+      "get state",      5000,
       () => conn.abciQuery(`/vp/pos/validator/state/${namadaAddress}`),
     ).then(state=>{
       return conn.decode.pos_validator_state(state)

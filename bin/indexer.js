@@ -9,10 +9,6 @@ console.log('⏳ Starting at', new Date())
 console.log('⏳ Patching globalThis.fetch...')
 import '../src/fetch.js'
 
-console.log('⏳ Initializing...')
-import { initialize } from '../src/utils.js'
-await initialize()
-
 console.log('⏳ Syncing DB schema...')
 import db from '../src/db.js'
 import { START_FROM_SCRATCH } from '../src/config.js'

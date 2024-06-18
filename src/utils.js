@@ -1,6 +1,4 @@
-import { readFile, writeFile } from "node:fs/promises";
-//import initShared from "@namada/shared";
-import { initDecoder } from "@fadroma/namada";
+import { writeFile } from "node:fs/promises";
 import { base64 } from "@hackbg/fadroma";
 
 export async function runForever (interval, callback, ...args) {
@@ -39,19 +37,6 @@ export async function retryForever (operation, interval, callback, ...args) {
       await waitFor(interval)
     }
   }
-}
-
-export async function initialize () {
-  await Promise.all([
-    // this should also not be required when calling Namada.testnet()
-    readFile("./node_modules/@fadroma/namada/pkg/fadroma_namada_bg.wasm")
-      .then(wasm=>initDecoder(wasm)),
-
-    // not required when wasm-pack is run with `--target nodejs`:
-    // it does its own `readFileSync(resolve(__dirname, '...wasm'))`.
-    //readFile("rust/pkg/shared_bg.wasm")
-      //.then(wasm=>initShared(wasm)),
-  ])
 }
 
 export async function save (path, data) {
