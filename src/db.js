@@ -15,15 +15,16 @@ const db = new Sequelize(DATABASE_URL, {
 
 export default db
 
-export const IntegerPrimaryKey = () => ({
+export const IntegerPrimaryKey = (autoIncrement = false) => ({
   type:       INTEGER,
   allowNull:  false,
   unique:     true,
   primaryKey: true,
+  autoIncrement
 })
 
 export const ErrorLog = db.define('error_log', {
-  id:        { ...IntegerPrimaryKey(), autoIncrement: true },
+  id:        IntegerPrimaryKey(true),
   timestamp: { type: DATE },
   message:   { type: TEXT },
   stack:     { type: JSONB },
@@ -61,22 +62,16 @@ import { serialize } from './utils.js'
 export const JSONField = name => ({
   type: JSONB,
   allowNull: false,
-  get () {
-    return JSON.parse(this.getDataValue(name));
-  },
   set (value) {
-    return this.setDataValue(name, serialize(value));
+    return this.setDataValue(name, JSON.parse(serialize(value)));
   },
 })
 
 export const NullableJSONField = name => ({
   type: JSONB,
   allowNull: true,
-  get () {
-    return JSON.parse(this.getDataValue(name));
-  },
   set (value) {
-    return this.setDataValue(name, serialize(value));
+    return this.setDataValue(name, JSON.parse(serialize(value)));
   },
 })
 
@@ -169,6 +164,7 @@ export const transactionsLatest = limit => Transaction.findAll({
     'blockTime',
     'txHash',
     'txTime',
+    '"txData"->data',//."data"',//."content"."type"',
   ],
 })
 
@@ -193,30 +189,18 @@ export const PROPOSAL_TALLY_TYPE = [
 ]
 
 export const Proposal = db.define('proposal', {
-  id:                IntegerPrimaryKey(),
-  proposalType:      { type: TEXT, },
-  author:            { type: TEXT, },
-  startEpoch:        { type: INTEGER, },
-  endEpoch:          { type: INTEGER, },
-  graceEpoch:        { type: INTEGER, },
-  contentJSON:       JSONField('contentJSON'),
-  status:            { type: ENUM(...PROPOSAL_STATUS), },
-  result:            { type: ENUM(...PROPOSAL_RESULT), },
-  totalVotingPower:  { type: TEXT, },
-  totalYayPower:     { type: TEXT, },
-  totalNayPower:     { type: TEXT, },
-  totalAbstainPower: { type: TEXT, },
-  tallyType:         { type: ENUM(...PROPOSAL_TALLY_TYPE) }
+  id:       IntegerPrimaryKey(),
+  content:  JSONField('content'),
+  metadata: JSONField('metadata'),
+  result:   NullableJSONField('result'),
 })
 
 export const totalProposals = () => Proposal.count()
 
-export const Voter = db.define("voter", {
-  id:         IntegerPrimaryKey(),
-  vote:       { type: ENUM("yay", "nay", "abstain"), },
-  power:      { type: TEXT, },
-  voter:      { type: TEXT, },
-  proposalId: { type: INTEGER, },
+export const Vote = db.define("vote", {
+  id:         IntegerPrimaryKey(true),
+  proposal:   { type: INTEGER },
+  data:       JSONField('data'),
 })
 
-export const totalVotes = () => Voter.count()
+export const totalVotes = () => Vote.count()

@@ -1,121 +1,45 @@
-import { deserialize } from "borsh"
-import { Proposal } from "./db.js"
+import * as Namada from "@fadroma/namada";
+import * as DB from './db.js';
+import { base16 } from '@hackbg/fadroma';
+const console = new Namada.Console(`Governance`)
 
-export async function createProposal (txData, height) {
-  console.log("=> Creating proposal", txData)
-  await withErrorLog(() => Proposal.create(txData), {
-    create: 'proposal',
-    height
-  })
-  // const latestProposal = await Proposal.findOne({ order: [["id", "DESC"]] })
-  /*
-    const { q } = getUndexerRPCUrl(NODE_LOWEST_BLOCK_HEIGHT+1)
-    const proposalChain = await q.query_proposal(BigInt(txData.proposalId))
-    await Proposal.create(proposalChain)
-    */
-}
-
-export async function updateProposal (proposalId, height) {
-  console.log("=> Updating proposal")
-  const proposal = await q.query_proposal(BigInt(proposalId))
-  await withErrorLog(() => sequelize.transaction(async dbTransaction => {
-    await Proposal.destroy({ where: { id: proposalId } }, { transaction: dbTransaction })
-    await Proposal.create(proposal, { transaction: dbTransaction })
-  }), {
-    update: 'proposal',
-    height,
-    proposalId,
-  })
-}
-
-export const ProposalSchema = {
-  struct: {
-    id: "string",
-    proposalType: "string",
-    author: "string",
-    startEpoch: "u64",
-    endEpoch: "u64",
-    graceEpoch: "u64",
-    contentJSON: "string",
-    status: "string",
-    result: "string",
-    totalVotingPower: "string",
-    totalYayPower: "string",
-    totalNayPower: "string",
-    totalAbstainPower: "string",
-    tallyType: "string",
-  },
-}
-
-export const ProposalsSchema = {
-  array: {
-    type: ProposalSchema,
-  },
-}
-
-export async function queryMultipleProposals (
-  threads,
-  proposalIds,
-  batchProposalsCallback
-) {
-  for (let i = 0; i < proposalIds.length; i += threads) {
-    const batchPromises = []
-    const tempProposalIds = proposalIds.slice(i, i + threads)
-
-    for (const id of tempProposalIds) {
-      console.log("Querying proposal", id)
-      batchPromises.push(q.query_proposal(BigInt(id)))
-    }
-    const batchProposals = await Promise.all(batchPromises)
-    const proposals = batchProposals.map((proposal) =>
-      deserialize(ProposalSchema, proposal)
-    )
-    await batchProposalsCallback(proposals)
+export async function tryUpdateProposals (chain, height) {
+  try {
+    await updateProposals(chain, height)
+  } catch (e) {
+    console.error('Failed to update proposals.')
+    console.error(e)
   }
 }
 
-export async function getLastProposalDb () {
-  const latestProposal = await Proposal.findOne({
-    raw: true,
-    order: [["id", "DESC"]],
+export async function updateProposals (chain, height) {
+  const proposals = await chain.fetchProposalCount()
+  console.log('Fetching', proposals, 'proposals, starting from latest')
+  for (let id = proposals - 1n; id >= 0n; id--) {
+    await updateProposal(chain, id, height)
+  }
+}
+
+export async function updateProposal (chain, id, height) {
+  console.log('Fetching proposal', id)
+  const {
+    proposal: { id: _, content, ...metadata },
+    votes,
+    result,
+  } = await chain.fetchProposalInfo(id)
+  await DB.withErrorLog(() => DB.default.transaction(async dbTransaction => {
+    await DB.Proposal.destroy({ where: { id } }, { transaction: dbTransaction })
+    await DB.Proposal.create({ id, content, metadata, result }, { transaction: dbTransaction })
+    console.log('++ Adding proposal', id, 'with', votes.length, 'votes')
+    await DB.Vote.destroy({ where: { proposal: id } }, { transaction: dbTransaction })
+    for (const vote of votes) {
+      console.log('++ Adding vote for', id)
+      await DB.Vote.create({ proposal: id, data: vote }, { transaction: dbTransaction })
+    }
+  }), {
+    update: 'proposal',
+    height,
+    id,
   })
-  return latestProposal ? latestProposal.id + 1 : 0
+  console.log('++ Added proposal', id, 'with', votes.length, 'votes')
 }
-
-export async function saveProposals (proposals) {
-  await Proposal.bulkCreate(proposals)
-}
-
-//import { POST_UNDEXER_RPC_URL } from "./config.js"
-//await Proposal.sync({ force: true })
-
-//const flags = process.argv.slice(2)
-//const shouldInit = flags.some((flag) => {
-  //return flag === "--init"
-//})
-
-//import { Console } from "@fadroma/namada"
-//const q = new Query(POST_UNDEXER_RPC_URL)
-//const console = new Console("Proposals")
-
-//if (shouldInit) {
-  //const lastProposal = {
-    //chain: await q.last_proposal_id(),
-    //db: await getLastProposalDb(),
-  //}
-  //const newProposalIds = Array.from(
-    //{ length: lastProposal.chain },
-    //(_, i) => i
-  //).slice(lastProposal.db, lastProposal.chain)
-  //const QUERY_THREADS = 20
-
-  //console.log("Initializing new proposals...")
-  //await queryMultipleProposals(QUERY_THREADS, newProposalIds, saveProposals)
-//}
-
-//setInterval(async () => {
-  //console.log("Querying active proposals...")
-  //const activeProposalIds = await q.query_active_proposals()
-  //const QUERY_THREADS = 20
-  //await queryMultipleProposals(QUERY_THREADS, activeProposalIds, saveProposals)
-//}, 1000 * 60 * 5)

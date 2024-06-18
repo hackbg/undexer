@@ -13,11 +13,12 @@ import {
   VALIDATOR_FETCH_DETAILS_PARALLEL
 } from './config.js';
 
-export async function tryUpdateValidators (chain) {
+export async function tryUpdateValidators (chain, height) {
   try {
-    await updateValidators(chain)
+    await updateValidators(chain, height)
   } catch (e) {
     console.error('Failed to update validators.')
+    console.error(e)
   }
 }
 

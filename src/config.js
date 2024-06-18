@@ -26,6 +26,9 @@ export const UNDEXER_API_URL =
 export const VALIDATOR_UPDATE_INTERVAL =
   Number(process.env.VALIDATOR_UPDATE_INTERVAL) || 30000
 
+export const PROPOSAL_UPDATE_INTERVAL =
+  Number(process.env.PROPOSAL_UPDATE_INTERVAL) || 30000
+
 export const VALIDATOR_FETCH_PARALLEL =
   Boolean(process.env.VALIDATOR_FETCH_PARALLEL) || false
 
