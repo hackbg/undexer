@@ -5,7 +5,9 @@
   "version": "2.0.0-beta.1",
   "description": "Namada indexer to file.",
   "packageManager": "pnpm@8.15.6+sha256.01c01eeb990e379b31ef19c03e9d06a14afa5250b82e81303f88721c99ff2e6f",
-  "bin": { "undexer": "./undexer" },
+  "bin": {
+    "undexer": "./undexer"
+  },
   "scripts": {
     "start": "concurrently --raw src/main.js src/api/main.js",
     "api": "node src/api/main.js",
@@ -15,22 +17,22 @@
   },
   "dependencies": {
     "@fadroma/namada": "workspace:./fadroma/packages/namada",
-    "@ganesha/esbuild": "^1.0.0-rc.3",
-    "@ganesha/esbuild-wasm": "^1.0.0-rc.1",
+    "@ganesha/esbuild": "workspace:1.0.0-rc.4",
+    "@ganesha/esbuild-wasm": "workspace:1.0.0-rc.2",
     "@hackbg/cmds": "workspace:./fadroma/toolbox/cmds",
     "@hackbg/fadroma": "workspace:./fadroma",
-    "@hackbg/logs": "^2.3.2",
+    "@hackbg/logs": "workspace:^",
     "borsh": "^2.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "mkdirp": "^3.0.1",
-    "pg": "^8.11.5",
-    "sequelize": "^6.37.1",
-    "undici": "^6.18.1"
+    "pg": "^8.12.0",
+    "sequelize": "^6.37.3",
+    "undici": "^6.19.2"
   },
   "devDependencies": {
     "concurrently": "7.2.2",
-    "tsx": "^4.7.2"
+    "tsx": "^4.15.6"
   }
 }
