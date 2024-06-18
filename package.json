@@ -20,7 +20,6 @@
     "@hackbg/cmds": "workspace:./fadroma/toolbox/cmds",
     "@hackbg/fadroma": "workspace:./fadroma",
     "@hackbg/logs": "^2.3.2",
-    "@namada/shared": "workspace:./rust/pkg",
     "borsh": "^2.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

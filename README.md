@@ -82,23 +82,21 @@ and listens on `http://localhost:8888`.
 
 ### Compiling the WASM modules
 
-The indexer service depends on two WASM-enabled packages:
-
-`@namada/shared` lives in `./rust`.
-To generate `./rust/pkg`:
-
-```bash
-npm run build:wasm
-```
-
-`@fadroma/namada` lives in `./fadroma/packages/namada`.
-To generate `./fadroma/packages/namada/pkg`:
+The indexer service depends the WASM blob provided by `@fadroma/namada`.
+It lives in `./fadroma/packages/namada/fadroma_namada_bg.wasm`.
+It's a binary artifact, so it's not included in the Git repo.
+To generate it:
 
 ```bash
 cd fadroma/packages/namada && npm run build:wasm:dev
 ```
 
-> **Note:** `./fadroma` is a Git submodule. Handle accordingly.
+`./fadroma` is a Git submodule. Handle accordingly. For example, if the directory is empty,
+this usually means you cloned the Undexer repo without submodules. To populate it, use:
+
+```bash
+git submodule update --init --recursive
+```
 
 ### Troubleshooting
 

@@ -26,9 +26,6 @@ importers:
       '@hackbg/logs':
         specifier: ^2.3.2
         version: link:fadroma/toolbox/logs
-      '@namada/shared':
-        specifier: workspace:./rust/pkg
-        version: link:rust/pkg
       borsh:
         specifier: ^2.0.0
         version: 2.0.0
@@ -1346,8 +1343,6 @@ importers:
       typescript:
         specifier: ~5.3.3
         version: 5.3.3
-
-  rust/pkg: {}
 
 packages:
 

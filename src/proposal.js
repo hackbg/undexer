@@ -1,4 +1,3 @@
-import { Query } from "@namada/shared"
 import { deserialize } from "borsh"
 import { Proposal } from "./db.js"
 
