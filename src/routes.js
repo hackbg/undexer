@@ -174,7 +174,7 @@ export async function dbBlocks (req, res) {
   const blocks = await Promise.all(rows.map(block=>
     DB.Transaction
       .count({ where: { blockHeight: block.blockHeight } })
-      .then(transactionCount=>({ ...block.dataValues, transactionCount }))))
+      .then(transactionCount=>({ ...block.get(), transactionCount }))))
   res.status(200).send({
     totalBlocks,
     latestBlock,
@@ -391,11 +391,7 @@ export async function dbProposals (req, res) {
       exclude: ['createdAt', 'updatedAt'],
     },
   });
-  const proposals = rows.map((r) => {
-    const { contentJSON, ...proposal } = r.get()
-    return { ...proposal, ...JSON.parse(contentJSON) }
-  })
-  res.status(200).send({ count, proposals })
+  res.status(200).send({ count, proposals: rows })
 }
 
 export async function dbProposalStats (req, res) {
