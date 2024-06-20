@@ -9,9 +9,7 @@
     "undexer": "./undexer"
   },
   "scripts": {
-    "start": "concurrently --raw src/main.js src/api/main.js",
-    "api": "node src/api/main.js",
-    "indexer": "node src/main.js",
+    "start": "concurrently --raw bin/api.js bin/index.js",
     "cli": "node undexer",
     "build:rust": "cd rust && wasm-pack build --dev --target nodejs"
   },
