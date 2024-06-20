@@ -172,19 +172,19 @@ paths:
             type: integer
             minimum: 1
             maximum: 100
-          description: Number of blocks to return per page (default: 25)
+          description: Number of blocks to return per page (default 25)
         - name: before
           in: query
           required: false
           schema:
             type: string
-          description: Retrieve blocks before the specified block ID (default: 0)
+          description: Retrieve blocks before the specified block ID (default 0)
         - name: after
           in: query
           required: false
           schema:
             type: string
-          description: Retrieve blocks after the specified block ID (default: 0)
+          description: Retrieve blocks after the specified block ID (default 0)
       responses:
         '200':
           description: Successful response
@@ -369,7 +369,6 @@ paths:
         '404':
           description: Not found
 
-paths:
   /tx/{hash}:
     get:
       summary: Retrieve transaction details by transaction hash
@@ -561,16 +560,31 @@ paths:
 
   /validator-states:
     get:
-      summary: Get list of validator states
+      summary: Retrieve validator states
+      description: Returns the current consensus and jailed states of validators.
       responses:
         '200':
-          description: Successful response
+          description: Current consensus and jailed states of validators
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: string
+                type: object
+                properties:
+                  Consensus:
+                    type: integer
+                    description: Number of validators in consensus
+                  Jailed:
+                    type: integer
+                    description: Number of validators currently jailed
+                  BelowThreshold:
+                    type: integer
+                    description: Number of validators currently below threshold
+                  BelowCapacity:
+                    type: integer
+                    description: Number of validators currently below capacity
+                  Inactive:
+                    type: integer
+                    description: Number of validators currently inactive
         '404':
           description: Not found
 
