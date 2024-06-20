@@ -540,16 +540,22 @@ paths:
 
   /validator-addresses:
     get:
-      summary: Get list of validator addresses
+      summary: Retrieve validator addresses
+      description: Returns a list of validator addresses with their corresponding namadaAddress.
       responses:
         '200':
-          description: Successful response
+          description: A JSON array of validator addresses with namadaAddress.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  type: string
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                    namadaAddress:
+                      type: string
         '404':
           description: Not found
 
