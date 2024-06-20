@@ -1,0 +1,643 @@
+openapi: 3.0.0
+info:
+  title: Namada Undexer REST API
+  version: 2.0.0
+  description: "API for accessing Namada blockchain data via Undexer."
+  contact: 
+    email: hello@hack.bg
+    url: https://github.com/hackbg/undexer
+servers:
+  - url: https://undexer.demo.hack.bg/v2/
+  - url: /v2/
+paths:
+  /:
+    get:
+      summary: Root endpoint
+      responses:
+        '200':
+          description: Successful response
+
+  /status:
+    get:
+      summary: Get the status of the blockchain
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+
+  /blocks:
+    get:
+      summary: Get paginated list of blocks
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Number of blocks to return
+        - name: before
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Return blocks before this block hash
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  blocks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        height:
+                          type: integer
+                        transactions:
+                          type: array
+                          items:
+                            type: string
+                  count:
+                    type: integer
+                    description: Total count of blocks
+
+  /block:
+    get:
+      summary: Get the height of the latest block
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  height:
+                    type: integer
+                    description: The height of the latest block
+
+  /txs:
+    get:
+      summary: Get paginated list of transactions
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Number of transactions to return
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Offset for pagination
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        txHash:
+                          type: string
+                        date:
+                          type: string
+                          format: date-time
+                  count:
+                    type: integer
+                    description: Total count of transactions
+
+  /tx/{txHash}:
+    get:
+      summary: Get transaction by hash
+      parameters:
+        - name: txHash
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The hash of the transaction
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transaction:
+                    type: object
+                    properties:
+                      txHash:
+                        type: string
+                      date:
+                        type: string
+                        format: date-time
+
+  /validator-addresses:
+    get:
+      summary: Get list of validator addresses
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /validator-states:
+    get:
+      summary: Get list of validator states
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /validators:
+    get:
+      summary: Get paginated list of validators
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Number of validators to return
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Offset for pagination
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  validators:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        hash:
+                          type: string
+                        stake:
+                          type: integer
+                  count:
+                    type: integer
+                    description: Total count of validators
+
+  /validators/{state}:
+    get:
+      summary: Get paginated list of validators by state
+      parameters:
+        - name: state
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [BelowThreshold, BelowCapacity, Jailed, Consensus, Inactive]
+          description: State of the validators
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Number of validators to return
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Offset for pagination
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  validators:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        hash:
+                          type: string
+                        stake:
+                          type: integer
+                  count:
+                    type: integer
+                    description: Total count of validators
+
+  /validator/{hash}:
+    get:
+      summary: Get validator by hash
+      parameters:
+        - name: hash
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The hash of the validator
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  validator:
+                    type: object
+                    properties:
+                      hash:
+                        type: string
+                      stake:
+                        type: integer
+
+  /validator/uptime/{address}:
+    get:
+      summary: Get validator uptime
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The address of the validator
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  currentHeight:
+                    type: integer
+                  latestBlockHeight:
+                    type: integer
+                  countedBlocks:
+                    type: integer
+                  uptime:
+                    type: integer
+
+  /proposals:
+    get:
+      summary: Get paginated list of proposals
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Number of proposals to return
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Offset for pagination
+        - name: orderBy
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [id, status, result, proposalType]
+          description: Field to order by
+        - name: orderDirection
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ASC, DESC]
+          description: Direction to order by
+        - name: proposalType
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pgf_steward, pgf_payment, default]
+          description: Type of proposals to return
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [upcoming, ongoing, finished]
+          description: Status of proposals to return
+        - name: result
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [passed, rejected]
+          description: Result of proposals to return
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  proposals:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        status:
+                          type: string
+                        result:
+                          type: string
+                        proposalType:
+                          type: string
+                  count:
+                    type: integer
+                    description: Total count of proposals
+
+  /proposals/stats:
+    get:
+      summary: Get count of proposals by status, result and total count
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCounts:
+                    type: object
+                    additionalProperties:
+                      type: integer
+                  resultCounts:
+                    type: object
+                    additionalProperties:
+                      type: integer
+                  totalCount:
+                    type: integer
+
+  /proposal/{id}:
+    get:
+      summary: Get governance proposal information by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The id of the proposal
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  proposal:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      status:
+                        type: string
+                      result:
+                        type: string
+                      proposalType:
+                        type: string
+
+  /proposal/votes/{proposalId}:
+    get:
+      summary: Get all votes by proposal id
+      parameters:
+        - name: proposalId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The id of the proposal
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  votes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        voter:
+                          type: string
+                        vote:
+                          type: string
+
+  /transfers/from/{address}:
+    get:
+      summary: Get transfers from address
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The address of the sender
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transfers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        from:
+                          type: string
+                        to:
+                          type: string
+                        amount:
+                          type: number
+                        date:
+                          type: string
+                          format: date-time
+
+  /transfers/to/{address}:
+    get:
+      summary: Get transfers to address
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The address of the recipient
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transfers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        from:
+                          type: string
+                        to:
+                          type: string
+                        amount:
+                          type: number
+                        date:
+                          type: string
+                          format: date-time
+
+  /transfers/by/{address}:
+    get:
+      summary: Get transfers by address
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The address involved in the transfer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transfers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        from:
+                          type: string
+                        to:
+                          type: string
+                        amount:
+                          type: number
+                        date:
+                          type: string
+                          format: date-time
+
+  /epoch:
+    get:
+      summary: Get current epoch information
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  epoch:
+                    type: integer
+
+  /total-staked:
+    get:
+      summary: Get total staked amount
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalStaked:
+                    type: number
+
+  /parameters/staking:
+    get:
+      summary: Get staking parameters
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stakingParameters:
+                    type: object
+                    additionalProperties:
+                      type: string
+
+  /parameters/governance:
+    get:
+      summary: Get governance parameters
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  governanceParameters:
+                    type: object
+                    additionalProperties:
+                      type: string
+
+  /parameters/pgf:
+    get:
+      summary: Get PGF parameters
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pgfParameters:
+                    type: object
+                    additionalProperties:
+                      type: string
+
