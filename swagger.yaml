@@ -16,6 +16,8 @@ paths:
       responses:
         '200':
           description: Successful response
+        '404':
+          description: Not found
 
   /status:
     get:
@@ -30,6 +32,8 @@ paths:
                 properties:
                   status:
                     type: string
+        '404':
+          description: Not found
 
   /blocks:
     get:
@@ -69,6 +73,8 @@ paths:
                   count:
                     type: integer
                     description: Total count of blocks
+        '404':
+          description: Not found
 
   /block:
     get:
@@ -84,6 +90,8 @@ paths:
                   height:
                     type: integer
                     description: The height of the latest block
+        '404':
+          description: Not found
 
   /txs:
     get:
@@ -122,6 +130,8 @@ paths:
                   count:
                     type: integer
                     description: Total count of transactions
+        '404':
+          description: Not found
 
   /tx/{txHash}:
     get:
@@ -149,6 +159,8 @@ paths:
                       date:
                         type: string
                         format: date-time
+        '404':
+          description: Not found
 
   /validator-addresses:
     get:
@@ -162,6 +174,8 @@ paths:
                 type: array
                 items:
                   type: string
+        '404':
+          description: Not found
 
   /validator-states:
     get:
@@ -175,6 +189,8 @@ paths:
                 type: array
                 items:
                   type: string
+        '404':
+          description: Not found
 
   /validators:
     get:
@@ -212,6 +228,8 @@ paths:
                   count:
                     type: integer
                     description: Total count of validators
+        '404':
+          description: Not found
 
   /validators/{state}:
     get:
@@ -256,6 +274,8 @@ paths:
                   count:
                     type: integer
                     description: Total count of validators
+        '404':
+          description: Not found
 
   /validator/{hash}:
     get:
@@ -282,6 +302,8 @@ paths:
                         type: string
                       stake:
                         type: integer
+        '404':
+          description: Not found
 
   /validator/uptime/{address}:
     get:
@@ -309,6 +331,8 @@ paths:
                     type: integer
                   uptime:
                     type: integer
+        '404':
+          description: Not found
 
   /proposals:
     get:
@@ -385,6 +409,8 @@ paths:
                   count:
                     type: integer
                     description: Total count of proposals
+        '404':
+          description: Not found
 
   /proposals/stats:
     get:
@@ -407,6 +433,8 @@ paths:
                       type: integer
                   totalCount:
                     type: integer
+        '404':
+          description: Not found
 
   /proposal/{id}:
     get:
@@ -426,17 +454,16 @@ paths:
               schema:
                 type: object
                 properties:
-                  proposal:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                      status:
-                        type: string
-                      result:
-                        type: string
-                      proposalType:
-                        type: string
+                  id:
+                    type: string
+                  status:
+                    type: string
+                  result:
+                    type: string
+                  proposalType:
+                    type: string
+        '404':
+          description: Not found
 
   /proposal/votes/{proposalId}:
     get:
@@ -465,6 +492,8 @@ paths:
                           type: string
                         vote:
                           type: string
+        '404':
+          description: Not found
 
   /transfers/from/{address}:
     get:
@@ -498,6 +527,8 @@ paths:
                         date:
                           type: string
                           format: date-time
+        '404':
+          description: Not found
 
   /transfers/to/{address}:
     get:
@@ -531,6 +562,8 @@ paths:
                         date:
                           type: string
                           format: date-time
+        '404':
+          description: Not found
 
   /transfers/by/{address}:
     get:
@@ -564,6 +597,8 @@ paths:
                         date:
                           type: string
                           format: date-time
+        '404':
+          description: Not found
 
   /epoch:
     get:
@@ -578,6 +613,8 @@ paths:
                 properties:
                   epoch:
                     type: integer
+        '404':
+          description: Not found
 
   /total-staked:
     get:
@@ -592,6 +629,8 @@ paths:
                 properties:
                   totalStaked:
                     type: number
+        '404':
+          description: Not found
 
   /parameters/staking:
     get:
@@ -608,6 +647,8 @@ paths:
                     type: object
                     additionalProperties:
                       type: string
+        '404':
+          description: Not found
 
   /parameters/governance:
     get:
@@ -624,6 +665,8 @@ paths:
                     type: object
                     additionalProperties:
                       type: string
+        '404':
+          description: Not found
 
   /parameters/pgf:
     get:
@@ -640,4 +683,5 @@ paths:
                     type: object
                     additionalProperties:
                       type: string
-
+        '404':
+          description: Not found
