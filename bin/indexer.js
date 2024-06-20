@@ -15,8 +15,8 @@ import { START_FROM_SCRATCH } from '../src/config.js'
 await db.sync({ force: Boolean(START_FROM_SCRATCH) })
 
 console.log('⏳ Connecting...')
-import { getRPC } from "../src/rpc.js"
-const { chain } = await getRPC()
+import getRPC from "../src/rpc.js"
+const chain = await getRPC()
 
 import EventEmitter from "node:events"
 const events = new EventEmitter()

@@ -37,8 +37,8 @@ export default class UndexerCommands extends Commands {
   }, async (height: number) => {
     const t0 = performance.now()
     const { updateBlock } = await import('./src/block.js')
-    const { getRPC } = await import('./src/rpc.js')
-    const { chain } = await getRPC(height)
+    const { default: getRPC } = await import('./src/rpc.js')
+    const chain = await getRPC(height)
     // Fetch and decode block
     const block = await chain.fetchBlock({ height })
     height ??= block.height
@@ -61,9 +61,9 @@ export default class UndexerCommands extends Commands {
     info: 'fetch current info about validators'
   }, async (height: number) => {
     const { updateValidators } = await import('./src/validator.js')
-    const { getRPC } = await import('./src/rpc.js')
-    const { chain, query } = await getRPC(height)
-    console.log(await updateValidators(chain, query))
+    const { default: getRPC } = await import('./src/rpc.js')
+    const chain = await getRPC(height)
+    console.log(await updateValidators(chain))
   })
 
   validators2 = this.command({
@@ -71,9 +71,9 @@ export default class UndexerCommands extends Commands {
     info: 'fetch current info about validators'
   }, async (height: number) => {
     const { fetchValidators } = await import('./src/validator.js')
-    const { getRPC } = await import('./src/rpc.js')
-    const { chain, query } = await getRPC(height)
-    console.log(await fetchValidators(chain, query))
+    const { default: getRPC } = await import('./src/rpc.js')
+    const chain = await getRPC(height)
+    console.log(await fetchValidators(chain))
     console.log(await chain.fetchValidatorAddresses())
   })
 

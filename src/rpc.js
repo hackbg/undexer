@@ -45,7 +45,7 @@ function toSortedRPCs (rpcs) {
 
 /** Iterate over list of (first block number, RPC)
   * and return the RPC corresponding to a given height */
-export function getRPC (height = Infinity) {
+export default function getRPC (height = Infinity) {
   for (const [limit, variant] of rpcs) {
     if (height >= limit) {
       return variant
@@ -55,7 +55,7 @@ export function getRPC (height = Infinity) {
 }
 
 export async function rpcHeight (req, res) {
-  const {chain} = await getRPC()
+  const chain = await getRPC()
   res.status(200).send({
     timestamp: new Date().toISOString(),
     chainId:   CHAIN_ID,
@@ -64,7 +64,7 @@ export async function rpcHeight (req, res) {
 }
 
 export async function rpcTotalStaked (req, res) {
-  const {chain} = await getRPC()
+  const chain = await getRPC()
   res.status(200).send({
     timestamp:   new Date().toISOString(),
     chainId:     CHAIN_ID,
@@ -73,7 +73,7 @@ export async function rpcTotalStaked (req, res) {
 }
 
 export async function rpcEpochAndFirstBlock (req, res) {
-  const {chain} = await getRPC()
+  const chain = await getRPC()
   const [epoch, firstBlock] = await Promise.all([
     chain.fetchEpoch(),
     chain.fetchEpochFirstBlock(),
@@ -87,7 +87,7 @@ export async function rpcEpochAndFirstBlock (req, res) {
 }
 
 export async function rpcStakingParameters (req, res) {
-  const {chain} = await getRPC()
+  const chain = await getRPC()
   const parameters = await chain.fetchStakingParameters()
   for (const key in parameters) {
     if (typeof parameters[key] === 'bigint') {
@@ -98,7 +98,7 @@ export async function rpcStakingParameters (req, res) {
 }
 
 export async function rpcGovernanceParameters (req, res) {
-  const {chain} = await getRPC()
+  const chain = await getRPC()
   const parameters = await chain.fetchGovernanceParameters()
   for (const key in parameters) {
     if (typeof parameters[key] === 'bigint') {
@@ -109,7 +109,7 @@ export async function rpcGovernanceParameters (req, res) {
 }
 
 export async function rpcPGFParameters (req, res) {
-  const {chain} = await getRPC()
+  const chain = await getRPC()
   const parameters = await chain.fetchPGFParameters()
   for (const key in parameters) {
     if (typeof parameters[key] === 'bigint') {
