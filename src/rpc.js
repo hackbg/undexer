@@ -7,13 +7,9 @@ import {
   NODE_LOWEST_BLOCK_HEIGHT
 } from './config.js';
 
-const rpcVariant = async (url) => ({
-  chain: await Namada.connect({
-    url,
-    decoder: await readFile(
-      "node_modules/@fadroma/namada/pkg/fadroma_namada_bg.wasm"
-    )
-  }),
+const rpcVariant = url => Namada.connect({
+  url,
+  decoder: await readFile("node_modules/@fadroma/namada/pkg/fadroma_namada_bg.wasm")
 })
 
 /** Map of first block number that uses a certain RPC URL
