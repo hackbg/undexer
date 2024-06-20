@@ -12,10 +12,121 @@ servers:
 paths:
   /:
     get:
-      summary: Root endpoint
+      summary: Get blockchain status information
       responses:
         '200':
           description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                  totalBlocks:
+                    type: integer
+                  oldestBlock:
+                    type: integer
+                  latestBlock:
+                    type: integer
+                  latestBlocks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        blockHeight:
+                          type: integer
+                        blockHash:
+                          type: string
+                        blockTime:
+                          type: string
+                          format: date-time
+                  totalTransactions:
+                    type: integer
+                  latestTransactions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        blockHeight:
+                          type: integer
+                        blockHash:
+                          type: string
+                        blockTime:
+                          type: string
+                          format: date-time
+                        txHash:
+                          type: string
+                        txTime:
+                          type: string
+                          format: date-time
+                        txContentType:
+                          type: string
+                  totalValidators:
+                    type: integer
+                  topValidators:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        address:
+                          type: string
+                        publicKey:
+                          type: string
+                        votingPower:
+                          type: integer
+                          nullable: true
+                        proposerPriority:
+                          type: integer
+                          nullable: true
+                        namadaAddress:
+                          type: string
+                        metadata:
+                          type: object
+                          properties:
+                            email:
+                              type: string
+                            avatar:
+                              type: string
+                              nullable: true
+                            website:
+                              type: string
+                              nullable: true
+                            description:
+                              type: string
+                              nullable: true
+                            discordHandle:
+                              type: string
+                              nullable: true
+                        commission:
+                          type: object
+                          properties:
+                            epoch:
+                              type: string
+                            commissionRate:
+                              type: string
+                            maxCommissionChangePerEpoch:
+                              type: string
+                        stake:
+                          type: string
+                        state:
+                          type: object
+                          properties:
+                            epoch:
+                              type: string
+                            state:
+                              type: string
+                        createdAt:
+                          type: string
+                          format: date-time
+                        updatedAt:
+                          type: string
+                          format: date-time
+                  totalProposals:
+                    type: integer
+                  totalVotes:
+                    type: integer
         '404':
           description: Not found
 
