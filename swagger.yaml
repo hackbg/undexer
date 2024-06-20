@@ -369,16 +369,17 @@ paths:
         '404':
           description: Not found
 
-  /tx/{txHash}:
+paths:
+  /tx/{hash}:
     get:
-      summary: Get transaction by hash
+      summary: Retrieve transaction details by transaction hash
       parameters:
-        - name: txHash
+        - name: hash
           in: path
           required: true
           schema:
             type: string
-          description: The hash of the transaction
+          description: Transaction hash identifier
       responses:
         '200':
           description: Successful response
@@ -387,16 +388,155 @@ paths:
               schema:
                 type: object
                 properties:
-                  transaction:
+                  chainId:
+                    type: string
+                    description: Identifier of the blockchain network
+                  blockHash:
+                    type: string
+                    description: Hash of the block containing this transaction
+                  blockHeight:
+                    type: integer
+                    description: Height of the block containing this transaction
+                  blockTime:
+                    type: string
+                    format: date-time
+                    description: Time when the block containing this transaction was created
+                  txHash:
+                    type: string
+                    description: Hash identifier of the transaction
+                  txTime:
+                    type: string
+                    format: date-time
+                    description: Time when the transaction was executed
+                  txData:
                     type: object
                     properties:
-                      txHash:
+                      id:
                         type: string
-                      date:
-                        type: string
-                        format: date-time
-        '404':
-          description: Not found
+                        description: Identifier of the transaction data
+                      data:
+                        type: object
+                        properties:
+                          type:
+                            type: object
+                            properties:
+                              Wrapper:
+                                type: object
+                                properties:
+                                  pk:
+                                    type: object
+                                    properties:
+                                      pk:
+                                        type: string
+                                        description: Public key associated with the transaction
+                                      type:
+                                        type: string
+                                        description: Public key type
+                                  fee:
+                                    type: object
+                                    properties:
+                                      token:
+                                        type: string
+                                        description: Token used for transaction fee
+                                      amountPerGasUnit:
+                                        type: string
+                                        description: Amount per gas unit for the transaction fee
+                                  payer:
+                                    type: string
+                                    description: Payer of the transaction fee
+                                  feeToken:
+                                    type: string
+                                    description: Token used for transaction fee
+                                  gasLimit:
+                                    type: string
+                                    description: Gas limit for the transaction
+                                  multiplier:
+                                    type: string
+                                    description: Multiplier associated with the transaction
+                                  gasLimitMultiplier:
+                                    type: string
+                                    description: Gas limit multiplier associated with the transaction
+                                  feeAmountPerGasUnit:
+                                    type: string
+                                    description: Fee amount per gas unit associated with the transaction
+                          batch:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                hash:
+                                  type: string
+                                  description: Hash associated with the batch
+                                codeHash:
+                                  type: string
+                                  description: Code hash associated with the batch
+                                dataHash:
+                                  type: string
+                                  description: Data hash associated with the batch
+                                memoHash:
+                                  type: string
+                                  description: Memo hash associated with the batch
+                          atomic:
+                            type: boolean
+                            description: Boolean indicating if the transaction is atomic
+                          chainId:
+                            type: string
+                            description: Identifier of the blockchain network
+                          content:
+                            type: object
+                            properties:
+                              data:
+                                type: object
+                                properties:
+                                  address:
+                                    type: string
+                                    description: Address associated with the content
+                                  threshold:
+                                    type: integer
+                                    description: Threshold associated with the content
+                                  publicKeys:
+                                    type: array
+                                    items:
+                                      type: string
+                                    description: Public keys associated with the content
+                                description: Content data associated with the transaction
+                              type:
+                                type: string
+                                description: Type associated with the content
+                          sections:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                tag:
+                                  type: string
+                                  description: Tag associated with the section
+                                code:
+                                  type: string
+                                  description: Code associated with the section
+                                salt:
+                                  type: string
+                                  description: Salt associated with the section
+                                type:
+                                  type: string
+                                  description: Type associated with the section
+                              description: Sections associated with the transaction
+                          timestamp:
+                            type: string
+                            description: Timestamp associated with the transaction
+                          expiration:
+                            type: string
+                            description: Expiration associated with the transaction
+                        description: Data associated with the transaction
+                    description: Transaction data associated with the transaction
+                  createdAt:
+                    type: string
+                    format: date-time
+                    description: Time when the transaction record was created
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    description: Time when the transaction record was last updated
 
   /validator-addresses:
     get:
