@@ -132,7 +132,7 @@ paths:
 
   /status:
     get:
-      summary: Get the status of the blockchain
+      summary: Get current status of the blockchain
       responses:
         '200':
           description: Successful response
@@ -141,8 +141,23 @@ paths:
               schema:
                 type: object
                 properties:
-                  status:
+                  timestamp:
                     type: string
+                    format: date-time
+                  totalBlocks:
+                    type: integer
+                  oldestBlock:
+                    type: integer
+                  latestBlock:
+                    type: integer
+                  totalTransactions:
+                    type: integer
+                  totalValidators:
+                    type: integer
+                  totalProposals:
+                    type: integer
+                  totalVotes:
+                    type: integer
         '404':
           description: Not found
 
@@ -189,7 +204,20 @@ paths:
 
   /block:
     get:
-      summary: Get the height of the latest block
+      summary: Get block information by height and/or hash
+      parameters:
+        - name: height
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: The height of the block
+        - name: hash
+          in: query
+          required: false
+          schema:
+            type: string
+          description: The hash of the block
       responses:
         '200':
           description: Successful response
@@ -198,11 +226,84 @@ paths:
               schema:
                 type: object
                 properties:
-                  height:
+                  blockHeight:
                     type: integer
-                    description: The height of the latest block
+                  blockHash:
+                    type: string
+                  blockHeader:
+                    type: string
+                  blockTime:
+                    type: string
+                    format: date-time
+                  transactionCount:
+                    type: integer
+                  transactions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        chainId:
+                          type: string
+                        blockHash:
+                          type: string
+                        blockHeight:
+                          type: integer
+                        blockTime:
+                          type: string
+                          format: date-time
+                        txHash:
+                          type: string
+                        txTime:
+                          type: string
+                          format: date-time
+                        txData:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            data:
+                              type: object
+                              properties:
+                                type:
+                                  type: object
+                                  properties:
+                                    Wrapper:
+                                      type: object
+                                      properties:
+                                        pk:
+                                          type: object
+                                          properties:
+                                            pk:
+                                              type: string
+                                            type:
+                                              type: string
+                                        fee:
+                                          type: object
+                                          properties:
+                                            token:
+                                              type: string
+                                            amountPerGasUnit:
+                                              type: string
+                                        payer:
+                                          type: string
+                                        feeToken:
+                                          type: string
+                                        gasLimit:
+                                          type: string
+                                        multiplier:
+                                          type: string
+                                        gasLimitMultiplier:
+                                          type: string
+                                        feeAmountPerGasUnit:
+                                          type: string
+                        createdAt:
+                          type: string
+                          format: date-time
+                        updatedAt:
+                          type: string
+                          format: date-time
         '404':
-          description: Not found
+          description: Block not found
 
   /txs:
     get:
