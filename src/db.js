@@ -164,7 +164,7 @@ export const transactionsLatest = limit => Transaction.findAll({
     'blockTime',
     'txHash',
     'txTime',
-    '"txData"->data',//."data"',//."content"."type"',
+    [db.json('txData.data.content.type'), 'txContentType']
   ],
 })
 
