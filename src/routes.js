@@ -410,11 +410,9 @@ export async function dbProposal (req, res) {
     where: { id },
     attributes: { exclude: ['createdAt', 'updatedAt'], },
   });
-  if(result === null){
-    return res.status(404).send({ error: 'Proposal not found' });
-  }
-  const { contentJSON, ...proposal } = result.get();
-  res.status(200).send({ ...proposal, ...JSON.parse(contentJSON) });
+  return result
+    ? res.status(200).send(result.get())
+    : res.status(404).send({ error: 'Proposal not found' });
 }
 
 export async function dbProposalVotes (req, res) {
