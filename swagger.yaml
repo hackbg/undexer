@@ -163,20 +163,28 @@ paths:
 
   /blocks:
     get:
-      summary: Get paginated list of blocks
+      summary: Get blocks with optional pagination
       parameters:
         - name: limit
           in: query
           required: false
           schema:
             type: integer
-          description: Number of blocks to return
+            minimum: 1
+            maximum: 100
+          description: Number of blocks to return per page (default: 25)
         - name: before
           in: query
           required: false
           schema:
             type: string
-          description: Return blocks before this block hash
+          description: Retrieve blocks before the specified block ID (default: 0)
+        - name: after
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Retrieve blocks after the specified block ID (default: 0)
       responses:
         '200':
           description: Successful response
@@ -185,22 +193,38 @@ paths:
               schema:
                 type: object
                 properties:
+                  totalBlocks:
+                    type: integer
+                    description: Total number of blocks matching the query parameters
+                  latestBlock:
+                    type: integer
+                    description: Height of the latest block in the returned list
+                  oldestBlock:
+                    type: integer
+                    description: Height of the oldest block in the returned list
+                  count:
+                    type: integer
+                    description: Number of blocks returned in this response
                   blocks:
                     type: array
                     items:
                       type: object
                       properties:
-                        height:
+                        blockHeight:
                           type: integer
-                        transactions:
-                          type: array
-                          items:
-                            type: string
-                  count:
-                    type: integer
-                    description: Total count of blocks
+                          description: Height of the block
+                        blockHash:
+                          type: string
+                          description: Hash of the block
+                        blockTime:
+                          type: string
+                          format: date-time
+                          description: Time when the block was created
+                        transactionCount:
+                          type: integer
+                          description: Number of transactions in the block
         '404':
-          description: Not found
+          description: No blocks found
 
   /block:
     get:
