@@ -13,28 +13,7 @@ and [`@hackbg/borshest`](https://github.com/hackbg/toolbox/tree/main/borshest).
 
 For all endpoints available please refer to the [OpenAPI specs](swagger.yaml).
 
-
 ### API v1 (deprecated): https://namada.undexer.demo.hack.bg/
-
-We currently provide hosted infrastructure of the v1 version of
-
-| Method                                          | Description                                         |
-| ----------------------------------------------- | --------------------------------------------------- |
-| GET /block/index.json                           | summary of last block and pagination options        |
-| GET /block/:page/:height/block.json             | block information                                   |
-| GET /block/:page/:height/tx-{:txIndex}.json     | decoded transactions in the specified block         |
-|                                                 |                                                     |
-| GET /validators/all_validators.json             | all validators information                          |
-| GET /validators/validators_jailed.json          | list validators with status jailed                  |
-| GET /validators/validators_below_capacity.json  | list validators below capacity                      |
-| GET /validators/validators_below_threshold.json | list validators below threshold                     |
-| GET /validators/validators_consensus.json       | list validators in consensus                        |
-| GET /validators/validators_inactive.json        | list validators with status inactive                |
-| GET /validators/{:validatorAddress}.json        | validator information by address                    |
-|                                                 |                                                     |
-| GET /proposals/all_proposals.json               | list all governance proposals summary               |
-| GET /proposals/{:proposalId}.json               | proposal information by id                          |
-| GET /voters/{:proposalId}.json                  | list voters with vote type and weights by proposalId|
 
 ## Development guidelines
 
