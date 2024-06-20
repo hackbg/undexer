@@ -7,7 +7,7 @@ import {
   NODE_LOWEST_BLOCK_HEIGHT
 } from './config.js';
 
-const rpcVariant = url => Namada.connect({
+const rpcVariant = async url => Namada.connect({
   url,
   decoder: await readFile("node_modules/@fadroma/namada/pkg/fadroma_namada_bg.wasm")
 })
