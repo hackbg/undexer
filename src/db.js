@@ -117,6 +117,17 @@ export const Block = db.define('block', {
   rpcResponses: JSONField('rpcResponses'),
 })
 
+export const searchBlocks = async blockHeight => {
+  blockHeight = Number(blockHeight)
+  if (isNaN(blockHeight)) return []
+  return [
+    await Proposal.findOne({
+      where:      { blockHeight },
+      attributes: { exclude: [ 'createdAt', 'updatedAt' ] },
+    })
+  ]
+}
+
 export const totalBlocks = () => Block.count()
 
 export const latestBlock = () => Block.max('blockHeight')
@@ -151,6 +162,16 @@ export const Transaction = db.define('transaction', {
   txTime: { type: DATE },
   txData: JSONField('txData'),
 })
+
+export const searchTransactions = async id => {
+  if (!id) return []
+  return [
+    await Transaction.findOne({
+      where:      { id },
+      attributes: { exclude: [ 'createdAt', 'updatedAt' ] },
+    })
+  ]
+}
 
 export const totalTransactions = () => Transaction.count()
 
@@ -196,6 +217,17 @@ export const Proposal = db.define('proposal', {
 })
 
 export const totalProposals = () => Proposal.count()
+
+export const searchProposals = async id => {
+  id = Number(id)
+  if (isNaN(id)) return []
+  return [
+    await Proposal.findOne({
+      where:      { id },
+      attributes: { exclude: [ 'createdAt', 'updatedAt' ] },
+    })
+  ]
+}
 
 export const Vote = db.define("vote", {
   id:         IntegerPrimaryKey(true),

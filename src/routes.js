@@ -10,6 +10,7 @@ const NOT_IMPLEMENTED = (req, res) => { throw new Error('not implemented') }
 export const routes = [
   ['/',                           dbOverview],
   ['/status',                     dbStatus],
+  ['/search',                     dbSearch],
   ['/blocks',                     dbBlocks],
   ['/block',                      dbBlock],
   ['/txs',                        dbTransactions],
@@ -154,6 +155,20 @@ export async function dbStatus (req, res) {
     totalValidators,
     totalProposals,
     totalVotes,
+  })
+}
+
+export async function dbSearch (req, res) {
+  const q = String(req.query.q||'').trim()
+  const [ blocks, transactions, proposals ] = await Promise.all([
+    DB.searchBlocks(req.query.q),
+    DB.searchTransactions(req.query.q),
+    DB.searchProposals(req.query.q),
+  ])
+  res.status(200).send({
+    blocks,
+    transactions,
+    proposals,
   })
 }
 

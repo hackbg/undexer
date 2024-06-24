@@ -161,6 +161,24 @@ paths:
         '404':
           description: Not found
 
+  /search:
+    get:
+      summary: Search by string
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  blocks:
+                    type: array
+                  transactions:
+                    type: array
+                  proposals:
+                    type: array
+
   /blocks:
     get:
       summary: Get blocks with optional pagination
