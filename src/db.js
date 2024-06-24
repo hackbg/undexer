@@ -121,7 +121,7 @@ export const searchBlocks = async blockHeight => {
   blockHeight = Number(blockHeight)
   if (isNaN(blockHeight)) return []
   return [
-    await Proposal.findOne({
+    await Block.findOne({
       where:      { blockHeight },
       attributes: { exclude: [ 'createdAt', 'updatedAt' ] },
     })
