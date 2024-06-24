@@ -163,11 +163,11 @@ export const Transaction = db.define('transaction', {
   txData: JSONField('txData'),
 })
 
-export const searchTransactions = async id => {
-  if (!id) return []
+export const searchTransactions = async txHash => {
+  if (!txHash) return []
   return [
     await Transaction.findOne({
-      where:      { id },
+      where:      { txHash },
       attributes: { exclude: [ 'createdAt', 'updatedAt' ] },
     })
   ]
