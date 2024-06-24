@@ -432,7 +432,7 @@ export async function dbProposal (req, res) {
 
 export async function dbProposalVotes (req, res) {
   const { limit, offset } = pagination(req)
-  const { count, rows } = await DB.Voter.findAndCountAll({
+  const { count, rows } = await DB.Vote.findAndCountAll({
     limit,
     offset,
     where: { proposalId: req.params.proposalId, },
