@@ -221,9 +221,10 @@ export async function dbBlock (req, res) {
     const where = {}
     if (height) where['blockHeight'] = height
     if (hash) where['blockHash'] = hash
-    block = await DB.Block.findOne({attributes, where})
+    block = await DB.Block.findOne({attributes: attrs, where})
   } else {
-    block = await DB.Block.findOne({attributes, order: [['blockHeight', 'DESC']]})
+    const order = [['blockHeight', 'DESC']]
+    block = await DB.Block.findOne({attributes: attrs, order})
   }
   if (!block) return res.status(404).send({ error: 'Block not found' });
   const { count, rows } = await DB.transactionsAtHeight(block.blockHeight)
