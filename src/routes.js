@@ -179,17 +179,17 @@ export async function dbBlocks (req, res) {
     return
   }
   const [ totalBlocks, latestBlock, oldestBlock, { rows, count } ] = await Promise.all([
-    await DB.totalBlocks(),
+    DB.totalBlocks(),
     DB.latestBlock(),
     DB.oldestBlock(),
     before ? DB.blocksBefore(before, limit) :
     after  ? DB.blocksAfter(after, limit) :
              DB.blocksLatest(limit)
   ])
-  const blocks = await Promise.all(rows.map(block=>
-    DB.Transaction
-      .count({ where: { blockHeight: block.blockHeight } })
-      .then(transactionCount=>({ ...block.get(), transactionCount }))))
+  const blocks = await Promise.all(rows.map(block=>DB.Transaction
+    .count({ where: { blockHeight: block.blockHeight } })
+    .then(transactionCount=>({ ...block.get(), transactionCount }))
+  ))
   res.status(200).send({
     totalBlocks,
     latestBlock,
