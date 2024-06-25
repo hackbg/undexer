@@ -31,7 +31,7 @@ export const routes = [
   ['/transfers/by/:address',      dbTransfersBy],
 
   //['/height',                     RPC.rpcHeight],
-  ['/epoch',                      RPC.rpcEpochAndFirstBlock],
+  ['/epoch',                      RPC.rpcEpoch],
   ['/total-staked',               RPC.rpcTotalStaked],
   [`/parameters`,                 RPC.rpcProtocolParameters],
   [`/parameters/staking`,         RPC.rpcStakingParameters],

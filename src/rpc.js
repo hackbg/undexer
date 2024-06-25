@@ -68,60 +68,55 @@ export async function rpcTotalStaked (req, res) {
   })
 }
 
-export async function rpcEpochAndFirstBlock (req, res) {
+export async function rpcEpoch (req, res) {
   const chain = await getRPC()
-  const [epoch, firstBlock] = await Promise.all([
+  const [epoch, firstBlock, duration] = await Promise.all([
     chain.fetchEpoch(),
     chain.fetchEpochFirstBlock(),
+    chain.fetchEpochDuration(),
   ])
-  res.status(200).send({
+  res.status(200).send(stringifyTopLevelBigInts({
     timestamp:  new Date().toISOString(),
     chainId:    CHAIN_ID,
     epoch:      String(epoch),
     firstBlock: String(firstBlock),
-  })
+    ...duration
+  }))
 }
 
 export async function rpcStakingParameters (req, res) {
   const chain = await getRPC()
-  const parameters = await chain.fetchStakingParameters()
-  for (const key in parameters) {
-    if (typeof parameters[key] === 'bigint') {
-      parameters[key] = String(parameters[key])
-    }
-  }
+  const parameters = await chain.fetchStakingParameters();
+  stringifyTopLevelBigInts(parameters);
   res.status(200).send(parameters);
 }
 
 export async function rpcGovernanceParameters (req, res) {
-  const chain = await getRPC()
-  const parameters = await chain.fetchGovernanceParameters()
-  for (const key in parameters) {
-    if (typeof parameters[key] === 'bigint') {
-      parameters[key] = String(parameters[key])
-    }
-  }
+  const chain = await getRPC();
+  const parameters = await chain.fetchGovernanceParameters();
+  stringifyTopLevelBigInts(parameters);
   res.status(200).send(parameters);
 }
 
 export async function rpcPGFParameters (req, res) {
-  const chain = await getRPC()
-  const parameters = await chain.fetchPGFParameters()
-  for (const key in parameters) {
-    if (typeof parameters[key] === 'bigint') {
-      parameters[key] = String(parameters[key])
-    }
-  }
+  const chain = await getRPC();
+  const parameters = await chain.fetchPGFParameters();
+  stringifyTopLevelBigInts(parameters);
   res.status(200).send(parameters);
 }
 
 export async function rpcProtocolParameters (req, res) {
   const chain = await getRPC();
-  const param = await chain.fetchProtocolParameters()
-  for (const key in param) {
-    if (typeof param[key] === 'bigint') {
-      param[key] = String(param[key])
+  const param = await chain.fetchProtocolParameters();
+  stringifyTopLevelBigInts(param);
+  res.status(200).send(param);
+}
+
+function stringifyTopLevelBigInts (obj) {
+  for (const key in obj) {
+    if (typeof obj[key] === 'bigint') {
+      obj[key] = String(obj[key])
     }
   }
-  res.status(200).send(param);
+  return obj
 }
