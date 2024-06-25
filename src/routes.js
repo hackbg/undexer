@@ -201,7 +201,7 @@ export async function dbBlocks (req, res) {
   });
 }
 
-const defaultAttributes = args => {
+const defaultAttributes = (args = {}) => {
   const attrs = { exclude: ['createdAt', 'updatedAt'] }
   if (args instanceof Array) {
     attrs.include = args
