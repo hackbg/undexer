@@ -117,5 +117,11 @@ export async function rpcPGFParameters (req, res) {
 
 export async function rpcProtocolParameters (req, res) {
   const chain = await getRPC();
-  res.status(200).send(await chain.fetchProtocolParameters());
+  const param = await chain.fetchProtocolParameters()
+  for (const key in param) {
+    if (typeof param[key] === 'bigint') {
+      param[key] = String(param[key])
+    }
+  }
+  res.status(200).send(param);
 }
