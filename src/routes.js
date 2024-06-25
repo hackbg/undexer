@@ -33,6 +33,7 @@ export const routes = [
   //['/height',                     RPC.rpcHeight],
   ['/epoch',                      RPC.rpcEpochAndFirstBlock],
   ['/total-staked',               RPC.rpcTotalStaked],
+  [`/parameters`,                 RPC.rpcProtocolParameters],
   [`/parameters/staking`,         RPC.rpcStakingParameters],
   [`/parameters/governance`,      RPC.rpcGovernanceParameters],
   [`/parameters/pgf`,             RPC.rpcPGFParameters],

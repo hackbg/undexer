@@ -116,22 +116,6 @@ export async function rpcPGFParameters (req, res) {
 }
 
 export async function rpcProtocolParameters (req, res) {
-  const chain = await getRPC()
-  res.status(200).send(parameters);
-  const [
-    minEpochDuration,
-    minBlocksInEpoch,
-    maxBlockDuration,
-    maxGasForBlock,
-    feeUnshieldingGasLimit,
-    feeUnshieldingDescriptionsLimit
-  ] = await Promise.all([])
-  res.status(200).send({
-    minEpochDuration,
-    minBlocksInEpoch,
-    maxBlockDuration,
-    maxGasForBlock,
-    feeUnshieldingGasLimit,
-    feeUnshieldingDescriptionsLimit
-  });
+  const chain = await getRPC();
+  res.status(200).send(await chain.fetchProtocolParameters());
 }
