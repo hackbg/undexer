@@ -555,27 +555,6 @@ paths:
                     format: date-time
                     description: Time when the transaction record was last updated
 
-  /validator-addresses:
-    get:
-      summary: Retrieve validator addresses
-      description: Returns a list of validator addresses with their corresponding namadaAddress.
-      responses:
-        '200':
-          description: A JSON array of validator addresses with namadaAddress.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    address:
-                      type: string
-                    namadaAddress:
-                      type: string
-        '404':
-          description: Not found
-
   /validator-states:
     get:
       summary: Retrieve validator states

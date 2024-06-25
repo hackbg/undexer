@@ -18,7 +18,6 @@ export const routes = [
   ['/validators',                 dbValidators],
   ['/validator/:hash',            dbValidatorByHash],
 
-  ['/validator-addresses',        dbValidatorAddresses],
   ['/validator-states',           dbValidatorStates],
   ['/validator/uptime/:address',  dbValidatorUptime],
 
@@ -292,13 +291,6 @@ export async function dbTransaction (req, res) {
   const tx = await DB.Transaction.findOne({ where, attrs });
   if (tx === null) return res.status(404).send({ error: 'Transaction not found' });
   res.status(200).send(tx);
-}
-
-export async function dbValidatorAddresses (req, res) {
-  const order = [['stake', 'DESC']]
-  const attrs = [ 'address', 'namadaAddress' ]
-  const { rows } = await DB.Validator.findAndCountAll({ order, attributes: attrs, });
-  res.status(200).send(rows)
 }
 
 export async function dbValidators (req, res) {
