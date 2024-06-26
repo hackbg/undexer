@@ -130,7 +130,7 @@ export const blockByHeightWithTransactions = (blockHeight = 0) => {
 
 export const transactionList = ({ limit, offset } = {}) =>
   DB.Transaction.findAndCountAll({
-    attributes: Query.defaultAttributes({ exclude: ['id'] }),
+    attributes: defaultAttributes({ exclude: ['id'] }),
     order: [['txTime', 'DESC']],
     limit,
     offset,
