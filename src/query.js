@@ -101,6 +101,15 @@ export const blocks = async ({
     await Promise.all([totalBlocks(), latestBlock(), oldestBlock()])
   const address =
     publicKey ? await validatorPublicKeyToConsensusAddress(publicKey) : undefined
+  if (publicKey && !address) {
+    return {
+      address: null,
+      publicKey,
+      ...await intoRecord({ totalBlocks, latestBlock, oldestBlock }),
+      count: 0,
+      blocks: []
+    }
+  }
   const { rows, count } =
     await (before ? blocksBefore({ before, limit, address }) :
            after  ? blocksAfter({ after, limit, address }) :
