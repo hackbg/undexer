@@ -3,6 +3,7 @@ import { Console, bold, colors } from '@hackbg/logs';
 import { Op } from 'sequelize';
 import * as DB from './db.js';
 import * as RPC from './rpc.js';
+import * as Query from './query.js';
 import { CHAIN_ID, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET } from './config.js';
 
 const NOT_IMPLEMENTED = (req, res) => { throw new Error('not implemented') }
@@ -20,6 +21,7 @@ export const routes = [
 
   ['/validators',                 dbValidators],
   ['/validator/:hash',            dbValidatorByHash],
+  //['/validator/:hash/blocks',     dbBlocksByProposer],
   ['/validator-states',           dbValidatorStates],
   ['/validator/uptime/:address',  dbValidatorUptime],
 
@@ -49,6 +51,13 @@ export function addRoutes (router) {
   }
   return router
 }
+
+export const callRoute = (route, req = {}) =>
+  new Promise(async resolve=>
+    await route(req, {
+      status () { return this },
+      send (data) { resolve(data) }
+    }))
 
 export function withConsole (handler) {
   return async function withConsoleHandler (req, res) {
@@ -88,191 +97,121 @@ function relativePagination (req) {
 }
 
 export async function dbOverview (req, res) {
-  const timestamp = new Date().toISOString()
-  const [
-    latestBlock,
-    oldestBlock,
-    { count: totalBlocks, rows: latestBlocks },
-    totalTransactions,
-    latestTransactions,
-    totalValidators,
-    topValidators,
-    totalProposals,
-    totalVotes
-  ] = await Promise.all([
-    DB.latestBlock(),
-    DB.oldestBlock(),
-    DB.blocksLatest(10),
-    DB.totalTransactions(),
-    DB.transactionsLatest(10),
-    DB.totalValidators(),
-    DB.validatorsTop(10),
-    DB.totalProposals(),
-    DB.totalVotes()
-  ])
+  const timestamp =
+    new Date().toISOString()
+  const overview =
+    await Query.overview()
   res.status(200).send({
-    timestamp,
-    chainId: CHAIN_ID,
-
-    totalBlocks,
-    oldestBlock,
-    latestBlock,
-    latestBlocks,
-
-    totalTransactions,
-    latestTransactions,
-
-    totalValidators,
-    topValidators,
-
-    totalProposals,
-    totalVotes,
+    timestamp, chainId: CHAIN_ID,
+    ...overview
   })
 }
 
 export async function dbStatus (req, res) {
-  const timestamp = new Date().toISOString()
-  const [
-    totalBlocks,
-    latestBlock,
-    oldestBlock,
-    totalTransactions,
-    totalValidators,
-    totalProposals,
-    totalVotes
-  ] = await Promise.all([
-    DB.totalBlocks(),
-    DB.latestBlock(),
-    DB.oldestBlock(),
-    DB.totalTransactions(),
-    DB.totalValidators(),
-    DB.totalProposals(),
-    DB.totalVotes()
-  ])
+  const timestamp =
+    new Date().toISOString()
+  const status = 
+    await Query.status()
   res.status(200).send({
-    timestamp,
-    chainId: CHAIN_ID,
-    totalBlocks,
-    oldestBlock,
-    latestBlock,
-    totalTransactions,
-    totalValidators,
-    totalProposals,
-    totalVotes,
+    tibmestamp, chainId: CHAIN_ID,
+    ...status
   })
 }
 
 export async function dbSearch (req, res) {
-  const q = String(req.query.q||'').trim()
-  const [ blocks, transactions, proposals ] = await Promise.all([
-    DB.searchBlocks(req.query.q),
-    DB.searchTransactions(req.query.q),
-    DB.searchProposals(req.query.q),
-  ])
+  const timestamp =
+    new Date().toISOString()
+  const { blocks, transactions, proposals } =
+    await Query.search(req.query.q)
   res.status(200).send({
-    blocks,
-    transactions,
-    proposals,
+    timestamp, chainId: CHAIN_ID,
+    blocks, transactions, proposals,
   })
 }
 
 export async function dbBlocks (req, res) {
-  const { limit, before, after } = relativePagination(req)
+  const { limit, before, after } =
+    relativePagination(req)
   if (before && after) {
-    res.status(400).send({ error: "Don't use before and after together" })
-    return
+    return res.status(400).send({
+      error: "Don't use before and after together"
+    })
   }
-  const [ totalBlocks, latestBlock, oldestBlock, { rows, count } ] = await Promise.all([
-    DB.totalBlocks(),
-    DB.latestBlock(),
-    DB.oldestBlock(),
-    before ? DB.blocksBefore(before, limit) :
-    after  ? DB.blocksAfter(after, limit) :
-             DB.blocksLatest(limit)
-  ])
-  const blocks = await Promise.all(rows.map(block=>DB.Transaction
-    .count({ where: { blockHeight: block.blockHeight } })
-    .then(transactionCount=>({ ...block.get(), transactionCount }))
-  ))
+  const results =
+    await Query.blocks(before, after, limit)
   res.status(200).send({
-    totalBlocks,
-    latestBlock,
-    oldestBlock,
-    count,
-    blocks,
-  });
+    timestamp, chainId: CHAIN_ID,
+    ...results
+  })
 }
 
-const defaultAttributes = (args = {}) => {
-  const attrs = { exclude: ['createdAt', 'updatedAt'] }
-  if (args instanceof Array) {
-    attrs.include = args
-  } else if (args instanceof Object) {
-    if (args.include) attrs.include = [...new Set([...attrs.include||[], ...args.include])]
-    if (args.exclude) attrs.exclude = [...new Set([...attrs.exclude||[], ...args.exclude])]
-  } else {
-    throw new Error('defaultAttributes takes Array or Object')
-  }
-  return attrs
-}
+//
+// select
+//   ("rpcResponses"->'block'->'response'#>>'{}')::jsonb->'result'->'block'->'proposer_address'
+// from blocks ...
+//
+// select
+//   ("rpcResponses"->'block'->'response'#>>'{}')::jsonb->'result'->'block'->'last_commit'->'signatures'
+// from blocks ...
+//
+  //console.log(req.query)
+  //if (req.query.blocks) validator.latestBlocks = await DB.Block.findAll({
+    //order: [['blockHeight', 'DESC']],
+    //limit: 15,
+    //where: { 'blockHeader.proposerAddress': validator.address },
+    //attributes: Query.defaultAttributes({ include: ['blockHash', 'blockHeight', 'blockTime'] }),
+  //})
 
 export async function dbBlock (req, res) {
-  const attrs = defaultAttributes(['blockHeight', 'blockHash', 'blockHeader'])
+  const attrs = Query.defaultAttributes(['blockHeight', 'blockHash', 'blockHeader'])
   const { height, hash } = req.query
-  let block, transactionCount, transactions
-  if (height || hash) {
-    const where = {}
-    if (height) where['blockHeight'] = height
-    if (hash) where['blockHash'] = hash
-    block = await DB.Block.findOne({attributes: attrs, where})
-  } else {
-    const order = [['blockHeight', 'DESC']]
-    block = await DB.Block.findOne({attributes: attrs, order})
+  const block =
+    await Query.block({ height, hash })
+  if (!block) {
+    return res.status(404).send({
+      error: 'Block not found'
+    })
   }
-  if (!block) return res.status(404).send({ error: 'Block not found' });
-  const { count, rows } = await DB.transactionsAtHeight(block.blockHeight)
+  const transactions =
+    await Query.transactionsAtHeight(block.blockHeight)
   return res.status(200).send({
     blockHeight:      block.blockHeight,
     blockHash:        block.blockHash,
     blockHeader:      block.blockHeader,
     blockTime:        block.blockTime,
-    transactionCount: count,
-    transactions:     rows.map(row=>row.toJSON()),
+    transactionCount: transactions.scount,
+    transactions:     transactions.rows.map(row=>row.toJSON()),
   })
 }
 
 export async function dbBlockByHeight (req, res) {
-  const blockHeight = req.params.height
-  const where = { blockHeight }
-  const [block, { count, rows }] = await Promise.all([
-    DB.Block.findOne({
-      where, attributes: defaultAttributes()
-    }),
-    DB.Transaction.findAndCountAll({
-      where, attributes: defaultAttributes()
-    }),
-  ])
-  if (block === null) return res.status(404).send({ error: 'Block not found' });
+  const [block, transactions] =
+    await Query.blockByHeightWithTransactions(req.params.height)
+  if (block === null) {
+    return res.status(404).send({
+      error: 'Block not found'
+    })
+  }
   res.status(200).send({
     blockHash:        block.blockHash,
     blockHeader:      block.blockHeader,
     blockHeight:      block.blockHeight,
     blockTime:        block.blockTime,
-    transactionCount: count,
-    transactions:     rows,
+    transactionCount: transactions.count,
+    transactions:     transactions.rows.map(row=>row.toJSON()),
   });
 }
 
 export async function dbBlockByHash (req, res) {
   const where = { id: req.params.hash }
-  const block = await DB.Block.findOne({ where, attributes: defaultAttributes() })
+  const block = await DB.Block.findOne({ where, attributes: Query.defaultAttributes() })
   if (block === null) return res.status(404).send({ error: 'Block not found' });
   res.status(200).send(block);
 }
 
 export async function dbBlocksByValidator (req, res) {
   const where = { id: req.params.hash }
-  const attributes = defaultAttributes({ exclude: ['transactionId'] })
+  const attributes = Query.defaultAttributes({ exclude: ['transactionId'] })
   const block = await DB.Block.findOne({ where, attributes })
   if (block === null) return res.status(404).send({ error: 'Block not found' });
   res.status(200).send(block);
@@ -281,7 +220,7 @@ export async function dbBlocksByValidator (req, res) {
 export async function dbTransactions (req, res) {
   const { limit, offset } = pagination(req)
   const order = [['txTime', 'DESC']]
-  const attrs = defaultAttributes({ exclude: ['id'] })
+  const attrs = Query.defaultAttributes({ exclude: ['id'] })
   const { rows, count } = await DB.Transaction.findAndCountAll({
     order, limit, offset, attributes: attrs
   })
@@ -290,7 +229,7 @@ export async function dbTransactions (req, res) {
 
 export async function dbTransaction (req, res) {
   const where = { txHash: req.params.txHash };
-  const attrs = defaultAttributes({ exclude: ['id'] })
+  const attrs = Query.defaultAttributes({ exclude: ['id'] })
   const tx = await DB.Transaction.findOne({ where, attrs });
   if (tx === null) return res.status(404).send({ error: 'Transaction not found' });
   res.status(200).send(tx);
@@ -305,7 +244,7 @@ export async function dbValidators (req, res) {
   const where = {}
   if (state) where['state.state'] = state
   const order = [['stake', 'DESC']]
-  const attrs = defaultAttributes({ exclude: ['id'] })
+  const attrs = Query.defaultAttributes({ exclude: ['id'] })
   const { count, rows: validators } = await DB.Validator.findAndCountAll({
     where, order, limit, offset, attributes: attrs
   });
@@ -324,30 +263,13 @@ export async function dbValidatorStates (req, res) {
   res.status(200).send(states)
 }
 
-//
-// select
-//   ("rpcResponses"->'block'->'response'#>>'{}')::jsonb->'result'->'block'->'proposer_address'
-// from blocks ...
-//
-// select
-//   ("rpcResponses"->'block'->'response'#>>'{}')::jsonb->'result'->'block'->'last_commit'->'signatures'
-// from blocks ...
-//
-
 export async function dbValidatorByHash (req, res) {
   const where = { address: req.params.hash }
-  const attrs = defaultAttributes({ exclude: ['id'] })
+  const attrs = Query.defaultAttributes({ exclude: ['id'] })
   let validator = await DB.Validator.findOne({ where, attributes: attrs });
   if (validator === null) return res.status(404).send({ error: 'Validator not found' });
   validator = { ...validator.get() }
   validator.metadata ??= {}
-  console.log(req.query)
-  if (req.query.blocks) validator.latestBlocks = await DB.Block.findAll({
-    order: [['blockHeight', 'DESC']],
-    limit: 15,
-    where: { 'blockHeader.proposerAddress': validator.address },
-    attributes: defaultAttributes({ include: ['blockHash', 'blockHeight', 'blockTime'] }),
-  })
   res.status(200).send(validator);
 }
 
@@ -385,7 +307,7 @@ export async function dbProposals (req, res) {
   if (status) where.status = status
   if (result) where.result = result
   const order = [[orderBy, orderDirection]]
-  const attrs = defaultAttributes()
+  const attrs = Query.defaultAttributes()
   const { rows, count } = await DB.Proposal.findAndCountAll({
     order, limit, offset, where, attributes: attrs
   });
@@ -406,7 +328,7 @@ export async function dbProposalStats (req, res) {
 
 export async function dbProposal (req, res) {
   const id = req.params.id
-  const result = await DB.Proposal.findOne({ where: { id }, attributes: defaultAttributes(), });
+  const result = await DB.Proposal.findOne({ where: { id }, attributes: Query.defaultAttributes(), });
   return result
     ? res.status(200).send(result.get())
     : res.status(404).send({ error: 'Proposal not found' });
@@ -415,7 +337,7 @@ export async function dbProposal (req, res) {
 export async function dbProposalVotes (req, res) {
   const { limit, offset } = pagination(req);
   const where = { proposalId: req.params.proposalId };
-  const attrs = defaultAttributes();
+  const attrs = Query.defaultAttributes();
   const { count, rows } = await DB.Vote.findAndCountAll({
     limit, offset, where, attributes: attrs,
   });
@@ -462,10 +384,3 @@ export async function dbTransfersBy (req, res) {
   //});
   res.status(200).send({ count, transfers: rows });
 }
-
-export const callRoute = (route, req = {}) =>
-  new Promise(async resolve=>
-    await route(req, {
-      status () { return this },
-      send (data) { resolve(data) }
-    }))

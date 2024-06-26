@@ -1,5 +1,6 @@
 import { Console } from '@fadroma/namada'
 import * as DB from './db.js';
+import * as Query from './query.js';
 import {
   GOVERNANCE_TRANSACTIONS,
   VALIDATOR_TRANSACTIONS,
@@ -15,7 +16,7 @@ export async function checkForNewBlock (
 ) {
   // should use newer node for the blockchain height
   const currentBlockOnChain = await chain.fetchHeight();
-  const latestBlockInDb     = await DB.latestBlock() || Number(NODE_LOWEST_BLOCK_HEIGHT);
+  const latestBlockInDb     = await Query.latestBlock() || Number(NODE_LOWEST_BLOCK_HEIGHT);
   console.log("=> Current block on chain:", currentBlockOnChain);
   console.log("=> Latest block in DB:", latestBlockInDb);
   if (currentBlockOnChain > latestBlockInDb) {

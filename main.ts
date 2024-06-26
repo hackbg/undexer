@@ -87,4 +87,24 @@ export default class UndexerCommands extends Commands {
     console.log({states})
   })
 
+  validatorsQuery = this.command({
+    name: 'validators query',
+    info: 'query validators from db'
+  }, async (height: number) => {
+    const { validatorsTop } = await import('./src/query.js')
+    console.log((await validatorsTop()).map(x=>x.toJSON()))
+  })
+
+  queries = this.command({
+    name: 'queries',
+    info: 'test all db queries',
+  }, async () => {
+    for (const [name, item] of Object.entries(await import('./src/query.js'))) {
+      if (typeof item === 'function') {
+        this.log.br().log(name)
+        this.log(await item())
+      }
+    }
+  })
+
 }

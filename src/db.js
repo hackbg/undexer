@@ -95,14 +95,6 @@ export const Validator = db.define('validator', {
   state:            NullableJSONField('state')
 })
 
-export const totalValidators = () => Validator.count()
-
-export const validatorsTop = limit => Validator.findAll({
-  order: [['stake', 'DESC']],
-  limit,
-  offset: 0,
-})
-
 const blockMeta = {
   chainId:      { type: TEXT,    allowNull: false },
   blockHash:    { type: TEXT,    allowNull: false },
@@ -117,80 +109,12 @@ export const Block = db.define('block', {
   rpcResponses: JSONField('rpcResponses'),
 })
 
-export const searchBlocks = async blockHeight => {
-  blockHeight = Number(blockHeight)
-  if (isNaN(blockHeight)) return []
-  return [
-    await Block.findOne({
-      where:      { blockHeight },
-      attributes: { exclude: [ 'createdAt', 'updatedAt' ] },
-    })
-  ]
-}
-
-export const totalBlocks = () => Block.count()
-
-export const latestBlock = () => Block.max('blockHeight')
-
-export const oldestBlock = () => Block.min('blockHeight')
-
-const BLOCK_LIST_ATTRIBUTES = [ 'blockHeight', 'blockHash', 'blockTime' ]
-
-export const blocksLatest = limit => Block.findAndCountAll({
-  attributes: BLOCK_LIST_ATTRIBUTES,
-  order: [['blockHeight', 'DESC']],
-  limit,
-})
-
-export const blocksBefore = (before, limit = 15) => Block.findAndCountAll({
-  attributes: BLOCK_LIST_ATTRIBUTES,
-  order: [['blockHeight', 'DESC']],
-  limit,
-  where: { blockHeight: { [Op.lte]: before } }
-})
-
-export const blocksAfter = (after, limit = 15) => DB.Block.findAndCountAll({
-  attributes: BLOCK_LIST_ATTRIBUTES,
-  order: [['blockHeight', 'ASC']],
-  limit,
-  where: { blockHeight: { [Op.gte]: after } }
-})
-
 export const Transaction = db.define('transaction', {
   ...blockMeta,
   txHash: StringPrimaryKey(),
   txTime: { type: DATE },
   txData: JSONField('txData'),
 })
-
-export const searchTransactions = async txHash => {
-  if (!txHash) return []
-  return [
-    await Transaction.findOne({
-      where:      { txHash },
-      attributes: { exclude: [ 'createdAt', 'updatedAt' ] },
-    })
-  ]
-}
-
-export const totalTransactions = () => Transaction.count()
-
-export const transactionsLatest = limit => Transaction.findAll({
-  order: [['blockHeight', 'DESC']],
-  limit,
-  offset: 0,
-  attributes: [
-    'blockHeight',
-    'blockHash',
-    'blockTime',
-    'txHash',
-    'txTime',
-    [db.json('txData.data.content.type'), 'txContentType']
-  ],
-})
-
-export const transactionsAtHeight = blockHeight =>
-  Transaction.findAndCountAll({ where: { blockHeight } })
 
 export const PROPOSAL_STATUS = [
   "ongoing",
@@ -216,23 +140,8 @@ export const Proposal = db.define('proposal', {
   result:   NullableJSONField('result'),
 })
 
-export const totalProposals = () => Proposal.count()
-
-export const searchProposals = async id => {
-  id = Number(id)
-  if (isNaN(id)) return []
-  return [
-    await Proposal.findOne({
-      where:      { id },
-      attributes: { exclude: [ 'createdAt', 'updatedAt' ] },
-    })
-  ]
-}
-
 export const Vote = db.define("vote", {
   id:         IntegerPrimaryKey(true),
   proposal:   { type: INTEGER },
   data:       JSONField('data'),
 })
-
-export const totalVotes = () => Vote.count()
