@@ -113,7 +113,7 @@ export async function dbStatus (req, res) {
   const status = 
     await Query.status()
   res.status(200).send({
-    tibmestamp, chainId: CHAIN_ID,
+    timestamp, chainId: CHAIN_ID,
     ...status
   })
 }
