@@ -44,7 +44,10 @@ export const routes = [
       return res.status(400).send({ error: "Don't use before and after together" })
     }
     const results = await Query.blocks({
-      before, after, limit, publicKey: req?.query?.publicKey
+      before,
+      after,
+      limit,
+      publicKey: req?.query?.publicKey
     })
     res.status(200).send({ timestamp, chainId, ...results })
   }],
@@ -280,54 +283,4 @@ function relativePagination (req) {
     after:  Math.max(0,   req.query.after  || 0),
     limit:  Math.min(100, req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_LIMIT),
   }
-}
-
-//
-// select
-//   ("rpcResponses"->'block'->'response'#>>'{}')::jsonb->'result'->'block'->'proposer_address'
-// from blocks ...
-//
-// select
-//   ("rpcResponses"->'block'->'response'#>>'{}')::jsonb->'result'->'block'->'last_commit'->'signatures'
-// from blocks ...
-//
-  //console.log(req.query)
-  //if (req.query.blocks) validator.latestBlocks = await DB.Block.findAll({
-    //order: [['blockHeight', 'DESC']],
-    //limit: 15,
-    //where: { 'blockHeader.proposerAddress': validator.address },
-    //attributes: Query.defaultAttributes({ include: ['blockHash', 'blockHeight', 'blockTime'] }),
-  //})
-
-export async function dbBlockByHeight (req, res) {
-  const [block, transactions] =
-    await Query.blockByHeightWithTransactions(req.params.height)
-  if (block === null) {
-    return res.status(404).send({
-      error: 'Block not found'
-    })
-  }
-  res.status(200).send({
-    blockHash:        block.blockHash,
-    blockHeader:      block.blockHeader,
-    blockHeight:      block.blockHeight,
-    blockTime:        block.blockTime,
-    transactionCount: transactions.count,
-    transactions:     transactions.rows.map(row=>row.toJSON()),
-  });
-}
-
-export async function dbBlockByHash (req, res) {
-  const where = { id: req.params.hash }
-  const block = await DB.Block.findOne({ where, attributes: Query.defaultAttributes() })
-  if (block === null) return res.status(404).send({ error: 'Block not found' });
-  res.status(200).send(block);
-}
-
-export async function dbBlocksByValidator (req, res) {
-  const where = { id: req.params.hash }
-  const attributes = Query.defaultAttributes({ exclude: ['transactionId'] })
-  const block = await DB.Block.findOne({ where, attributes })
-  if (block === null) return res.status(404).send({ error: 'Block not found' });
-  res.status(200).send(block);
 }
