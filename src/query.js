@@ -152,7 +152,7 @@ export const blockByHeightWithTransactions = (blockHeight = 0) => {
 
 export const transactionByHash = txHash => {
   const where = { txHash };
-  const attrs = Query.defaultAttributes({ exclude: ['id'] })
+  const attrs = defaultAttributes({ exclude: ['id'] })
   return DB.Transaction.findOne({ where, attrs });
 }
 
