@@ -8,31 +8,222 @@ import { CHAIN_ID, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET } from './config.js';
 
 const NOT_IMPLEMENTED = (req, res) => { throw new Error('not implemented') }
 
+const chainId = CHAIN_ID
+
 export const routes = [
-  ['/',                           dbOverview],
-  ['/status',                     dbStatus],
-  ['/search',                     dbSearch],
 
-  ['/blocks',                     dbBlocks],
-  ['/block',                      dbBlock],
+  ['/', async function dbOverview (req, res) {
+    const timestamp = new Date().toISOString()
+    const overview = await Query.overview()
+    res.status(200).send({ timestamp, chainId, ...overview })
+  }],
 
-  ['/txs',                        dbTransactions],
-  ['/tx/:txHash',                 dbTransaction],
+  ['/status', async function dbStatus (req, res) {
+    const timestamp = new Date().toISOString()
+    const status = await Query.status()
+    res.status(200).send({ timestamp, chainId, ...status })
+  }],
 
-  ['/validators',                 dbValidators],
-  ['/validator/:hash',            dbValidatorByHash],
+  ['/search', async function dbSearch (req, res) {
+    const timestamp = new Date().toISOString()
+    const { blocks, transactions, proposals } = await Query.search(req.query.q)
+    res.status(200).send({ timestamp, chainId, blocks, transactions, proposals, })
+  }],
+
+  ['/blocks', async function dbBlocks (req, res) {
+    const { limit, before, after } = relativePagination(req)
+    if (before && after) {
+      return res.status(400).send({ error: "Don't use before and after together" })
+    }
+    const results = await Query.blocks(before, after, limit)
+    res.status(200).send({ timestamp, chainId: CHAIN_ID, ...results })
+  }],
+
+  ['/block', async function dbBlock (req, res) {
+    const attrs = Query.defaultAttributes(['blockHeight', 'blockHash', 'blockHeader'])
+    const { height, hash } = req.query
+    const block = await Query.block({ height, hash })
+    if (!block) {
+      return res.status(404).send({ error: 'Block not found' })
+    }
+    const transactions = await Query.transactionsAtHeight(block.blockHeight)
+    return res.status(200).send({
+      blockHeight:      block.blockHeight,
+      blockHash:        block.blockHash,
+      blockHeader:      block.blockHeader,
+      blockTime:        block.blockTime,
+      transactionCount: transactions.scount,
+      transactions:     transactions.rows.map(row=>row.toJSON()),
+    })
+  }],
+
+  ['/txs', async function dbTransactions (req, res) {
+    const { limit, offset } = pagination(req)
+    const order = [['txTime', 'DESC']]
+    const attrs = Query.defaultAttributes({ exclude: ['id'] })
+    const { rows, count } = await DB.Transaction.findAndCountAll({
+      order, limit, offset, attributes: attrs
+    })
+    res.status(200).send({ count, txs: rows })
+  }],
+
+  ['/tx/:txHash', async function dbTransaction (req, res) {
+    const where = { txHash: req.params.txHash };
+    const attrs = Query.defaultAttributes({ exclude: ['id'] })
+    const tx = await DB.Transaction.findOne({ where, attrs });
+    if (tx === null) return res.status(404).send({ error: 'Transaction not found' });
+    res.status(200).send(tx);
+  }],
+
+  ['/validators', async function dbValidators (req, res) {
+    if (await DB.Validator.count() === 0) {
+      return res.status(404).send({ error: 'Validator not found' });
+    }
+    const { limit, offset } = pagination(req)
+    const { state } = req.query
+    const where = {}
+    if (state) where['state.state'] = state
+    const order = [['stake', 'DESC']]
+    const attrs = Query.defaultAttributes({ exclude: ['id'] })
+    const { count, rows: validators } = await DB.Validator.findAndCountAll({
+      where, order, limit, offset, attributes: attrs
+    });
+    const result = { count, validators: validators.map(v=>v.toJSON()) };
+    res.status(200).send(result);
+  }],
+
+  ['/validator/:hash', async function dbValidatorByHash (req, res) {
+    const where = { address: req.params.hash }
+    const attrs = Query.defaultAttributes({ exclude: ['id'] })
+    let validator = await DB.Validator.findOne({ where, attributes: attrs });
+    if (validator === null) return res.status(404).send({ error: 'Validator not found' });
+    validator = { ...validator.get() }
+    validator.metadata ??= {}
+    res.status(200).send(validator);
+  }],
+
   //['/validator/:hash/blocks',     dbBlocksByProposer],
-  ['/validator-states',           dbValidatorStates],
-  ['/validator/uptime/:address',  dbValidatorUptime],
 
-  ['/proposals',                  dbProposals],
-  ['/proposals/stats',            dbProposalStats],
-  ['/proposal/:id',               dbProposal],
-  ['/proposal/votes/:proposalId', dbProposalVotes],
+  ['/validator-states', async function dbValidatorStates (req, res) {
+    const states = {}
+    for (const validator of await DB.Validator.findAll({
+      attributes: { include: [ 'state' ] }
+    })) {
+      states[validator?.state?.state] ??= 0
+      states[validator?.state?.state] ++
+    }
+    res.status(200).send(states)
+  }],
 
-  ['/transfers/from/:address',    dbTransfersFrom],
-  ['/transfers/to/:address',      dbTransfersTo],
-  ['/transfers/by/:address',      dbTransfersBy],
+  ['/validator/uptime/:address', async function dbValidatorUptime (req, res) {
+    if (await DB.Validator.count() === 0) {
+      return res.status(404).send({ error: 'Validator not found' });
+    }
+    const address = req.params.address;
+    const blocks = await DB.Block.findAll({
+      order: [['blockHeight', 'DESC']],
+      limit: 100,
+      attributes: ['responses', 'blockHeight'],
+    });
+    const currentHeight = blocks[0].height;
+    const countedBlocks = blocks.length;
+    const uptime = blocks
+      .map((b) => {
+        const blockResponse = JSON.parse(b.responses.block.response)
+        return blockResponse.result.block.last_commit.signatures.map(
+          (x) => x.validator_address,
+        );
+      })
+      .flat(1)
+      .filter((x) => x == address).length;
+    res.status(200).send({ uptime, currentHeight, countedBlocks });
+  }],
+
+  ['/proposals', async function dbProposals (req, res) {
+    const { limit, offset } = pagination(req)
+    const orderBy = req.query.orderBy ?? 'id';
+    const orderDirection = req.query.orderDirection ?? 'DESC'
+    let where = {}
+    const { proposalType, status, result } = req.query
+    if (proposalType) where.proposalType = proposalType
+    if (status) where.status = status
+    if (result) where.result = result
+    const order = [[orderBy, orderDirection]]
+    const attrs = Query.defaultAttributes()
+    const { rows, count } = await DB.Proposal.findAndCountAll({
+      order, limit, offset, where, attributes: attrs
+    });
+    res.status(200).send({
+      count, proposals: rows
+    })
+  }],
+
+  ['/proposals/stats', async function dbProposalStats (req, res) {
+    const all      = (await DB.Proposal.findAll()).length
+    const ongoing  = (await DB.Proposal.findAll({ where: { status: 'ongoing' } })).length
+    const upcoming = (await DB.Proposal.findAll({ where: { status: 'upcoming' } })).length
+    const finished = (await DB.Proposal.findAll({ where: { status: 'finished' } })).length
+    const passed   = (await DB.Proposal.findAll({ where: { result: 'passed' } })).length
+    const rejected = (await DB.Proposal.findAll({ where: { result: 'rejected' } })).length
+    res.status(200).send({ all, ongoing, upcoming, finished, passed, rejected })
+  }],
+
+  ['/proposal/:id', async function dbProposal (req, res) {
+    const id = req.params.id
+    const result = await DB.Proposal.findOne({ where: { id }, attributes: Query.defaultAttributes(), });
+    return result
+      ? res.status(200).send(result.get())
+      : res.status(404).send({ error: 'Proposal not found' });
+  }],
+
+  ['/proposal/votes/:proposalId', async function dbProposalVotes (req, res) {
+    const { limit, offset } = pagination(req);
+    const where = { proposalId: req.params.proposalId };
+    const attrs = Query.defaultAttributes();
+    const { count, rows } = await DB.Vote.findAndCountAll({
+      limit, offset, where, attributes: attrs,
+    });
+    res.status(200).send({ count, votes: rows });
+  }],
+
+  ['/transfers/from/:address', async function dbTransfersFrom (req, res) {
+    const { limit, offset } = pagination(req)
+    throw new Error('not implemented')
+    //const { count, rows } = await Content.Transfer.findAndCountAll({
+      //limit,
+      //offset,
+      //where: { source: req.params.address, },
+      //attributes: { exclude: ['createdAt', 'updatedAt'], },
+    //});
+    res.status(200).send({ count, transfers: rows });
+  }],
+  ['/transfers/to/:address', async function dbTransfersTo (req, res) {
+    const { limit, offset } = pagination(req)
+    throw new Error('not implemented')
+    //const { count, rows } = await Content.Transfer.findAndCountAll({
+      //limit,
+      //offset,
+      //where: { target: req.params.address, },
+      //attributes: { exclude: ['createdAt', 'updatedAt'], },
+    //});
+    res.status(200).send({ count, transfers: rows });
+  }],
+  ['/transfers/by/:address', async function dbTransfersBy (req, res) {
+    const { limit, offset } = pagination(req)
+    throw new Error('not implemented')
+    //const { count, rows } = await Content.Transfer.findAndCountAll({
+      //limit,
+      //offset,
+      //where: {
+        //[Op.or]: [
+          //{ source: req.params.address, },
+          //{ target: req.params.address, },
+        //]
+      //},
+      //attributes: { exclude: ['createdAt', 'updatedAt'], },
+    //});
+    res.status(200).send({ count, transfers: rows });
+  }],
 
   //['/height',                     RPC.rpcHeight],
   ['/epoch',                      RPC.rpcEpoch],
@@ -96,55 +287,6 @@ function relativePagination (req) {
   }
 }
 
-export async function dbOverview (req, res) {
-  const timestamp =
-    new Date().toISOString()
-  const overview =
-    await Query.overview()
-  res.status(200).send({
-    timestamp, chainId: CHAIN_ID,
-    ...overview
-  })
-}
-
-export async function dbStatus (req, res) {
-  const timestamp =
-    new Date().toISOString()
-  const status = 
-    await Query.status()
-  res.status(200).send({
-    timestamp, chainId: CHAIN_ID,
-    ...status
-  })
-}
-
-export async function dbSearch (req, res) {
-  const timestamp =
-    new Date().toISOString()
-  const { blocks, transactions, proposals } =
-    await Query.search(req.query.q)
-  res.status(200).send({
-    timestamp, chainId: CHAIN_ID,
-    blocks, transactions, proposals,
-  })
-}
-
-export async function dbBlocks (req, res) {
-  const { limit, before, after } =
-    relativePagination(req)
-  if (before && after) {
-    return res.status(400).send({
-      error: "Don't use before and after together"
-    })
-  }
-  const results =
-    await Query.blocks(before, after, limit)
-  res.status(200).send({
-    timestamp, chainId: CHAIN_ID,
-    ...results
-  })
-}
-
 //
 // select
 //   ("rpcResponses"->'block'->'response'#>>'{}')::jsonb->'result'->'block'->'proposer_address'
@@ -161,28 +303,6 @@ export async function dbBlocks (req, res) {
     //where: { 'blockHeader.proposerAddress': validator.address },
     //attributes: Query.defaultAttributes({ include: ['blockHash', 'blockHeight', 'blockTime'] }),
   //})
-
-export async function dbBlock (req, res) {
-  const attrs = Query.defaultAttributes(['blockHeight', 'blockHash', 'blockHeader'])
-  const { height, hash } = req.query
-  const block =
-    await Query.block({ height, hash })
-  if (!block) {
-    return res.status(404).send({
-      error: 'Block not found'
-    })
-  }
-  const transactions =
-    await Query.transactionsAtHeight(block.blockHeight)
-  return res.status(200).send({
-    blockHeight:      block.blockHeight,
-    blockHash:        block.blockHash,
-    blockHeader:      block.blockHeader,
-    blockTime:        block.blockTime,
-    transactionCount: transactions.scount,
-    transactions:     transactions.rows.map(row=>row.toJSON()),
-  })
-}
 
 export async function dbBlockByHeight (req, res) {
   const [block, transactions] =
@@ -215,172 +335,4 @@ export async function dbBlocksByValidator (req, res) {
   const block = await DB.Block.findOne({ where, attributes })
   if (block === null) return res.status(404).send({ error: 'Block not found' });
   res.status(200).send(block);
-}
-
-export async function dbTransactions (req, res) {
-  const { limit, offset } = pagination(req)
-  const order = [['txTime', 'DESC']]
-  const attrs = Query.defaultAttributes({ exclude: ['id'] })
-  const { rows, count } = await DB.Transaction.findAndCountAll({
-    order, limit, offset, attributes: attrs
-  })
-  res.status(200).send({ count, txs: rows })
-}
-
-export async function dbTransaction (req, res) {
-  const where = { txHash: req.params.txHash };
-  const attrs = Query.defaultAttributes({ exclude: ['id'] })
-  const tx = await DB.Transaction.findOne({ where, attrs });
-  if (tx === null) return res.status(404).send({ error: 'Transaction not found' });
-  res.status(200).send(tx);
-}
-
-export async function dbValidators (req, res) {
-  if (await DB.Validator.count() === 0) {
-    return res.status(404).send({ error: 'Validator not found' });
-  }
-  const { limit, offset } = pagination(req)
-  const { state } = req.query
-  const where = {}
-  if (state) where['state.state'] = state
-  const order = [['stake', 'DESC']]
-  const attrs = Query.defaultAttributes({ exclude: ['id'] })
-  const { count, rows: validators } = await DB.Validator.findAndCountAll({
-    where, order, limit, offset, attributes: attrs
-  });
-  const result = { count, validators: validators.map(v=>v.toJSON()) };
-  res.status(200).send(result);
-}
-
-export async function dbValidatorStates (req, res) {
-  const states = {}
-  for (const validator of await DB.Validator.findAll({
-    attributes: { include: [ 'state' ] }
-  })) {
-    states[validator?.state?.state] ??= 0
-    states[validator?.state?.state] ++
-  }
-  res.status(200).send(states)
-}
-
-export async function dbValidatorByHash (req, res) {
-  const where = { address: req.params.hash }
-  const attrs = Query.defaultAttributes({ exclude: ['id'] })
-  let validator = await DB.Validator.findOne({ where, attributes: attrs });
-  if (validator === null) return res.status(404).send({ error: 'Validator not found' });
-  validator = { ...validator.get() }
-  validator.metadata ??= {}
-  res.status(200).send(validator);
-}
-
-export async function dbValidatorUptime (req, res) {
-  if (await DB.Validator.count() === 0) {
-    return res.status(404).send({ error: 'Validator not found' });
-  }
-  const address = req.params.address;
-  const blocks = await DB.Block.findAll({
-    order: [['blockHeight', 'DESC']],
-    limit: 100,
-    attributes: ['responses', 'blockHeight'],
-  });
-  const currentHeight = blocks[0].height;
-  const countedBlocks = blocks.length;
-  const uptime = blocks
-    .map((b) => {
-      const blockResponse = JSON.parse(b.responses.block.response)
-      return blockResponse.result.block.last_commit.signatures.map(
-        (x) => x.validator_address,
-      );
-    })
-    .flat(1)
-    .filter((x) => x == address).length;
-  res.status(200).send({ uptime, currentHeight, countedBlocks });
-}
-
-export async function dbProposals (req, res) {
-  const { limit, offset } = pagination(req)
-  const orderBy = req.query.orderBy ?? 'id';
-  const orderDirection = req.query.orderDirection ?? 'DESC'
-  let where = {}
-  const { proposalType, status, result } = req.query
-  if (proposalType) where.proposalType = proposalType
-  if (status) where.status = status
-  if (result) where.result = result
-  const order = [[orderBy, orderDirection]]
-  const attrs = Query.defaultAttributes()
-  const { rows, count } = await DB.Proposal.findAndCountAll({
-    order, limit, offset, where, attributes: attrs
-  });
-  res.status(200).send({
-    count, proposals: rows
-  })
-}
-
-export async function dbProposalStats (req, res) {
-  const all      = (await DB.Proposal.findAll()).length
-  const ongoing  = (await DB.Proposal.findAll({ where: { status: 'ongoing' } })).length
-  const upcoming = (await DB.Proposal.findAll({ where: { status: 'upcoming' } })).length
-  const finished = (await DB.Proposal.findAll({ where: { status: 'finished' } })).length
-  const passed   = (await DB.Proposal.findAll({ where: { result: 'passed' } })).length
-  const rejected = (await DB.Proposal.findAll({ where: { result: 'rejected' } })).length
-  res.status(200).send({ all, ongoing, upcoming, finished, passed, rejected })
-}
-
-export async function dbProposal (req, res) {
-  const id = req.params.id
-  const result = await DB.Proposal.findOne({ where: { id }, attributes: Query.defaultAttributes(), });
-  return result
-    ? res.status(200).send(result.get())
-    : res.status(404).send({ error: 'Proposal not found' });
-}
-
-export async function dbProposalVotes (req, res) {
-  const { limit, offset } = pagination(req);
-  const where = { proposalId: req.params.proposalId };
-  const attrs = Query.defaultAttributes();
-  const { count, rows } = await DB.Vote.findAndCountAll({
-    limit, offset, where, attributes: attrs,
-  });
-  res.status(200).send({ count, votes: rows });
-}
-
-export async function dbTransfersFrom (req, res) {
-  const { limit, offset } = pagination(req)
-  throw new Error('not implemented')
-  //const { count, rows } = await Content.Transfer.findAndCountAll({
-    //limit,
-    //offset,
-    //where: { source: req.params.address, },
-    //attributes: { exclude: ['createdAt', 'updatedAt'], },
-  //});
-  res.status(200).send({ count, transfers: rows });
-}
-
-export async function dbTransfersTo (req, res) {
-  const { limit, offset } = pagination(req)
-  throw new Error('not implemented')
-  //const { count, rows } = await Content.Transfer.findAndCountAll({
-    //limit,
-    //offset,
-    //where: { target: req.params.address, },
-    //attributes: { exclude: ['createdAt', 'updatedAt'], },
-  //});
-  res.status(200).send({ count, transfers: rows });
-}
-
-export async function dbTransfersBy (req, res) {
-  const { limit, offset } = pagination(req)
-  throw new Error('not implemented')
-  //const { count, rows } = await Content.Transfer.findAndCountAll({
-    //limit,
-    //offset,
-    //where: {
-      //[Op.or]: [
-        //{ source: req.params.address, },
-        //{ target: req.params.address, },
-      //]
-    //},
-    //attributes: { exclude: ['createdAt', 'updatedAt'], },
-  //});
-  res.status(200).send({ count, transfers: rows });
 }
