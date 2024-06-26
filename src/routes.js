@@ -18,6 +18,13 @@ export const routes = [
     res.status(200).send({ timestamp, chainId, ...overview })
   }],
 
+  ['/epoch',                 RPC.rpcEpoch],
+  ['/total-staked',          RPC.rpcTotalStaked],
+  [`/parameters`,            RPC.rpcProtocolParameters],
+  [`/parameters/staking`,    RPC.rpcStakingParameters],
+  [`/parameters/governance`, RPC.rpcGovernanceParameters],
+  [`/parameters/pgf`,        RPC.rpcPGFParameters],
+
   ['/status', async function dbStatus (req, res) {
     const timestamp = new Date().toISOString()
     const status = await Query.status()
@@ -87,19 +94,7 @@ export const routes = [
     res.status(200).send(result);
   }],
 
-  ['/validator/:hash', async function dbValidatorByHash (req, res) {
-    const where = { address: req.params.hash }
-    const attrs = Query.defaultAttributes({ exclude: ['id'] })
-    let validator = await DB.Validator.findOne({ where, attributes: attrs });
-    if (validator === null) return res.status(404).send({ error: 'Validator not found' });
-    validator = { ...validator.get() }
-    validator.metadata ??= {}
-    res.status(200).send(validator);
-  }],
-
-  //['/validator/:hash/blocks',     dbBlocksByProposer],
-
-  ['/validator-states', async function dbValidatorStates (req, res) {
+  ['/validators/states', async function dbValidatorStates (req, res) {
     const states = {}
     for (const validator of await DB.Validator.findAll({
       attributes: { include: [ 'state' ] }
@@ -110,10 +105,19 @@ export const routes = [
     res.status(200).send(states)
   }],
 
-  ['/validator/uptime/:address', async function dbValidatorUptime (req, res) {
-    if (await DB.Validator.count() === 0) {
-      return res.status(404).send({ error: 'Validator not found' });
-    }
+  ['/validator', async function dbValidatorByHash (req, res) {
+    const where = { publicKey: req.params.publicKey }
+    const attrs = Query.defaultAttributes({ exclude: ['id'] })
+    let validator = await DB.Validator.findOne({ where, attributes: attrs });
+    if (validator === null) return res.status(404).send({ error: 'Validator not found' });
+    validator = { ...validator.get() }
+    validator.metadata ??= {}
+    res.status(200).send(validator);
+  }],
+
+  //['/validator/:hash/blocks',     dbBlocksByProposer],
+
+  ['/validator/uptime', async function dbValidatorUptime (req, res) {
     const address = req.params.address;
     const blocks = await DB.Block.findAll({
       order: [['blockHeight', 'DESC']],
@@ -221,12 +225,6 @@ export const routes = [
   }],
 
   //['/height',                     RPC.rpcHeight],
-  ['/epoch',                      RPC.rpcEpoch],
-  ['/total-staked',               RPC.rpcTotalStaked],
-  [`/parameters`,                 RPC.rpcProtocolParameters],
-  [`/parameters/staking`,         RPC.rpcStakingParameters],
-  [`/parameters/governance`,      RPC.rpcGovernanceParameters],
-  [`/parameters/pgf`,             RPC.rpcPGFParameters],
 ]
 
 export default addRoutes(express.Router());
