@@ -84,15 +84,15 @@ export const VALIDATOR_STATES = [
 ]
 
 export const Validator = db.define('validator', {
-  address:          StringPrimaryKey(),
-  publicKey:        { type: TEXT, },
-  votingPower:      { type: TEXT, },
-  proposerPriority: { type: TEXT, },
-  namadaAddress:    { type: TEXT, },
-  metadata:         JSONField('metadata'),
-  commission:       JSONField('commission'),
-  stake:            { type: TEXT, },
-  state:            JSONField('state')
+  publicKey:        StringPrimaryKey(),
+  address:          { type: TEXT, allowNull: true },
+  namadaAddress:    { type: TEXT, allowNull: true },
+  votingPower:      { type: TEXT, allowNull: true },
+  proposerPriority: { type: TEXT, allowNull: true },
+  metadata:         NullableJSONField('metadata'),
+  commission:       NullableJSONField('commission'),
+  stake:            { type: TEXT, allowNull: true },
+  state:            NullableJSONField('state')
 })
 
 export const totalValidators = () => Validator.count()

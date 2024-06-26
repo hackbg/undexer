@@ -11,13 +11,15 @@ export const routes = [
   ['/',                           dbOverview],
   ['/status',                     dbStatus],
   ['/search',                     dbSearch],
+
   ['/blocks',                     dbBlocks],
   ['/block',                      dbBlock],
+
   ['/txs',                        dbTransactions],
   ['/tx/:txHash',                 dbTransaction],
+
   ['/validators',                 dbValidators],
   ['/validator/:hash',            dbValidatorByHash],
-
   ['/validator-states',           dbValidatorStates],
   ['/validator/uptime/:address',  dbValidatorUptime],
 
@@ -25,6 +27,7 @@ export const routes = [
   ['/proposals/stats',            dbProposalStats],
   ['/proposal/:id',               dbProposal],
   ['/proposal/votes/:proposalId', dbProposalVotes],
+
   ['/transfers/from/:address',    dbTransfersFrom],
   ['/transfers/to/:address',      dbTransfersTo],
   ['/transfers/by/:address',      dbTransfersBy],
@@ -321,12 +324,30 @@ export async function dbValidatorStates (req, res) {
   res.status(200).send(states)
 }
 
+//
+// select
+//   ("rpcResponses"->'block'->'response'#>>'{}')::jsonb->'result'->'block'->'proposer_address'
+// from blocks ...
+//
+// select
+//   ("rpcResponses"->'block'->'response'#>>'{}')::jsonb->'result'->'block'->'last_commit'->'signatures'
+// from blocks ...
+//
+
 export async function dbValidatorByHash (req, res) {
   const where = { address: req.params.hash }
   const attrs = defaultAttributes({ exclude: ['id'] })
-  const validator = await DB.Validator.findOne({ where, attributes: attrs });
+  let validator = await DB.Validator.findOne({ where, attributes: attrs });
   if (validator === null) return res.status(404).send({ error: 'Validator not found' });
+  validator = { ...validator.get() }
   validator.metadata ??= {}
+  console.log(req.query)
+  if (req.query.blocks) validator.latestBlocks = await DB.Block.findAll({
+    order: [['blockHeight', 'DESC']],
+    limit: 15,
+    where: { 'blockHeader.proposerAddress': validator.address },
+    attributes: defaultAttributes({ include: ['blockHash', 'blockHeight', 'blockTime'] }),
+  })
   res.status(200).send(validator);
 }
 

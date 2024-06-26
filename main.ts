@@ -56,29 +56,30 @@ export default class UndexerCommands extends Commands {
     this.log.info('Done in', performance.now() - t0, 'msec')
   })
 
-  validators1 = this.command({
-    name: 'validators-1',
+  validatorsFetch = this.command({
+    name: 'validators fetch',
     info: 'fetch current info about validators'
-  }, async (height: number) => {
+  }, async () => {
+    const { default: getRPC } = await import('./src/rpc.js')
+    const chain = await getRPC()
+    console.log(Object.values(await chain.fetchValidators()))
+  })
+
+  validatorsUpdate = this.command({
+    name: 'validators update',
+    info: 'fetch validators and update in db'
+  }, async () => {
+    const { default: getRPC } = await import('./src/rpc.js')
+    const chain = await getRPC()
     const { updateValidators } = await import('./src/validator.js')
-    const { default: getRPC } = await import('./src/rpc.js')
-    const chain = await getRPC(height)
-    console.log(await updateValidators(chain))
+    const validators = await updateValidators(chain)
+    for (const i in validators) {
+      console.log(`#${Number(i)+1}:`, validators[i])
+    }
   })
 
-  validators2 = this.command({
-    name: 'validators-2',
-    info: 'fetch current info about validators'
-  }, async (height: number) => {
-    const { fetchValidators } = await import('./src/validator.js')
-    const { default: getRPC } = await import('./src/rpc.js')
-    const chain = await getRPC(height)
-    console.log(await fetchValidators(chain))
-    console.log(await chain.fetchValidatorAddresses())
-  })
-
-  validatorStates = this.command({
-    name: 'validator-states',
+  validatorsStates = this.command({
+    name: 'validators states',
     info: 'count validators in database by state'
   }, async (height: number) => {
     const { callRoute, dbValidatorStates } = await import('./src/routes.js')
