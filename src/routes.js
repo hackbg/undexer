@@ -57,7 +57,7 @@ export const routes = [
     }
     const transactions = await Query.transactionsAtHeight(block.blockHeight)
     return res.status(200).send({
-      timestmap,
+      timestamp,
       chainId,
       blockHeight:      block.blockHeight,
       blockHash:        block.blockHash,
