@@ -23,6 +23,9 @@ importers:
       '@hackbg/fadroma':
         specifier: workspace:./fadroma
         version: link:fadroma
+      '@hackbg/into':
+        specifier: workspace:^
+        version: link:fadroma/toolbox/into
       '@hackbg/logs':
         specifier: workspace:^
         version: link:fadroma/toolbox/logs
@@ -1038,7 +1041,7 @@ importers:
         version: 1.6.3
       typedoc:
         specifier: 0.25.13
-        version: 0.25.13(typescript@5.4.5)
+        version: 0.25.13(typescript@5.3.3)
 
   fadroma/toolbox/dome: {}
 
@@ -13387,32 +13390,11 @@ packages:
       minimatch: 9.0.4
       shiki: 0.14.7
       typescript: 5.3.3
-    dev: true
-
-  /typedoc@0.25.13(typescript@5.4.5):
-    resolution: {integrity: sha512-pQqiwiJ+Z4pigfOnnysObszLiU3mVLWAExSPf+Mu06G/qsc3wzbuM56SZQvONhHLncLUhYzOVkjFFpFfL5AzhQ==}
-    engines: {node: '>= 16'}
-    hasBin: true
-    peerDependencies:
-      typescript: 4.6.x || 4.7.x || 4.8.x || 4.9.x || 5.0.x || 5.1.x || 5.2.x || 5.3.x || 5.4.x
-    dependencies:
-      lunr: 2.3.9
-      marked: 4.3.0
-      minimatch: 9.0.4
-      shiki: 0.14.7
-      typescript: 5.4.5
-    dev: false
 
   /typescript@5.3.3:
     resolution: {integrity: sha512-pXWcraxM0uxAS+tN0AG/BF2TyqmHO014Z070UsJ+pFvYuRSq8KH8DmWpnbXe0pEPDHXZV3FcAbJkijJ5oNEnWw==}
     engines: {node: '>=14.17'}
     hasBin: true
-
-  /typescript@5.4.5:
-    resolution: {integrity: sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==}
-    engines: {node: '>=14.17'}
-    hasBin: true
-    dev: false
 
   /ua-parser-js@0.7.37:
     resolution: {integrity: sha512-xV8kqRKM+jhMvcHWUKthV9fNebIzrNy//2O9ZwWcfiBFR5f25XVZPLlEajk/sf3Ra15V92isyQqnIEXRDaZWEA==}

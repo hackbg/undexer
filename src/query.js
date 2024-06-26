@@ -1,6 +1,7 @@
 import db from './db.js'
 import * as DB from './db.js'
 import { Op } from "sequelize"
+import { intoRecord } from '@hackbg/into'
 
 export const totalTransactions = () =>
   DB.Transaction.count()
@@ -17,32 +18,28 @@ export const totalBlocks = () =>
 export const totalValidators = () =>
   DB.Validator.count()
 
-export const overview = async (n = 10) => {
-  return {
-    totalBlocks:        await totalBlocks(),
-    oldestBlock:        await oldestBlock(),
-    latestBlock:        await latestBlock(),
-    latestBlocks:       await blocksLatest(n).then(x=>x.rows),
-    totalTransactions:  await totalTransactions(),
-    latestTransactions: await transactionsLatest(n),
-    totalValidators:    await totalValidators(),
-    topValidators:      await validatorsTop(n),
-    totalProposals:     await totalProposals(),
-    totalVotes:         await totalVotes(),
-  }
-}
+export const overview = ({ limit = 10 } = {}) => intoRecord({
+  totalBlocks,
+  oldestBlock,
+  latestBlock,
+  latestBlocks: blocksLatest({ limit }).then(x=>x.rows),
+  totalTransactions,
+  latestTransactions: transactionsLatest({ limit }),
+  totalValidators,
+  topValidators: validatorsTop({ limit }),
+  totalProposals,
+  totalVotes,
+})
 
-export const status = async () => {
-  return {
-    totalBlocks:       await totalBlocks(),
-    oldestBlock:       await oldestBlock(),
-    latestBlock:       await latestBlock(),
-    totalTransactions: await totalTransactions(),
-    totalValidators:   await totalValidators(),
-    totalProposals:    await totalProposals(),
-    totalVotes:        await totalVotes(),
-  }
-}
+export const status = () => intoRecord({
+  totalBlocks,
+  oldestBlock,
+  latestBlock,
+  totalTransactions,
+  totalValidators,
+  totalProposals,
+  totalVotes,
+})
 
 export const search = async (q = '') => {
   q = String(q||'').trim()
@@ -105,9 +102,7 @@ export const blocks = async ({
   return {
     address,
     publicKey,
-    totalBlocks: total,
-    latestBlock: latest,
-    oldestBlock: oldest,
+    ...await intoRecord({ totalBlocks, latestblock, oldestBlock }),
     count,
     blocks: await Promise.all(rows.map(block=>DB.Transaction
       .count({ where: { blockHeight: block.blockHeight } })
@@ -133,29 +128,32 @@ export const blocks = async ({
     //attributes: Query.defaultAttributes({ include: ['blockHash', 'blockHeight', 'blockTime'] }),
   //})
 
-export const blocksBefore = ({ before, limit = 15, address }) => DB.Block.findAndCountAll({
-  attributes: BLOCK_LIST_ATTRIBUTES,
-  order: [['blockHeight', 'DESC']],
-  limit,
-  where: Object.assign({ blockHeight: { [Op.lte]: before } },
-    address ? { 'blockHeader.proposerAddress': address } : {})
-})
+export const blocksBefore = ({ before, limit = 15, address }) =>
+  DB.Block.findAndCountAll({
+    attributes: BLOCK_LIST_ATTRIBUTES,
+    order: [['blockHeight', 'DESC']],
+    limit,
+    where: Object.assign({ blockHeight: { [Op.lte]: before } },
+      address ? { 'blockHeader.proposerAddress': address } : {})
+  })
 
-export const blocksAfter = ({ after, limit = 15, address }) => DB.Block.findAndCountAll({
-  attributes: BLOCK_LIST_ATTRIBUTES,
-  order: [['blockHeight', 'ASC']],
-  limit,
-  where: Object.assign({ blockHeight: { [Op.gte]: after } },
-    address ? { 'blockHeader.proposerAddress': address } : {})
-})
+export const blocksAfter = ({ after, limit = 15, address }) =>
+  DB.Block.findAndCountAll({
+    attributes: BLOCK_LIST_ATTRIBUTES,
+    order: [['blockHeight', 'ASC']],
+    limit,
+    where: Object.assign({ blockHeight: { [Op.gte]: after } },
+      address ? { 'blockHeader.proposerAddress': address } : {})
+  })
 
-export const blocksLatest = ({ limit, address }) => DB.Block.findAndCountAll({
-  attributes: BLOCK_LIST_ATTRIBUTES,
-  order: [['blockHeight', 'DESC']],
-  limit,
-  where: Object.assign({},
-    address ? { 'blockHeader.proposerAddress': address } : {})
-})
+export const blocksLatest = ({ limit, address }) =>
+  DB.Block.findAndCountAll({
+    attributes: BLOCK_LIST_ATTRIBUTES,
+    order: [['blockHeight', 'DESC']],
+    limit,
+    where: Object.assign({},
+      address ? { 'blockHeader.proposerAddress': address } : {})
+  })
 
 export const block = async ({ height, hash } = {}) => {
   const attrs = defaultAttributes(['blockHeight', 'blockHash', 'blockHeader'])
@@ -195,19 +193,20 @@ export const transactionList = ({ limit, offset } = {}) =>
     offset,
   })
 
-export const transactionsLatest = limit => DB.Transaction.findAll({
-  order: [['blockHeight', 'DESC']],
-  limit,
-  offset: 0,
-  attributes: [
-    'blockHeight',
-    'blockHash',
-    'blockTime',
-    'txHash',
-    'txTime',
-    [db.json('txData.data.content.type'), 'txContentType']
-  ],
-})
+export const transactionsLatest = ({ limit = 15 } = {}) =>
+  DB.Transaction.findAll({
+    order: [['blockHeight', 'DESC']],
+    limit,
+    offset: 0,
+    attributes: [
+      'blockHeight',
+      'blockHash',
+      'blockTime',
+      'txHash',
+      'txTime',
+      [db.json('txData.data.content.type'), 'txContentType']
+    ],
+  })
 
 export const transactionsAtHeight = (blockHeight = 0) =>
   DB.Transaction.findAndCountAll({ where: { blockHeight } })
@@ -216,12 +215,13 @@ export const latestBlock = () => DB.Block.max('blockHeight')
 
 export const oldestBlock = () => DB.Block.min('blockHeight')
 
-export const validatorsTop = limit => DB.Validator.findAll({
-  attributes: defaultAttributes(),
-  order: [['stake', 'DESC']],
-  limit,
-  offset: 0,
-})
+export const validatorsTop = ({ limit = 15 } = {}) =>
+  DB.Validator.findAll({
+    attributes: defaultAttributes(),
+    order: [['stake', 'DESC']],
+    limit,
+    offset: 0,
+  })
 
 export const validatorPublicKeyToConsensusAddress = (publicKey = '') => DB.Validator.findOne({
   attributes: { include: [ 'address' ] },

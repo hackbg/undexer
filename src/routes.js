@@ -163,12 +163,14 @@ export const routes = [
   }],
 
   ['/proposals/stats', async function dbProposalStats (req, res) {
-    const all      = (await DB.Proposal.findAll()).length
-    const ongoing  = (await DB.Proposal.findAll({ where: { status: 'ongoing' } })).length
-    const upcoming = (await DB.Proposal.findAll({ where: { status: 'upcoming' } })).length
-    const finished = (await DB.Proposal.findAll({ where: { status: 'finished' } })).length
-    const passed   = (await DB.Proposal.findAll({ where: { result: 'passed' } })).length
-    const rejected = (await DB.Proposal.findAll({ where: { result: 'rejected' } })).length
+    const [all, ongoing, upcoming, finished, passed, rejected] = await Promise.all([
+      DB.Proposal.count(),
+      DB.Proposal.count({ where: { 'metadata.status': 'ongoing' } }),
+      DB.Proposal.count({ where: { 'metadata.status': 'upcoming' } }),
+      DB.Proposal.count({ where: { 'metadata.status': 'finished' } }),
+      DB.Proposal.count({ where: { 'result.result': 'Passed' } }),
+      DB.Proposal.count({ where: { 'result.result': 'Rejected' } }),
+    ])
     res.status(200).send({ all, ongoing, upcoming, finished, passed, rejected })
   }],
 
