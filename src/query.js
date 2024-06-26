@@ -15,6 +15,12 @@ export const totalProposals = () =>
 export const totalBlocks = () =>
   DB.Block.count()
 
+export const latestBlock = () =>
+  DB.Block.max('blockHeight')
+
+export const oldestBlock = () =>
+  DB.Block.min('blockHeight')
+
 export const totalValidators = () =>
   DB.Validator.count()
 
@@ -102,7 +108,7 @@ export const blocks = async ({
   return {
     address,
     publicKey,
-    ...await intoRecord({ totalBlocks, latestblock, oldestBlock }),
+    ...await intoRecord({ totalBlocks, latestBlock, oldestBlock }),
     count,
     blocks: await Promise.all(rows.map(block=>DB.Transaction
       .count({ where: { blockHeight: block.blockHeight } })
@@ -210,10 +216,6 @@ export const transactionsLatest = ({ limit = 15 } = {}) =>
 
 export const transactionsAtHeight = (blockHeight = 0) =>
   DB.Transaction.findAndCountAll({ where: { blockHeight } })
-
-export const latestBlock = () => DB.Block.max('blockHeight')
-
-export const oldestBlock = () => DB.Block.min('blockHeight')
 
 export const validatorsTop = ({ limit = 15 } = {}) =>
   DB.Validator.findAll({
