@@ -128,6 +128,12 @@ export const blockByHeightWithTransactions = (blockHeight = 0) => {
   ])
 }
 
+export const transactionByHash = hash => {
+  const where = { txHash: req.params.txHash };
+  const attrs = Query.defaultAttributes({ exclude: ['id'] })
+  return DB.Transaction.findOne({ where, attrs });
+}
+
 export const transactionList = ({ limit, offset } = {}) =>
   DB.Transaction.findAndCountAll({
     attributes: defaultAttributes({ exclude: ['id'] }),
