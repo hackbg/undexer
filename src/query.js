@@ -86,11 +86,11 @@ export const searchTransactions = async txHash => {
   ]
 }
 
-export const blocks = async (before, after, limit = 15) => {
+export const blocks = async ({ before, after, limit = 15, publicKey }) => {
   const { rows, count } = await (
-    before ? blocksBefore(before, limit) :
-    after  ? blocksAfter(after, limit) :
-             blocksLatest(limit)
+    before ? blocksBefore({ before, limit, publicKey }) :
+    after  ? blocksAfter({ after, limit, publicKey }) :
+             blocksLatest({ limit, publicKey })
   )
   return {
     totalBlocks: await totalBlocks(),
@@ -103,6 +103,28 @@ export const blocks = async (before, after, limit = 15) => {
     ))
   }
 }
+
+const BLOCK_LIST_ATTRIBUTES = [ 'blockHeight', 'blockHash', 'blockTime' ]
+
+export const blocksBefore = ({ before, limit = 15, publicKey }) => DB.Block.findAndCountAll({
+  attributes: BLOCK_LIST_ATTRIBUTES,
+  order: [['blockHeight', 'DESC']],
+  limit,
+  where: { blockHeight: { [Op.lte]: before } }
+})
+
+export const blocksAfter = ({ after, limit = 15, publicKey }) => DB.Block.findAndCountAll({
+  attributes: BLOCK_LIST_ATTRIBUTES,
+  order: [['blockHeight', 'ASC']],
+  limit,
+  where: { blockHeight: { [Op.gte]: after } }
+})
+
+export const blocksLatest = ({ limit, publicKey }) => DB.Block.findAndCountAll({
+  attributes: BLOCK_LIST_ATTRIBUTES,
+  order: [['blockHeight', 'DESC']],
+  limit,
+})
 
 export const block = async ({ height, hash } = {}) => {
   const attrs = defaultAttributes(['blockHeight', 'blockHash', 'blockHeader'])
@@ -158,28 +180,6 @@ export const transactionsLatest = limit => DB.Transaction.findAll({
 
 export const transactionsAtHeight = (blockHeight = 0) =>
   DB.Transaction.findAndCountAll({ where: { blockHeight } })
-
-const BLOCK_LIST_ATTRIBUTES = [ 'blockHeight', 'blockHash', 'blockTime' ]
-
-export const blocksLatest = limit => DB.Block.findAndCountAll({
-  attributes: BLOCK_LIST_ATTRIBUTES,
-  order: [['blockHeight', 'DESC']],
-  limit,
-})
-
-export const blocksBefore = (before, limit = 15) => DB.Block.findAndCountAll({
-  attributes: BLOCK_LIST_ATTRIBUTES,
-  order: [['blockHeight', 'DESC']],
-  limit,
-  where: { blockHeight: { [Op.lte]: before } }
-})
-
-export const blocksAfter = (after, limit = 15) => DB.Block.findAndCountAll({
-  attributes: BLOCK_LIST_ATTRIBUTES,
-  order: [['blockHeight', 'ASC']],
-  limit,
-  where: { blockHeight: { [Op.gte]: after } }
-})
 
 export const latestBlock = () => DB.Block.max('blockHeight')
 
