@@ -31,15 +31,17 @@ export const routes = [
   }],
 
   ['/blocks', async function dbBlocks (req, res) {
+    const timestamp = new Date().toISOString()
     const { limit, before, after } = relativePagination(req)
     if (before && after) {
       return res.status(400).send({ error: "Don't use before and after together" })
     }
     const results = await Query.blocks(before, after, limit)
-    res.status(200).send({ timestamp, chainId: CHAIN_ID, ...results })
+    res.status(200).send({ timestamp, chainId, ...results })
   }],
 
   ['/block', async function dbBlock (req, res) {
+    const timestamp = new Date().toISOString()
     const attrs = Query.defaultAttributes(['blockHeight', 'blockHash', 'blockHeader'])
     const { height, hash } = req.query
     const block = await Query.block({ height, hash })
@@ -48,6 +50,8 @@ export const routes = [
     }
     const transactions = await Query.transactionsAtHeight(block.blockHeight)
     return res.status(200).send({
+      timestmap,
+      chainId,
       blockHeight:      block.blockHeight,
       blockHash:        block.blockHash,
       blockHeader:      block.blockHeader,
@@ -58,19 +62,13 @@ export const routes = [
   }],
 
   ['/txs', async function dbTransactions (req, res) {
-    const { limit, offset } = pagination(req)
-    const order = [['txTime', 'DESC']]
-    const attrs = Query.defaultAttributes({ exclude: ['id'] })
-    const { rows, count } = await DB.Transaction.findAndCountAll({
-      order, limit, offset, attributes: attrs
-    })
-    res.status(200).send({ count, txs: rows })
+    const timestamp = new Date().toISOString()
+    const { rows, count } = await Query.transactionList(pagination(req))
+    res.status(200).send({ timestamp, chainId, count, txs: rows })
   }],
 
   ['/tx/:txHash', async function dbTransaction (req, res) {
-    const where = { txHash: req.params.txHash };
-    const attrs = Query.defaultAttributes({ exclude: ['id'] })
-    const tx = await DB.Transaction.findOne({ where, attrs });
+    const tx = await Query.transactionByHash(req.params.txHash);
     if (tx === null) return res.status(404).send({ error: 'Transaction not found' });
     res.status(200).send(tx);
   }],
