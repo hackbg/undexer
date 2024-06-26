@@ -76,9 +76,6 @@ export const routes = [
   }],
 
   ['/validators', async function dbValidators (req, res) {
-    if (await DB.Validator.count() === 0) {
-      return res.status(404).send({ error: 'Validator not found' });
-    }
     const { limit, offset } = pagination(req)
     const { state } = req.query
     const where = {}
