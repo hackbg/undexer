@@ -106,7 +106,7 @@ export const routes = [
   }],
 
   ['/validator', async function dbValidatorByHash (req, res) {
-    const where = { publicKey: req.params.publicKey }
+    const where = { publicKey: req.query.publicKey }
     const attrs = Query.defaultAttributes({ exclude: ['id'] })
     let validator = await DB.Validator.findOne({ where, attributes: attrs });
     if (validator === null) return res.status(404).send({ error: 'Validator not found' });
@@ -118,7 +118,7 @@ export const routes = [
   //['/validator/:hash/blocks',     dbBlocksByProposer],
 
   ['/validator/uptime', async function dbValidatorUptime (req, res) {
-    const address = req.params.address;
+    const address = req.query.address;
     const blocks = await DB.Block.findAll({
       order: [['blockHeight', 'DESC']],
       limit: 100,
