@@ -124,12 +124,12 @@ export const routes = [
       // in the set of all signatures belonging to the past 100 blocks.
       // This powers the uptime blocks visualization in the validator detail page.
       const latestBlocks = await DB.Block.findAll({
-        order: [['blockHeight', 'DESC']], limit, attributes: ['responses', 'blockHeight'],
+        order: [['blockHeight', 'DESC']], limit, attributes: ['rpcResponses', 'blockHeight'],
       });
       currentHeight = latestBlocks[0].height;
       countedBlocks = latestBlocks.length;
       uptime = latestBlocks
-        .map((b) => JSON.parse(b.responses.block.response)
+        .map((b) => JSON.parse(b.rpcResponses.block.response)
           .result.block.last_commit.signatures.map((x) => x.validator_address))
         .flat(1)
         .filter((x) => x === validator.address)
