@@ -545,6 +545,7 @@ paths:
           schema: {type: string}
           description: The address of the validator
       responses:
+        '404': {description: "Not found"}
         '200':
           description: Successful response
           content:
@@ -556,141 +557,44 @@ paths:
                   latestBlockHeight: {type: integer}
                   countedBlocks: {type: integer}
                   uptime: {type: integer}
-        '404':
-          description: Not found
 
   /proposals:
     get:
       summary: Get paginated list of proposals
       parameters:
-        - name: limit
-          in: query
-          required: false
-          schema: {type: integer}
-          description: Number of proposals to return
-        - name: offset
-          in: query
-          required: false
-          schema: {type: integer}
-          description: Offset for pagination
-        - name: orderBy
-          in: query
-          required: false
-          schema: {type: string, enum: [id, status, result, proposalType]}
-          description: Field to order by
-        - name: orderDirection
-          in: query
-          required: false
-          schema: {type: string, enum: [ASC, DESC]}
-          description: Direction to order by
-        - name: proposalType
-          in: query
-          required: false
-          schema: {type: string, enum: [pgf_steward, pgf_payment, default]}
-          description: Type of proposals to return
-        - name: status
-          in: query
-          required: false
-          schema: {type: string, enum: [upcoming, ongoing, finished]}
-          description: Status of proposals to return
-        - name: result
-          in: query
-          required: false
-          schema: {type: string, enum: [passed, rejected]}
-          description: Result of proposals to return
+        - {name: limit,          in: query, required: false, schema: {type: integer}, description: "Number of proposals to return"}
+        - {name: offset,         in: query, required: false, schema: {type: integer}, description: "Offset for pagination"}
+        - {name: orderBy,        in: query, required: false, schema: {type: string, enum: [id, status, result, proposalType]}, description: "Field to order by"}
+        - {name: orderDirection, in: query, required: false, schema: {type: string, enum: [ASC, DESC]}, description: "Direction to order by"}
+        - {name: proposalType,   in: query, required: false, schema: {type: string, enum: [pgf_steward, pgf_payment, default]}, description: "Type of proposals to return"}
+        - {name: status,         in: query, required: false, schema: {type: string, enum: [upcoming, ongoing, finished]}, description: "Status of proposals to return"}
+        - {name: result,         in: query, required: false, schema: {type: string, enum: [passed, rejected]}, description: "Result of proposals to return"}
       responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  count: {type: integer, description: "Total count of proposals"}
-                  proposals:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id: {type: string}
-                        status: {type: string}
-                        result: {type: string}
-                        proposalType: {type: string}
-        '404':
-          description: Not found
+        '200': {content:{application/json:{schema:{$ref:'#/components/schemas/ProposalsList'}}}}
 
   /proposals/stats:
     get:
       summary: Get count of proposals by status, result and total count
       responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  statusCounts:
-                    type: object
-                    additionalProperties: {type: integer}
-                  resultCounts:
-                    type: object
-                    additionalProperties: {type: integer}
-                  totalCount: {type: integer}
-        '404':
-          description: Not found
+        '200': {content:{application/json:{schema:{$ref:'#/components/schemas/ProposalsStats'}}}}
 
   /proposal/{id}:
     get:
       summary: Get governance proposal information by id
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema: {type: string}
-          description: The id of the proposal
+        - {name: id, in: path, required: true, schema: {type: string}, description: "The id of the proposal"}
       responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:           {type: string}
-                  status:       {type: string}
-                  result:       {type: string}
-                  proposalType: {type: string}
-        '404':
-          description: Not found
+        '404': {description: "Not found"}
+        '200': {content:{application/json:{schema:{$ref:'#/components/schemas/ProposalDetail'}}}}
 
   /proposal/votes/{proposalId}:
     get:
       summary: Get all votes by proposal id
       parameters:
-        - name: proposalId
-          in: path
-          required: true
-          schema: {type: string}
-          description: The id of the proposal
+        - {name: proposalId, in: path, required: true, schema: {type: string}, description: "The id of the proposal" }
       responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  count: {type: integer}
-                  votes:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        voter: {type: string}
-                        vote:  {type: string}
-        '404':
-          description: Not found
+        '404': {description: "Not found"}
+        '200': {content:{application/json:{schema:{$ref:'#/components/schemas/VotesPage'}}}}
 
   /transfers:
     get:
@@ -700,79 +604,119 @@ paths:
         - {name: to,   in: query, schema: {type: string}, description: "Receiver"}
         - {name: by,   in: query, schema: {type: string}, description: "Sender or receiver"}
       responses:
-        '200':
-          description: Successful response
-          content: {application/json: {schema:{$ref:'#/components/schemas/TransferList'}}}
+        '200': {content:{application/json:{schema:{$ref:'#/components/schemas/TransferList'}}}}
 
   /epoch:
     get:
       summary: Get current epoch information
       responses:
-        '200':
-          description: Successful response
-          content: {application/json: {schema:{$ref:'#/components/schemas/EpochInfo'}}}
+        '200': {content:{application/json:{schema:{$ref:'#/components/schemas/EpochInfo'}}}}
 
   /total-staked:
     get:
       summary: Get total staked amount
       responses:
-        '200':
-          description: Successful response
-          content: {application/json: {schema:{$ref:'#/components/schemas/TotalStaked'}}}
+        '200': {content:{application/json:{schema:{$ref:'#/components/schemas/TotalStaked'}}}}
 
   /parameters/staking:
     get:
       summary: Get staking parameters
       responses:
-        '200':
-          description: Successful response
-          content: {application/json: {schema:{$ref:'#/components/schemas/PoSParameters'}}}
+        '200': {content:{application/json:{schema:{$ref:'#/components/schemas/PoSParams'}}}}
 
   /parameters/governance:
     get:
       summary: Get governance parameters
       responses:
-        '200':
-          description: Successful response
-          content: {application/json: {schema:{$ref:'#/components/schemas/GovernanceParameters'}}}
+        '200': {content:{application/json:{schema:{$ref:'#/components/schemas/GovParams'}}}}
 
   /parameters/pgf:
     get:
       summary: Get PGF parameters
       responses:
-        '200':
-          description: Successful response
-          content: {application/json: {schema:{$ref:'#/components/schemas/PGFParameters'}}}
+        '200': {content:{application/json:{schema:{$ref:'#/components/schemas/PGFParams'}}}}
 
 components:
   schemas:
+
+    ProposalsList:
+      type:             object
+      properties:
+        count:          {type:integer}
+        proposals:
+          type:         array
+          items:
+            type:       object
+            properties:
+              id:       {type: integer}
+              content:  {type: object}
+              metadata: {type: object}
+              result:   {type: object}
+
+    ProposalsStats:
+      type:       object
+      properties:
+        all:      {type:integer}
+        ongoing:  {type:integer}
+        upcoming: {type:integer}
+        finished: {type:integer}
+        passed:   {type:integer}
+        rejected: {type:integer}
+
+    ProposalDetail:
+      type:                  object
+      properties:
+        id:                  {type: integer}
+        content:             {type: object}
+        metadata:            {type: object}
+        result:              {type: object}
+
+    VotesPage:
+      type:                  object
+      properties:
+        count:               {type: integer}
+        votes:
+          type:              array
+          items:
+            type:            object
+            properties:
+              data:
+                type:        object
+                properties:
+                  data:      {type: string}
+                  delegator: {type: string}
+                  validator: {type: string}
+
     TransferList:
-      type: object
+      type:           object
       properties:
         transfers:
-          type: array
+          type:       array
           items:
-            type: object
+            type:     object
             properties:
               from:   {type: string}
               to:     {type: string}
               amount: {type: integer}
               date:   {type: string, format: date-time}
+
     EpochInfo:
-      type: object
+      type:             object
       properties:
         timestamp:      {type: string}
         epoch:          {type: string}
         firstBlock:     {type: string}
         minNumOfBlocks: {type: string}
         minDuration:    {type: string}
+
     TotalStaked:
-      type: object
+      type:          object
       properties:
         timestamp:   {type: string}
         totalStaked: {type: string}
-    PoSParameters:
-      type: object
+
+    PoSParams:
+      type:                            object
       properties:
         maxValidatorSlots:             {type: string}
         pipelineLen:                   {type: string}
@@ -791,8 +735,9 @@ components:
         rewardsGainP:                  {type: string}
         rewardsGainD:                  {type: string}
         maxProposalPeriod:             {type: string}
-    GovernanceParameters:
-      type: object
+
+    GovParams:
+      type:                      object
       properties:
         minProposalFund:         {type: string}
         maxProposalCodeSize:     {type: string}
@@ -800,8 +745,9 @@ components:
         maxProposalPeriod:       {type: string}
         maxProposalContentSize:  {type: string}
         minProposalGraceEpochs:  {type: string}
-    PGFParameters:
-      type: object
+
+    PGFParams:
+      type:                    object
       properties:
         stewards:              {type: object}
         pgfInflationRate:      {type: string}
