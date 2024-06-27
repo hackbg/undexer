@@ -902,26 +902,7 @@ paths:
         '200':
           description: Successful response
           content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  transfers:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        from:
-                          type: string
-                        to:
-                          type: string
-                        amount:
-                          type: number
-                        date:
-                          type: string
-                          format: date-time
-        '404':
-          description: Not found
+            application/json: { schema: { $ref: '#/components/schemas/TransferList' } }
 
   /transfers/to/{address}:
     get:
@@ -937,26 +918,7 @@ paths:
         '200':
           description: Successful response
           content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  transfers:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        from:
-                          type: string
-                        to:
-                          type: string
-                        amount:
-                          type: number
-                        date:
-                          type: string
-                          format: date-time
-        '404':
-          description: Not found
+            application/json: { schema: { $ref: '#/components/schemas/TransferList' } }
 
   /transfers/by/{address}:
     get:
@@ -972,26 +934,7 @@ paths:
         '200':
           description: Successful response
           content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  transfers:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        from:
-                          type: string
-                        to:
-                          type: string
-                        amount:
-                          type: number
-                        date:
-                          type: string
-                          format: date-time
-        '404':
-          description: Not found
+            application/json: { schema: { $ref: '#/components/schemas/TransferList' } }
 
   /epoch:
     get:
@@ -1000,9 +943,7 @@ paths:
         '200':
           description: Successful response
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EpochInfo'
+            application/json: { schema: { $ref: '#/components/schemas/EpochInfo' } }
   /total-staked:
     get:
       summary: Get total staked amount
@@ -1010,9 +951,7 @@ paths:
         '200':
           description: Successful response
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TotalStaked'
+            application/json: { schema: { $ref: '#/components/schemas/TotalStaked' } }
   /parameters/staking:
     get:
       summary: Get staking parameters
@@ -1020,9 +959,7 @@ paths:
         '200':
           description: Successful response
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PoSParameters'
+            application/json: { schema: { $ref: '#/components/schemas/PoSParameters' } }
   /parameters/governance:
     get:
       summary: Get governance parameters
@@ -1030,9 +967,7 @@ paths:
         '200':
           description: Successful response
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GovernanceParameters'
+            application/json: { schema: { $ref: '#/components/schemas/GovernanceParameters' } }
   /parameters/pgf:
     get:
       summary: Get PGF parameters
@@ -1040,11 +975,21 @@ paths:
         '200':
           description: Successful response
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PGFParameters'
+            application/json: { schema: { $ref: '#/components/schemas/PGFParameters' } }
 components:
   schemas:
+    TransferList:
+      type: object
+      properties:
+        transfers:
+          type: array
+          items:
+            type: object
+            properties:
+              from:   { type: string }
+              to:     { type: string }
+              amount: { type: number }
+              date:   { type: string, format: date-time }
     EpochInfo:
       type: object
       properties:
