@@ -192,40 +192,14 @@ export const routes = [
     res.status(200).send({ count, votes: rows });
   }],
 
-  ['/transfers/from/:address', async function dbTransfersFrom (req, res) {
+  ['/transfers', async function dbTransfersFrom (req, res) {
     const { limit, offset } = pagination(req)
+    const { by, from, to } = req.query
     throw new Error('not implemented')
     //const { count, rows } = await Content.Transfer.findAndCountAll({
       //limit,
       //offset,
       //where: { source: req.params.address, },
-      //attributes: { exclude: ['createdAt', 'updatedAt'], },
-    //});
-    res.status(200).send({ count, transfers: rows });
-  }],
-  ['/transfers/to/:address', async function dbTransfersTo (req, res) {
-    const { limit, offset } = pagination(req)
-    throw new Error('not implemented')
-    //const { count, rows } = await Content.Transfer.findAndCountAll({
-      //limit,
-      //offset,
-      //where: { target: req.params.address, },
-      //attributes: { exclude: ['createdAt', 'updatedAt'], },
-    //});
-    res.status(200).send({ count, transfers: rows });
-  }],
-  ['/transfers/by/:address', async function dbTransfersBy (req, res) {
-    const { limit, offset } = pagination(req)
-    throw new Error('not implemented')
-    //const { count, rows } = await Content.Transfer.findAndCountAll({
-      //limit,
-      //offset,
-      //where: {
-        //[Op.or]: [
-          //{ source: req.params.address, },
-          //{ target: req.params.address, },
-        //]
-      //},
       //attributes: { exclude: ['createdAt', 'updatedAt'], },
     //});
     res.status(200).send({ count, transfers: rows });

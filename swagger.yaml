@@ -5,9 +5,9 @@ info:
   description: "API for accessing Namada blockchain data via Undexer."
   contact: 
     email: hello@hack.bg
-    url: https://github.com/hackbg/undexer
+    url: "https://github.com/hackbg/undexer"
 servers:
-  - url: https://undexer.demo.hack.bg/v2/
+  - url: "https://undexer.demo.hack.bg/v2/"
   - url: /v2/
 paths:
   /:
@@ -21,114 +21,65 @@ paths:
               schema:
                 type: object
                 properties:
-                  timestamp:
-                    type: string
-                    format: date-time
-                  totalBlocks:
-                    type: integer
-                  oldestBlock:
-                    type: integer
-                  latestBlock:
-                    type: integer
+                  timestamp:                             {type: string, format: date-time}
+                  totalBlocks:                           {type: integer}
+                  oldestBlock:                           {type: integer}
+                  latestBlock:                           {type: integer}
                   latestBlocks:
                     type: array
                     items:
                       type: object
                       properties:
-                        blockHeight:
-                          type: integer
-                        blockHash:
-                          type: string
-                        blockTime:
-                          type: string
-                          format: date-time
-                  totalTransactions:
-                    type: integer
+                        blockHeight:                     {type: integer}
+                        blockHash:                       {type: string}
+                        blockTime:                       {type: string, format: date-time}
+                  totalTransactions:                     {type: integer}
                   latestTransactions:
                     type: array
                     items:
                       type: object
                       properties:
-                        blockHeight:
-                          type: integer
-                        blockHash:
-                          type: string
-                        blockTime:
-                          type: string
-                          format: date-time
-                        txHash:
-                          type: string
-                        txTime:
-                          type: string
-                          format: date-time
-                        txContentType:
-                          type: string
-                  totalValidators:
-                    type: integer
+                        blockHeight:                     {type: integer}
+                        blockHash:                       {type: string}
+                        blockTime:                       {type: string, format: date-time}
+                        txHash:                          {type: string}
+                        txTime:                          {type: string, format: date-time}
+                        txContentType:                   {type: string}
+                  totalValidators:                       {type: integer}
                   topValidators:
                     type: array
                     items:
                       type: object
                       properties:
-                        address:
-                          type: string
-                        publicKey:
-                          type: string
-                        votingPower:
-                          type: integer
-                          nullable: true
-                        proposerPriority:
-                          type: integer
-                          nullable: true
-                        namadaAddress:
-                          type: string
+                        address:                         {type: string}
+                        publicKey:                       {type: string}
+                        votingPower:                     {type: integer, nullable: true}
+                        proposerPriority:                {type: integer, nullable: true}
+                        namadaAddress:                   {type: string}
                         metadata:
                           type: object
                           properties:
-                            email:
-                              type: string
-                            avatar:
-                              type: string
-                              nullable: true
-                            website:
-                              type: string
-                              nullable: true
-                            description:
-                              type: string
-                              nullable: true
-                            discordHandle:
-                              type: string
-                              nullable: true
+                            email:                       {type: string}
+                            avatar:                      {type: string, nullable: true}
+                            website:                     {type: string, nullable: true}
+                            description:                 {type: string, nullable: true}
+                            discordHandle:               {type: string, nullable: true}
                         commission:
                           type: object
                           properties:
-                            epoch:
-                              type: string
-                            commissionRate:
-                              type: string
-                            maxCommissionChangePerEpoch:
-                              type: string
-                        stake:
-                          type: string
+                            epoch:                       {type: string}
+                            commissionRate:              {type: string}
+                            maxCommissionChangePerEpoch: {type: string}
+                        stake:                           {type: string}
                         state:
                           type: object
                           properties:
-                            epoch:
-                              type: string
-                            state:
-                              type: string
-                        createdAt:
-                          type: string
-                          format: date-time
-                        updatedAt:
-                          type: string
-                          format: date-time
-                  totalProposals:
-                    type: integer
-                  totalVotes:
-                    type: integer
-        '404':
-          description: Not found
+                            epoch:                       {type: string}
+                            state:                       {type: string}
+                        createdAt:                       {type: string, format: date-time}
+                        updatedAt:                       {type: string, format: date-time}
+                  totalProposals:                        {type: integer}
+                  totalVotes:                            {type: integer}
 
   /status:
     get:
@@ -141,25 +92,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  timestamp:
-                    type: string
-                    format: date-time
-                  totalBlocks:
-                    type: integer
-                  oldestBlock:
-                    type: integer
-                  latestBlock:
-                    type: integer
-                  totalTransactions:
-                    type: integer
-                  totalValidators:
-                    type: integer
-                  totalProposals:
-                    type: integer
-                  totalVotes:
-                    type: integer
-        '404':
-          description: Not found
+                  timestamp:         {type: string, format: date-time}
+                  totalBlocks:       {type: integer}
+                  oldestBlock:       {type: integer}
+                  latestBlock:       {type: integer}
+                  totalTransactions: {type: integer}
+                  totalValidators:   {type: integer}
+                  totalProposals:    {type: integer}
+                  totalVotes:        {type: integer}
 
   /search:
     get:
@@ -172,12 +112,9 @@ paths:
               schema:
                 type: object
                 properties:
-                  blocks:
-                    type: array
-                  transactions:
-                    type: array
-                  proposals:
-                    type: array
+                  blocks:       {type: array}
+                  transactions: {type: array}
+                  proposals:    {type: array}
 
   /blocks:
     get:
@@ -186,22 +123,17 @@ paths:
         - name: limit
           in: query
           required: false
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
+          schema: {type: integer, minimum: 1, maximum: 100}
           description: Number of blocks to return per page (default 25)
         - name: before
           in: query
           required: false
-          schema:
-            type: string
+          schema: {type: string}
           description: Retrieve blocks before the specified block ID (default 0)
         - name: after
           in: query
           required: false
-          schema:
-            type: string
+          schema: {type: string}
           description: Retrieve blocks after the specified block ID (default 0)
       responses:
         '200':
@@ -241,8 +173,6 @@ paths:
                         transactionCount:
                           type: integer
                           description: Number of transactions in the block
-        '404':
-          description: No blocks found
 
   /block:
     get:
@@ -251,14 +181,12 @@ paths:
         - name: height
           in: query
           required: false
-          schema:
-            type: integer
+          schema: {type: integer}
           description: The height of the block
         - name: hash
           in: query
           required: false
-          schema:
-            type: string
+          schema: {type: string}
           description: The hash of the block
       responses:
         '200':
@@ -268,41 +196,26 @@ paths:
               schema:
                 type: object
                 properties:
-                  blockHeight:
-                    type: integer
-                  blockHash:
-                    type: string
-                  blockHeader:
-                    type: string
-                  blockTime:
-                    type: string
-                    format: date-time
-                  transactionCount:
-                    type: integer
+                  blockHeight: {type: integer}
+                  blockHash: {type: string}
+                  blockHeader: {type: string}
+                  blockTime: {type: string, format: date-time}
+                  transactionCount: {type: integer}
                   transactions:
                     type: array
                     items:
                       type: object
                       properties:
-                        chainId:
-                          type: string
-                        blockHash:
-                          type: string
-                        blockHeight:
-                          type: integer
-                        blockTime:
-                          type: string
-                          format: date-time
-                        txHash:
-                          type: string
-                        txTime:
-                          type: string
-                          format: date-time
+                        chainId: {type: string}
+                        blockHash: {type: string}
+                        blockHeight: {type: integer}
+                        blockTime: {type: string, format: date-time}
+                        txHash: {type: string}
+                        txTime: {type: string, format: date-time}
                         txData:
                           type: object
                           properties:
-                            id:
-                              type: string
+                            id: {type: string}
                             data:
                               type: object
                               properties:
@@ -315,35 +228,21 @@ paths:
                                         pk:
                                           type: object
                                           properties:
-                                            pk:
-                                              type: string
-                                            type:
-                                              type: string
+                                            pk: {type: string}
+                                            type: {type: string}
                                         fee:
                                           type: object
                                           properties:
-                                            token:
-                                              type: string
-                                            amountPerGasUnit:
-                                              type: string
-                                        payer:
-                                          type: string
-                                        feeToken:
-                                          type: string
-                                        gasLimit:
-                                          type: string
-                                        multiplier:
-                                          type: string
-                                        gasLimitMultiplier:
-                                          type: string
-                                        feeAmountPerGasUnit:
-                                          type: string
-                        createdAt:
-                          type: string
-                          format: date-time
-                        updatedAt:
-                          type: string
-                          format: date-time
+                                            token: {type: string}
+                                            amountPerGasUnit: {type: string}
+                                        payer: {type: string}
+                                        feeToken: {type: string}
+                                        gasLimit: {type: string}
+                                        multiplier: {type: string}
+                                        gasLimitMultiplier: {type: string}
+                                        feeAmountPerGasUnit: {type: string}
+                        createdAt: {type: string, format: date-time}
+                        updatedAt: {type: string, format: date-time}
         '404':
           description: Block not found
 
@@ -354,14 +253,12 @@ paths:
         - name: limit
           in: query
           required: false
-          schema:
-            type: integer
+          schema: {type: integer}
           description: Number of transactions to return
         - name: offset
           in: query
           required: false
-          schema:
-            type: integer
+          schema: {type: integer}
           description: Offset for pagination
       responses:
         '200':
@@ -371,21 +268,16 @@ paths:
               schema:
                 type: object
                 properties:
+                  count:
+                    type: integer
+                    description: Total count of transactions
                   transactions:
                     type: array
                     items:
                       type: object
                       properties:
-                        txHash:
-                          type: string
-                        date:
-                          type: string
-                          format: date-time
-                  count:
-                    type: integer
-                    description: Total count of transactions
-        '404':
-          description: Not found
+                        txHash: {type: string}
+                        date: {type: string, format: date-time}
 
   /tx/{hash}:
     get:
@@ -394,8 +286,7 @@ paths:
         - name: hash
           in: path
           required: true
-          schema:
-            type: string
+          schema: {type: string}
           description: Transaction hash identifier
       responses:
         '200':
@@ -582,70 +473,25 @@ paths:
                   Inactive:
                     type: integer
                     description: Number of validators currently inactive
-        '404':
-          description: Not found
 
   /validators:
     get:
-      summary: Get paginated list of validators
-      parameters:
-        - name: limit
-          in: query
-          required: false
-          schema:
-            type: integer
-          description: Number of validators to return
-        - name: offset
-          in: query
-          required: false
-          schema:
-            type: integer
-          description: Offset for pagination
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  validators:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        hash:
-                          type: string
-                        stake:
-                          type: integer
-                  count:
-                    type: integer
-                    description: Total count of validators
-        '404':
-          description: Not found
-
-  /validators/{state}:
-    get:
-      summary: Get paginated list of validators by state
+      summary: Get paginated list of validators, optionally filtered by state
       parameters:
         - name: state
-          in: path
+          in: query
           required: true
-          schema:
-            type: string
-            enum: [BelowThreshold, BelowCapacity, Jailed, Consensus, Inactive]
+          schema: {type: string, enum: [BelowThreshold, BelowCapacity, Jailed, Consensus, Inactive]}
           description: State of the validators
         - name: limit
           in: query
           required: false
-          schema:
-            type: integer
+          schema: {type: integer}
           description: Number of validators to return
         - name: offset
           in: query
           required: false
-          schema:
-            type: integer
+          schema: {type: integer}
           description: Offset for pagination
       responses:
         '200':
@@ -655,30 +501,23 @@ paths:
               schema:
                 type: object
                 properties:
+                  count: {type: integer, description: "Total count of validators"}
                   validators:
                     type: array
                     items:
                       type: object
                       properties:
-                        hash:
-                          type: string
-                        stake:
-                          type: integer
-                  count:
-                    type: integer
-                    description: Total count of validators
-        '404':
-          description: Not found
+                        hash: {type: string}
+                        stake: {type: integer}
 
-  /validator/{hash}:
+  /validator:
     get:
-      summary: Get validator by hash
+      summary: Get validator by public key
       parameters:
-        - name: hash
-          in: path
+        - name: publicKey
+          in: query
           required: true
-          schema:
-            type: string
+          schema: {type: string}
           description: The hash of the validator
       responses:
         '200':
@@ -691,10 +530,8 @@ paths:
                   validator:
                     type: object
                     properties:
-                      hash:
-                        type: string
-                      stake:
-                        type: integer
+                      hash: {type: string}
+                      stake: {type: integer}
         '404':
           description: Not found
 
@@ -705,8 +542,7 @@ paths:
         - name: address
           in: path
           required: true
-          schema:
-            type: string
+          schema: {type: string}
           description: The address of the validator
       responses:
         '200':
@@ -716,14 +552,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  currentHeight:
-                    type: integer
-                  latestBlockHeight:
-                    type: integer
-                  countedBlocks:
-                    type: integer
-                  uptime:
-                    type: integer
+                  currentHeight: {type: integer}
+                  latestBlockHeight: {type: integer}
+                  countedBlocks: {type: integer}
+                  uptime: {type: integer}
         '404':
           description: Not found
 
@@ -734,49 +566,37 @@ paths:
         - name: limit
           in: query
           required: false
-          schema:
-            type: integer
+          schema: {type: integer}
           description: Number of proposals to return
         - name: offset
           in: query
           required: false
-          schema:
-            type: integer
+          schema: {type: integer}
           description: Offset for pagination
         - name: orderBy
           in: query
           required: false
-          schema:
-            type: string
-            enum: [id, status, result, proposalType]
+          schema: {type: string, enum: [id, status, result, proposalType]}
           description: Field to order by
         - name: orderDirection
           in: query
           required: false
-          schema:
-            type: string
-            enum: [ASC, DESC]
+          schema: {type: string, enum: [ASC, DESC]}
           description: Direction to order by
         - name: proposalType
           in: query
           required: false
-          schema:
-            type: string
-            enum: [pgf_steward, pgf_payment, default]
+          schema: {type: string, enum: [pgf_steward, pgf_payment, default]}
           description: Type of proposals to return
         - name: status
           in: query
           required: false
-          schema:
-            type: string
-            enum: [upcoming, ongoing, finished]
+          schema: {type: string, enum: [upcoming, ongoing, finished]}
           description: Status of proposals to return
         - name: result
           in: query
           required: false
-          schema:
-            type: string
-            enum: [passed, rejected]
+          schema: {type: string, enum: [passed, rejected]}
           description: Result of proposals to return
       responses:
         '200':
@@ -786,22 +606,16 @@ paths:
               schema:
                 type: object
                 properties:
+                  count: {type: integer, description: "Total count of proposals"}
                   proposals:
                     type: array
                     items:
                       type: object
                       properties:
-                        id:
-                          type: string
-                        status:
-                          type: string
-                        result:
-                          type: string
-                        proposalType:
-                          type: string
-                  count:
-                    type: integer
-                    description: Total count of proposals
+                        id: {type: string}
+                        status: {type: string}
+                        result: {type: string}
+                        proposalType: {type: string}
         '404':
           description: Not found
 
@@ -818,14 +632,11 @@ paths:
                 properties:
                   statusCounts:
                     type: object
-                    additionalProperties:
-                      type: integer
+                    additionalProperties: {type: integer}
                   resultCounts:
                     type: object
-                    additionalProperties:
-                      type: integer
-                  totalCount:
-                    type: integer
+                    additionalProperties: {type: integer}
+                  totalCount: {type: integer}
         '404':
           description: Not found
 
@@ -836,8 +647,7 @@ paths:
         - name: id
           in: path
           required: true
-          schema:
-            type: string
+          schema: {type: string}
           description: The id of the proposal
       responses:
         '200':
@@ -847,14 +657,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  id:
-                    type: string
-                  status:
-                    type: string
-                  result:
-                    type: string
-                  proposalType:
-                    type: string
+                  id:           {type: string}
+                  status:       {type: string}
+                  result:       {type: string}
+                  proposalType: {type: string}
         '404':
           description: Not found
 
@@ -865,8 +671,7 @@ paths:
         - name: proposalId
           in: path
           required: true
-          schema:
-            type: string
+          schema: {type: string}
           description: The id of the proposal
       responses:
         '200':
@@ -876,65 +681,28 @@ paths:
               schema:
                 type: object
                 properties:
+                  count: {type: integer}
                   votes:
                     type: array
                     items:
                       type: object
                       properties:
-                        voter:
-                          type: string
-                        vote:
-                          type: string
+                        voter: {type: string}
+                        vote:  {type: string}
         '404':
           description: Not found
 
-  /transfers/from/{address}:
+  /transfers:
     get:
       summary: Get transfers from address
       parameters:
-        - name: address
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The address of the sender
+        - {name: from, in: query, schema: {type: string}, description: "Sender"}
+        - {name: to,   in: query, schema: {type: string}, description: "Receiver"}
+        - {name: by,   in: query, schema: {type: string}, description: "Sender or receiver"}
       responses:
         '200':
           description: Successful response
-          content:
-            application/json: { schema: { $ref: '#/components/schemas/TransferList' } }
-
-  /transfers/to/{address}:
-    get:
-      summary: Get transfers to address
-      parameters:
-        - name: address
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The address of the recipient
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: { schema: { $ref: '#/components/schemas/TransferList' } }
-
-  /transfers/by/{address}:
-    get:
-      summary: Get transfers by address
-      parameters:
-        - name: address
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The address involved in the transfer
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: { schema: { $ref: '#/components/schemas/TransferList' } }
+          content: {application/json: {schema:{$ref:'#/components/schemas/TransferList'}}}
 
   /epoch:
     get:
@@ -942,40 +710,40 @@ paths:
       responses:
         '200':
           description: Successful response
-          content:
-            application/json: { schema: { $ref: '#/components/schemas/EpochInfo' } }
+          content: {application/json: {schema:{$ref:'#/components/schemas/EpochInfo'}}}
+
   /total-staked:
     get:
       summary: Get total staked amount
       responses:
         '200':
           description: Successful response
-          content:
-            application/json: { schema: { $ref: '#/components/schemas/TotalStaked' } }
+          content: {application/json: {schema:{$ref:'#/components/schemas/TotalStaked'}}}
+
   /parameters/staking:
     get:
       summary: Get staking parameters
       responses:
         '200':
           description: Successful response
-          content:
-            application/json: { schema: { $ref: '#/components/schemas/PoSParameters' } }
+          content: {application/json: {schema:{$ref:'#/components/schemas/PoSParameters'}}}
+
   /parameters/governance:
     get:
       summary: Get governance parameters
       responses:
         '200':
           description: Successful response
-          content:
-            application/json: { schema: { $ref: '#/components/schemas/GovernanceParameters' } }
+          content: {application/json: {schema:{$ref:'#/components/schemas/GovernanceParameters'}}}
+
   /parameters/pgf:
     get:
       summary: Get PGF parameters
       responses:
         '200':
           description: Successful response
-          content:
-            application/json: { schema: { $ref: '#/components/schemas/PGFParameters' } }
+          content: {application/json: {schema:{$ref:'#/components/schemas/PGFParameters'}}}
+
 components:
   schemas:
     TransferList:
@@ -986,55 +754,55 @@ components:
           items:
             type: object
             properties:
-              from:   { type: string }
-              to:     { type: string }
-              amount: { type: number }
-              date:   { type: string, format: date-time }
+              from:   {type: string}
+              to:     {type: string}
+              amount: {type: integer}
+              date:   {type: string, format: date-time}
     EpochInfo:
       type: object
       properties:
-        timestamp:      { type: string }
-        epoch:          { type: string }
-        firstBlock:     { type: string }
-        minNumOfBlocks: { type: string }
-        minDuration:    { type: string }
+        timestamp:      {type: string}
+        epoch:          {type: string}
+        firstBlock:     {type: string}
+        minNumOfBlocks: {type: string}
+        minDuration:    {type: string}
     TotalStaked:
       type: object
       properties:
-        timestamp:   { type: string }
-        totalStaked: { type: string }
+        timestamp:   {type: string}
+        totalStaked: {type: string}
     PoSParameters:
       type: object
       properties:
-        maxValidatorSlots:             { type: string }
-        pipelineLen:                   { type: string }
-        unbondingLen:                  { type: string }
-        tmVotesPerToken:               { type: string }
-        blockProposerReward:           { type: string }
-        blockVoteReward:               { type: string }
-        maxInflationRate:              { type: string }
-        targetStakedRatio:             { type: string }
-        duplicateVoteMinSlashRate:     { type: string }
-        lightClientAttackMinSlashRate: { type: string }
-        cubicSlashingWindowLength:     { type: string }
-        validatorStakeThreshold:       { type: string }
-        livenessWindowCheck:           { type: string }
-        livenessThreshold:             { type: string }
-        rewardsGainP:                  { type: string }
-        rewardsGainD:                  { type: string }
-        maxProposalPeriod:             { type: string }
+        maxValidatorSlots:             {type: string}
+        pipelineLen:                   {type: string}
+        unbondingLen:                  {type: string}
+        tmVotesPerToken:               {type: string}
+        blockProposerReward:           {type: string}
+        blockVoteReward:               {type: string}
+        maxInflationRate:              {type: string}
+        targetStakedRatio:             {type: string}
+        duplicateVoteMinSlashRate:     {type: string}
+        lightClientAttackMinSlashRate: {type: string}
+        cubicSlashingWindowLength:     {type: string}
+        validatorStakeThreshold:       {type: string}
+        livenessWindowCheck:           {type: string}
+        livenessThreshold:             {type: string}
+        rewardsGainP:                  {type: string}
+        rewardsGainD:                  {type: string}
+        maxProposalPeriod:             {type: string}
     GovernanceParameters:
       type: object
       properties:
-        minProposalFund:         { type: string }
-        maxProposalCodeSize:     { type: string }
-        minProposalVotingPeriod: { type: string }
-        maxProposalPeriod:       { type: string }
-        maxProposalContentSize:  { type: string }
-        minProposalGraceEpochs:  { type: string }
+        minProposalFund:         {type: string}
+        maxProposalCodeSize:     {type: string}
+        minProposalVotingPeriod: {type: string}
+        maxProposalPeriod:       {type: string}
+        maxProposalContentSize:  {type: string}
+        minProposalGraceEpochs:  {type: string}
     PGFParameters:
       type: object
       properties:
-        stewards:              { type: object }
-        pgfInflationRate:      { type: string }
-        stewardsInflationRate: { type: string }
+        stewards:              {type: object}
+        pgfInflationRate:      {type: string}
+        stewardsInflationRate: {type: string}
