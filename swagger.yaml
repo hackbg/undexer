@@ -1002,13 +1002,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  epoch:
-                    type: integer
-        '404':
-          description: Not found
-
+                $ref: '#/components/schemas/EpochInfo'
   /total-staked:
     get:
       summary: Get total staked amount
@@ -1018,13 +1012,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  totalStaked:
-                    type: number
-        '404':
-          description: Not found
-
+                $ref: '#/components/schemas/TotalStaked'
   /parameters/staking:
     get:
       summary: Get staking parameters
@@ -1034,15 +1022,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  stakingParameters:
-                    type: object
-                    additionalProperties:
-                      type: string
-        '404':
-          description: Not found
-
+                $ref: '#/components/schemas/PoSParameters'
   /parameters/governance:
     get:
       summary: Get governance parameters
@@ -1052,15 +1032,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  governanceParameters:
-                    type: object
-                    additionalProperties:
-                      type: string
-        '404':
-          description: Not found
-
+                $ref: '#/components/schemas/GovernanceParameters'
   /parameters/pgf:
     get:
       summary: Get PGF parameters
@@ -1070,11 +1042,54 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  pgfParameters:
-                    type: object
-                    additionalProperties:
-                      type: string
-        '404':
-          description: Not found
+                $ref: '#/components/schemas/PGFParameters'
+components:
+  schemas:
+    EpochInfo:
+      type: object
+      properties:
+        timestamp:      { type: string }
+        epoch:          { type: string }
+        firstBlock:     { type: string }
+        minNumOfBlocks: { type: string }
+        minDuration:    { type: string }
+    TotalStaked:
+      type: object
+      properties:
+        timestamp:   { type: string }
+        totalStaked: { type: string }
+    PoSParameters:
+      type: object
+      properties:
+        maxValidatorSlots:             { type: string }
+        pipelineLen:                   { type: string }
+        unbondingLen:                  { type: string }
+        tmVotesPerToken:               { type: string }
+        blockProposerReward:           { type: string }
+        blockVoteReward:               { type: string }
+        maxInflationRate:              { type: string }
+        targetStakedRatio:             { type: string }
+        duplicateVoteMinSlashRate:     { type: string }
+        lightClientAttackMinSlashRate: { type: string }
+        cubicSlashingWindowLength:     { type: string }
+        validatorStakeThreshold:       { type: string }
+        livenessWindowCheck:           { type: string }
+        livenessThreshold:             { type: string }
+        rewardsGainP:                  { type: string }
+        rewardsGainD:                  { type: string }
+        maxProposalPeriod:             { type: string }
+    GovernanceParameters:
+      type: object
+      properties:
+        minProposalFund:         { type: string }
+        maxProposalCodeSize:     { type: string }
+        minProposalVotingPeriod: { type: string }
+        maxProposalPeriod:       { type: string }
+        maxProposalContentSize:  { type: string }
+        minProposalGraceEpochs:  { type: string }
+    PGFParameters:
+      type: object
+      properties:
+        stewards:              { type: object }
+        pgfInflationRate:      { type: string }
+        stewardsInflationRate: { type: string }
