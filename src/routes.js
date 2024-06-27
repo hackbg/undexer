@@ -117,30 +117,25 @@ export const routes = [
     if (validator === null) return res.status(404).send({ error: 'Validator not found' });
     validator = { ...validator.get() }
     validator.metadata ??= {}
-    res.status(200).send(validator);
-  }],
-
-  //['/validator/:hash/blocks',     dbBlocksByProposer],
-
-  ['/validator/uptime', async function dbValidatorUptime (req, res) {
-    const address = req.query.address;
-    const blocks = await DB.Block.findAll({
-      order: [['blockHeight', 'DESC']],
-      limit: 100,
-      attributes: ['responses', 'blockHeight'],
-    });
-    const currentHeight = blocks[0].height;
-    const countedBlocks = blocks.length;
-    const uptime = blocks
-      .map((b) => {
-        const blockResponse = JSON.parse(b.responses.block.response)
-        return blockResponse.result.block.last_commit.signatures.map(
-          (x) => x.validator_address,
-        );
-      })
-      .flat(1)
-      .filter((x) => x == address).length;
-    res.status(200).send({ uptime, currentHeight, countedBlocks });
+    let uptime, currentHeight, countedBlocks
+    if (validator.address && ('uptime' in req.query)) {
+      const limit = Math.min(1000, Number(req.query.uptime)||100);
+      // Count number of times the validator's consensus address is encountered
+      // in the set of all signatures belonging to the past 100 blocks.
+      // This powers the uptime blocks visualization in the validator detail page.
+      const latestBlocks = await DB.Block.findAll({
+        order: [['blockHeight', 'DESC']], limit, attributes: ['responses', 'blockHeight'],
+      });
+      currentHeight = latestBlocks[0].height;
+      countedBlocks = latestBlocks.length;
+      uptime = latestBlocks
+        .map((b) => JSON.parse(b.responses.block.response)
+          .result.block.last_commit.signatures.map((x) => x.validator_address))
+        .flat(1)
+        .filter((x) => x === validator.address)
+        .length;
+    }
+    res.status(200).send({ ...validator, uptime, currentHeight, countedBlocks  });
   }],
 
   ['/proposals', async function dbProposals (req, res) {

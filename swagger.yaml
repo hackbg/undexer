@@ -307,53 +307,53 @@ components:
                 description: Number of transactions in the block
 
     BlockDetails:
-      type: object
+      type:                                         object
       properties:
-        blockHeight:      {type: integer}
-        blockHash:        {type: string}
-        blockHeader:      {type: string}
-        blockTime:        {type: string, format: date-time}
-        transactionCount: {type: integer}
+        blockHeight:                                {type: integer}
+        blockHash:                                  {type: string}
+        blockHeader:                                {type: string}
+        blockTime:                                  {type: string, format: date-time}
+        transactionCount:                           {type: integer}
         transactions:
-          type: array
+          type:                                     array
           items:
-            type: object
+            type:                                   object
             properties:
-              chainId: {type: string}
-              blockHash: {type: string}
-              blockHeight: {type: integer}
-              blockTime: {type: string, format: date-time}
-              txHash: {type: string}
-              txTime: {type: string, format: date-time}
+              chainId:                              {type: string}
+              blockHash:                            {type: string}
+              blockHeight:                          {type: integer}
+              blockTime:                            {type: string, format: date-time}
+              txHash:                               {type: string}
+              txTime:                               {type: string, format: date-time}
               txData:
-                type: object
+                type:                               object
                 properties:
-                  id: {type: string}
+                  id:                               {type: string}
                   data:
-                    type: object
+                    type:                           object
                     properties:
                       type:
-                        type: object
+                        type:                       object
                         properties:
                           Wrapper:
-                            type: object
+                            type:                   object
                             properties:
                               pk:
-                                type: object
+                                type:               object
                                 properties:
-                                  pk: {type: string}
-                                  type: {type: string}
+                                  pk:               {type: string}
+                                  type:             {type: string}
                               fee:
-                                type: object
+                                type:               object
                                 properties:
-                                  token: {type: string}
+                                  token:            {type: string}
                                   amountPerGasUnit: {type: string}
-                              payer: {type: string}
-                              feeToken: {type: string}
-                              gasLimit: {type: string}
-                              multiplier: {type: string}
-                              gasLimitMultiplier: {type: string}
-                              feeAmountPerGasUnit: {type: string}
+                              payer:                {type: string}
+                              feeToken:             {type: string}
+                              gasLimit:             {type: string}
+                              multiplier:           {type: string}
+                              gasLimitMultiplier:   {type: string}
+                              feeAmountPerGasUnit:  {type: string}
 
     TransactionsList:
       type: object
@@ -648,30 +648,36 @@ components:
           description: Number of validators currently inactive
 
     ValidatorsList:
-      type: object
+      type:                      object
       properties:
-        count:       {type: integer, description: "Total count of validators"}
+        count:                   {type: integer, description: "Total count of validators"}
         validators:
-          type:      array
+          type:                  array
           items:
-            type:    object
+            type:                object
             properties:
-              hash:  {type: string}
-              stake: {type: integer}
+              publicKey:         {type: string}
+              address:           {type: string}
+              namadaAddress:     {type: string}
+              votingPower:       {type: string}
+              proposerPriority:  {type: string}
+              metadata:          {type: object}
+              commission:        {type: object}
+              stake:             {type: string}
+              state:             {type: object}
 
     ValidatorDetails:
-      type:        object
-      properties:
-        validator:
-          type:    object
-          properties:
-            hash:  {type: string}
-            stake: {type: integer}
-
-    ValidatorUptime:
       type:                object
       properties:
-        currentHeight:     {type: integer}
-        latestBlockHeight: {type: integer}
-        countedBlocks:     {type: integer}
+        publicKey:         {type: string}
+        address:           {type: string}
+        namadaAddress:     {type: string}
+        votingPower:       {type: string}
+        proposerPriority:  {type: string}
+        metadata:          {type: object}
+        commission:        {type: object}
+        stake:             {type: string}
+        state:             {type: object}
         uptime:            {type: integer}
+        currentHeight:     {type: integer}
+        countedBlocks:     {type: integer}

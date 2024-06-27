@@ -106,6 +106,7 @@ export const Block = db.define('block', {
   ...blockMeta,
   blockHash:    StringPrimaryKey(),
   blockHeader:  JSONField('blockHeader'),
+  //blockResults: JSONField('blockResults'), // TODO deserialize results response
   rpcResponses: JSONField('rpcResponses'),
 })
 
