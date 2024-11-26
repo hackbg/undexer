@@ -15,7 +15,7 @@ export class Fetcher extends Logged {
   }
 
   fetchBlock (height) {
-    this.logE(epoch, 'Fetching block height')
+    this.logH(height, 'Fetching block')
     return retryForever(1000, () => this.chain.fetchBlock({ height, raw: true }))
   }
   
@@ -25,7 +25,7 @@ export class Fetcher extends Logged {
   }
 
   fetchEpoch (height) {
-    this.logEH(epoch, height, 'Fetching epoch at height')
+    this.logH(height, 'Fetching epoch at height')
     return retryForever(1000, () => this.chain.fetchEpoch({ height }))
   }
 
