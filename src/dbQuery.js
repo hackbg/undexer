@@ -400,66 +400,25 @@ export const proposalsWithoutResults = () =>
   slonikSelect(sql.unsafe`SELECT id FROM proposals WHERE result is null`)
     .then(rows=>rows.map(row=>row.id))
 
-export const txWithAddressCount = async ({ address = "" }) => await count(`
-  SELECT COUNT(*) FROM "transactions" WHERE (
-    (
-      "txData"->'data'->'content'->'type' = '"tx_bond.wasm"'
-      OR
-      "txData"->'data'->'content'->'type' = '"tx_unbond.wasm"'
-    ) AND (
-      "txData"->'data'->'content'->'data'->'source' = :address
-      OR
-      "txData"->'data'->'content'->'data'->'validator' = :address
-    )
-  ) OR (
-    (
-      "txData"->'data'->'content'->'type' = '"tx_become_validator.wasm"'
-      OR
-      "txData"->'data'->'content'->'type' = '"tx_deactivate_validator.wasm"'
-    )
-    AND "txData"->'data'->'content'->'data'->'address' = :address
-  ) OR (
-    "txData"->'data'->'content'->'type' = '"tx_change_validator_metadata.wasm"'
-    AND
-    "txData"->'data'->'content'->'data'->'validator' = :address
-  )
-`, { replacements: { address: JSON.stringify(address) } })
+const txByAddress = address => sql.fragment`(
+  (content->'type' = '"tx_bond.wasm"' OR content->'type' = '"tx_unbond.wasm"')
+  AND (content->'data'->'source' = ${address} OR content->'data'->'validator' = ${address})
+) OR (
+  (content->'type' = '"tx_become_validator.wasm"' OR content->'type' = '"tx_deactivate_validator.wasm"')
+  AND content->'data'->'address' = ${address}
+) OR (
+  content->'type' = '"tx_change_validator_metadata.wasm"'
+  AND content->'data'->'validator' = ${address}
+)`
 
-export const txWithAddressList = async ({
-  address   = "",
-  limit     = 100,
-  offset    = 0
-}) => await db.query(`
-  SELECT * FROM "transactions" WHERE (
-    (
-      "txData"->'data'->'content'->'type' = '"tx_bond.wasm"'
-      OR
-      "txData"->'data'->'content'->'type' = '"tx_unbond.wasm"'
-    ) AND (
-      "txData"->'data'->'content'->'data'->'source' = :address
-      OR
-      "txData"->'data'->'content'->'data'->'validator' = :address
-    )
-  ) OR (
-    (
-      "txData"->'data'->'content'->'type' = '"tx_become_validator.wasm"'
-      OR
-      "txData"->'data'->'content'->'type' = '"tx_deactivate_validator.wasm"'
-    )
-    AND "txData"->'data'->'content'->'data'->'address' = :address
-  ) OR (
-      "txData"->'data'->'content'->'type' = '"tx_change_validator_metadata.wasm"'
-      AND
-      "txData"->'data'->'content'->'data'->'validator' = :address
-  )
-  ORDER BY "blockHeight" DESC LIMIT :limit OFFSET :offset
-`, {
-  type: SELECT, replacements: {
-    address: JSON.stringify(address),
-    limit,
-    offset
-  }
-})
+export const txWithAddressCount = ({ address = "" }) =>
+  slonikCount(sql.unsafe`
+    SELECT COUNT(*) FROM "transactions" WHERE ${txByAddress(address)}`)
+
+export const txWithAddressList = ({ address = "", limit = 100, offset = 0 }) =>
+  slonikSelect(sql.unsafe`
+    SELECT * FROM "transactions" WHERE ${txByAddress(address)}
+    ORDER BY "blockHeight" DESC LIMIT ${limit} OFFSET ${offset}`)
 
 export const transferredTokens = () => db.query(`
   WITH "transactionData" AS (

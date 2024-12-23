@@ -52,10 +52,11 @@ export const paginate = (column, ordering, limit, offset) =>
 export const paginateByContent = (column, path, type, ordering, limit, offset) =>
   sql.fragment`ORDER BY (${sql.identifier([column])} -> ${path})::${type} ${ordering} LIMIT ${limit} OFFSET ${offset}`
 
+export const txContents =
+  sql.fragment`jsonb_path_query("txData", '$.data.content[*]')`
+
 export const txsByContent =
-  sql.fragment`SELECT
-    "blockHeight", "txHash", "txTime",
-    jsonb_path_query("txData", '$.data.content[*]') as content
+  sql.fragment`SELECT "blockHeight", "txHash", "txTime", ${txContents} as content
   FROM "transactions"`
 
 export const fromTxsByContent =
