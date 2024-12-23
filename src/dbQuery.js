@@ -296,80 +296,6 @@ export const transactionsLatest = ({ limit = 15 } = {}) =>
 export const transactionsAtHeight = (blockHeight = 0) =>
   DB.Transaction.findAndCountAll({ where: { blockHeight } })
 
-export const becomeValidator = {
-  count: ({ address = "" }) => countTxs(sql.fragment`
-    WHERE ${matchContentType('tx_become_validator.wasm')}
-    AND   ${matchContentData(sql.literalValue('address'), address)}`),
-  list:  ({ address = "", limit = 100, offset = 0 }) => selectTxs(sql.fragment`
-    WHERE ${matchContentType('tx_become_validator.wasm')}
-    AND   ${matchContentData(sql.literalValue('address'), address)}
-    ${paginate("blockHeight", DESC, limit, offset)}`)
-}
-
-export const changeValidatorMetadata = {
-  count: ({ validator = "" }) => countTxs(sql.fragment`
-    WHERE ${matchContentType('tx_change_validator_metadata.wasm')}
-    AND   ${matchContentData(sql.literalValue('validator'), validator)}`),
-  list:  ({ validator = "", limit = 100, offset = 0 }) => selectTxs(sql.fragment`
-    WHERE ${matchContentType('tx_change_validator_metadata.wasm')}
-    AND   ${matchContentData(sql.literalValue('validator'), validator)}
-    ${paginate("blockHeight", DESC, limit, offset)}`)
-}
-
-export const deactivateValidator = {
-  count: ({ address = "" }) => countTxs(sql.fragment`
-      WHERE ${matchContentType('tx_deactivate_validator.wasm')}
-      AND   ${matchContentData(sql.literalValue('address'), address)}`),
-  list:  ({ address = "", limit = 100, offset = 0 }) => selectTxs(sql.fragment`
-      WHERE ${matchContentType('tx_deactivate_validator.wasm')}
-      AND   ${matchContentData(sql.literalValue('address'), address)}
-      ${paginate("blockHeight", DESC, limit, offset)}`)
-}
-
-export const bondUnbond = {
-  pagination: ({ limit, offset }) => paginateByContent(
-    "content", sql.fragment`'data'->>'amount'`, sql.fragment`bigint`, DESC, limit, offset),
-  filter: ({ source, validator }) => sql.fragment`
-    WHERE ${OR(matchContentType("tx_bond.wasm"), matchContentType("tx_unbond.wasm"))}
-      AND ${matchSourceOrValidator({ source, validator })}`,
-  count: ({ source = "", validator = "" }) =>
-    slonikCount(sql.unsafe`SELECT COUNT(*)
-      ${fromTxsByContent} ${bondUnbond.filter({ source, validator })}`),
-  list:  ({ source, validator, limit = 100, offset = 0 }) =>
-    slonikSelect(sql.unsafe`SELECT *
-      ${fromTxsByContent} ${bondUnbond.filter({ source, validator })}
-      ${bondUnbond.pagination({ limit, offset })}`),
-}
-
-export const bond = {
-  filter: ({ source, validator }) => sql.fragment`
-    WHERE ${matchContentType("tx_bond.wasm")}
-      AND ${matchSourceOrValidator({ source, validator })}`,
-  count: ({ source = "", validator = "" }) =>
-    slonikCount(sql.unsafe`SELECT COUNT(*)
-      ${fromTxsByContent} ${bondFilter({ source, validator })}`),
-  list:  ({ source, validator, limit = 100, offset = 0 }) =>
-    slonikSelect(sql.unsafe`SELECT *
-      ${fromTxsByContent} ${bondFilter({ source, validator })}
-      ${bondUnbondPagination({ limit, offset })}`),
-}
-
-export const unbond = {
-  filter: ({ source, validator }) => sql.fragment`
-    WHERE ${matchContentType("tx_unbond.wasm")}
-      AND ${matchSourceOrValidator({ source, validator })}`,
-  count: ({ source = "", validator = "" }) =>
-    slonikCount(sql.unsafe`SELECT COUNT(*)
-      ${fromTxsByContent} ${unbondFilter({ source, validator })}`),
-  list:  ({ source, validator, limit = 100, offset = 0 }) =>
-    slonikSelect(sql.unsafe`SELECT *
-      ${fromTxsByContent} ${unbondFilter({ source, validator })}
-      ${bondUnbondPagination({ limit, offset })}`)
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 export const proposalsWithoutResults = () =>
   slonikSelect(sql.unsafe`SELECT id FROM proposals WHERE result is null`)
     .then(rows=>rows.map(row=>row.id))
@@ -518,3 +444,48 @@ export const validatorNamadaAddressToConsensusAddresses = async (namadaAddress) 
   }
   return addresses
 }
+
+/// COUNT/LIST TXS: GENERIC IMPLEMENTATION ////////////////////////////////////////////////////////
+
+export class TxQuerier {
+  count = ({ ...args }) => countTxs(sql.fragment`
+    WHERE ${this.matcher} AND ${this.filter(...args)}`)
+  list = ({ limit = 100, offset = 0, ...args }) => selectTxs(sql.fragment`
+    WHERE ${this.matcher} AND ${this.filter(...args)} ${this.pagination(limit, offset)}`)
+  constructor (matcher, filter, pagination) {
+    if (typeof matcher === 'string') matcher = matchContentType(matcher)
+    this.matcher    = matcher
+    this.filter     = filter
+    this.pagination = pagination ?? ((limit, offset)=>paginate("blockHeight", DESC, limit, offset))
+  }
+}
+
+// COUNT/LIST TXS: BECOME/CHANGE/DEACTIVATE VALIDATOR /////////////////////////////////////////////
+
+const addressFilter = ({ address = "" }) =>
+  matchContentData(sql.literalValue('address'), address)
+const validatorFilter = ({ validator = "" }) =>
+  matchContentData(sql.literalValue('validator'), validator)
+
+export const becomeValidator = 
+  new TxQuerier("tx_become_validator.wasm", addressFilter)
+export const changeValidatorMetadata =
+  new TxQuerier("tx_change_validator_metadata.wasm", validatorFilter)
+export const deactivateValidator =
+  new TxQuerier("tx_deactivate_validator.wasm", addressFilter)
+
+// COUNT/LIST TXS: BOND/UNBOND ////////////////////////////////////////////////////////////////////
+
+const bondUnbondFilter = ({ source = "", validator = "" }) =>
+  matchSourceOrValidator({ source, validator })
+const bondUnbondPaginate = (limit, offset) => paginateByContent(
+  "content", sql.fragment`'data'->>'amount'`, sql.fragment`bigint`, DESC, limit, offset)
+const bondOrUnbond = OR(
+  matchContentType("tx_bond.wasm"),
+  matchContentType("tx_unbond.wasm"))
+
+export const bondUnbond = new TxQuerier(bondOrUnbond,     bondUnbondFilter,  bondUnbondPaginate)
+export const bond       = new TxQuerier("tx_bond.wasm",   bondUnbond.filter, bondUnbondPaginate)
+export const unbond     = new TxQuerier("tx_unbond.wasm", bondUnbond.filter, bondUnbondPaginate)
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
