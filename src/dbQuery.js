@@ -4,17 +4,13 @@ import { Sequelize, Op, QueryTypes } from "sequelize"
 import { intoRecord } from '@hackbg/into'
 
 import {
-  sql,
-  count,
-  slonikCount,
-  slonikSelect,
-  fromTxsByContent,
-  matchContentType,
-  matchSourceOrValidator,
+  sql, count,
+  slonikCount, slonikSelect,
+  fromTxsByContent, selectTxs, countTxs,
+  matchContentType, matchContentData, matchSourceOrValidator,
   paginateByContent,
   defaultAttributes,
-  ASC, DESC,
-  OR
+  ASC, DESC, OR
 } from './dbUtil.js'
 
 const { SELECT, COUNT } = QueryTypes
@@ -300,59 +296,44 @@ export const transactionsLatest = ({ limit = 15 } = {}) =>
 export const transactionsAtHeight = (blockHeight = 0) =>
   DB.Transaction.findAndCountAll({ where: { blockHeight } })
 
-export const becomeValidatorCount = async ({ address = "" }) => await count(`
-  SELECT COUNT(*) FROM "transactions"
-  WHERE "txData"->'data'->'content'->'type' = '"tx_become_validator.wasm"'
-  AND "txData"->'data'->'content'->'data'->'address' = :address
-`, { replacements: { address: JSON.stringify(address), } })
+export const becomeValidatorCount = ({ address = "" }) =>
+  countTxs(sql.fragment`
+    WHERE ${matchContentType('tx_become_validator.wasm')}
+    AND   ${matchContentData(sql.literalValue('address'), address)}
+  `)
 
-export const becomeValidatorList = async ({
-  address = "",
-  limit   = 100,
-  offset  = 0
-}) => await db.query(`
-  SELECT "blockHeight", "txHash", "txTime", "txData"->'data'->'content'->'data' as data
-  FROM   "transactions"
-  WHERE  "txData"->'data'->'content'->'type' = '"tx_become_validator.wasm"'
-  AND    "txData"->'data'->'content'->'data'->'address' = :address
-  ORDER BY "blockHeight" DESC LIMIT :limit OFFSET :offset
-`, { type: SELECT, replacements: { address: JSON.stringify(address), limit, offset, } })
+export const becomeValidatorList = ({ address = "", limit = 100, offset = 0 }) =>
+  selectTxs(sql.fragment`
+    WHERE ${matchContentType('tx_become_validator.wasm')}
+    AND   ${matchContentData(sql.literalValue('address'), address)}
+    ORDER BY "blockHeight" DESC LIMIT ${limit} OFFSET ${offset}
+  `)
 
-export const changeValidatorMetadataCount = async ({ validator = "" }) => await count(`
-  SELECT COUNT(*) FROM "transactions"
-  WHERE "txData"->'data'->'content'->'type' = '"tx_change_validator_metadata.wasm"'
-  AND "txData"->'data'->'content'->'data'->'validator' = :validator
-`, { replacements: { validator: JSON.stringify(validator), } })
+export const changeValidatorMetadataCount = ({ validator = "" }) =>
+  countTxs(sql.fragment`
+    WHERE ${matchContentType('tx_change_validator_metadata.wasm')}
+    AND   ${matchContentData(sql.literalValue('validator'), validator)}
+  `)
 
-export const changeValidatorMetadataList = async ({
-  validator = "",
-  limit   = 100,
-  offset  = 0
-}) => await db.query(`
-  SELECT "blockHeight", "txHash", "txTime", "txData"->'data'->'content'->'data' as data
-  FROM   "transactions"
-  WHERE  "txData"->'data'->'content'->'type' = '"tx_change_validator_metadata.wasm"'
-  AND    "txData"->'data'->'content'->'data'->'validator' = :validator
-  ORDER BY "blockHeight" DESC LIMIT :limit OFFSET :offset
-`, { type: SELECT, replacements: { validator: JSON.stringify(validator), limit, offset, } })
+export const changeValidatorMetadataList = ({ validator = "" }) =>
+  selectTxs(sql.fragment`
+    WHERE ${matchContentType('tx_change_validator_metadata.wasm')}
+    AND   ${matchContentData(sql.literalValue('validator'), validator)}
+    ORDER BY "blockHeight" DESC LIMIT ${limit} OFFSET ${offset}
+  `)
 
-export const deactivateValidatorCount = async ({ address = "" }) => await count(`
-  SELECT COUNT(*) FROM "transactions"
-  WHERE "txData"->'data'->'content'->'type' = '"tx_deactivate_validator.wasm"'
-  AND "txData"->'data'->'content'->'data'->'address' = :address
-`, { replacements: { address: JSON.stringify(address), } })
+export const deactivateValidatorCount = ({ address = "" }) =>
+  countTxs(sql.fragment`
+    WHERE ${matchContentType('tx_deactivate_validator.wasm')}
+    AND   ${matchContentData(sql.literalValue('address'), address)}
+  `)
 
-export const deactivateValidatorList = async ({
-  address = "",
-  limit   = 100,
-  offset  = 0
-}) => await db.query(`
-  SELECT "blockHeight", "txHash", "txTime", "txData"->'data'->'content'->'data' as data
-  FROM   "transactions"
-  WHERE  "txData"->'data'->'content'->'type' = '"tx_deactivate_validator.wasm"'
-  AND    "txData"->'data'->'content'->'data'->'address' = :address
-  ORDER BY "blockHeight" DESC LIMIT :limit OFFSET :offset
-`, { type: SELECT, replacements: { address: JSON.stringify(address), limit, offset, } })
+export const deactivateValidatorList = ({ address = "", limit = 100, offset = 0 }) =>
+  selectTxs(sql.fragment`
+    WHERE ${matchContentType('tx_deactivate_validator.wasm')}
+    AND   ${matchContentData(sql.literalValue('address'), address)}
+    ORDER BY "blockHeight" DESC LIMIT ${limit} OFFSET ${offset}
+  `)
 
 const bondUnbondPagination = ({ limit, offset }) => paginateByContent(
   "content", sql.fragment`'data'->>'amount'`, sql.fragment`bigint`, DESC, limit, offset)

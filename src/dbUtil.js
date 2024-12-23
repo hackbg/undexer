@@ -52,12 +52,24 @@ export const paginate = (column, ordering, limit, offset) =>
 export const paginateByContent = (column, path, type, ordering, limit, offset) =>
   sql.fragment`ORDER BY (${sql.identifier([column])} -> ${path})::${type} ${ordering} LIMIT ${limit} OFFSET ${offset}`
 
+export const jsonbPathQueryTxData = query =>
+  sql.fragment`jsonb_path_query("txData", ${query})`
+
+export const jsonbPathQueryContent = query =>
+  sql.fragment`jsonb_path_query("content", ${query})`
+
 export const txContents =
-  sql.fragment`jsonb_path_query("txData", '$.data.content[*]')`
+  jsonbPathQueryTxData('$.data.content[*]')
 
 export const txsByContent =
   sql.fragment`SELECT "blockHeight", "txHash", "txTime", ${txContents} as content
   FROM "transactions"`
+
+export const countTxs = (query = sql.fragment``) =>
+  sql.unsafe`SELECT COUNT(*) ${fromTxsByContent} ${query}`
+
+export const selectTxs = (query = sql.fragment``, fields = sql.fragment`*`) =>
+  sql.unsafe`SELECT ${fields} ${fromTxsByContent} ${query}`
 
 export const fromTxsByContent =
   sql.fragment`FROM (${txsByContent})`
@@ -65,8 +77,8 @@ export const fromTxsByContent =
 export const matchContentType = type =>
   sql.fragment`content->'type' = ${sql.jsonb(type)}`
 
-export const OR = (a, b) =>
-  sql.fragment`(${a} OR ${b})`
+export const matchContentData = (key, type) =>
+  sql.fragment`content->'type'->${sql.literalValue(key)} = ${sql.jsonb(type)}`
 
 export const matchSourceOrValidator = ({ source, validator }) =>
   (source && validator)
@@ -79,3 +91,6 @@ export const matchSourceOrValidator = ({ source, validator }) =>
   (validator)
     ? sql.fragment`content->'data'->>'validator' = ${validator}`
     : sql.fragment`true`
+
+export const OR = (a, b) =>
+  sql.fragment`(${a} OR ${b})`
