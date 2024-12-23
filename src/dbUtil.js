@@ -40,11 +40,11 @@ export const slonikQuery = (query, options = {}) => {
   return db.query(sql, { ...options, bind })
 }
 
-export const AND = (a, b) =>
-  sql.fragment`(${a} AND ${b})`
+export const AND = (...args) =>
+  sql.fragment`(${sql.join(args, sql.fragment` AND `)})`
 
-export const OR = (a, b) =>
-  sql.fragment`(${a} OR ${b})`
+export const OR = (...args) =>
+  sql.fragment`(${sql.join(args, sql.fragment` OR `)})`
 
 export const ASC =
   sql.fragment`ASC`

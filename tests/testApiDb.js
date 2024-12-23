@@ -15,11 +15,17 @@ const { dbRoutes } = await import('../src/dbRoutes.js')
 
 const testDbRoute = async (path, query) => {
   console.br().log('Testing', path, query||'')
+  const t0 = performance.now()
   const { code, ...rest } = await testRoute(dbRoutes[path], query)
-  console.log(code, rest)
+  console.log(performance.now().toFixed(0) - t0, code, rest)
 }
-const testRoute = (route, query = {}) =>
-  new Promise(resolve=>route({ query }, new MockResponse(resolve)))
+const testRoute = (route, query = {}) => new Promise(async (resolve, reject)=>{
+  try {
+    await route({ query }, new MockResponse(resolve))
+  } catch (e) {
+    reject(e)
+  }
+})
 class MockResponse {
   status (code) { this.code = code; return this }
   send (data) { this.data = data; this.resolve(this) }
@@ -48,11 +54,16 @@ try {
   await testDbRoute('/transfers')
   await testDbRoute('/transactions/:address')
   await testDbRoute('/balances/:address')
-  console.log('Tests done in', performance.now() - t1)
+  console.br().log('Tests done in', (performance.now() - t1).toFixed())
   process.exit(0)
 } catch (e) {
-  console.error(e)
-  console.log('Tests failed in', performance.now() - t1)
+  console.br().error(e)
+  if (e.sql) {
+    console
+      .br().error(`Error SQL:\n${e.sql}`)
+      .br().error('SQL parameters:', e.parameters)
+  }
+  console.br().log('Tests failed in', (performance.now() - t1).toFixed())
   process.exit(1)
 }
 

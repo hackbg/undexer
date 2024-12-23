@@ -278,11 +278,7 @@ export const transactionsLatest = ({ limit = 15 } = {}) =>
     limit,
     offset: 0,
     attributes: [
-      'blockHeight',
-      'blockHash',
-      'blockTime',
-      'txHash',
-      'txTime',
+      'blockHeight', 'blockHash', 'blockTime', 'txHash', 'txTime',
       [db.json('txData.data.content.type'), 'txContentType']
     ],
   })
@@ -358,25 +354,25 @@ export class TxQuerier {
 
 // COUNT/LIST TXS: BECOME/CHANGE/DEACTIVATE VALIDATOR /////////////////////////////////////////////
 
-const addressFilter   = ({ address = "" }) =>
+const addressFilter = ({ address = "" }) =>
   matchContentData(sql.literalValue('address'), address)
 const validatorFilter = ({ validator = "" }) =>
   matchContentData(sql.literalValue('validator'), validator)
 
-export const becomeValidator = 
+export const becomeValidator         = 
   new TxQuerier("tx_become_validator.wasm", addressFilter)
 export const changeValidatorMetadata =
   new TxQuerier("tx_change_validator_metadata.wasm", validatorFilter)
-export const deactivateValidator =
+export const deactivateValidator     =
   new TxQuerier("tx_deactivate_validator.wasm", addressFilter)
 
 // COUNT/LIST TXS: BOND/UNBOND ////////////////////////////////////////////////////////////////////
 
-const bondUnbondFilter   = ({ source = "", validator = "" }) =>
+const bondUnbondFilter = ({ source = "", validator = "" }) =>
   matchSourceOrValidator({ source, validator })
 const bondUnbondPaginate = (limit, offset) => paginateByContent(
   "content", sql.fragment`'data'->>'amount'`, sql.fragment`bigint`, DESC, limit, offset)
-const matchBondOrUnbond  = OR(
+const matchBondOrUnbond = OR(
   matchContentType("tx_bond.wasm"),
   matchContentType("tx_unbond.wasm"))
 
@@ -387,39 +383,46 @@ export const unbond     = new TxQuerier("tx_unbond.wasm",  bondUnbond.filter, bo
 // COUNT/LIST TXS: TRANSFER ///////////////////////////////////////////////////////////////////////
 
 export const transfer = {
-  txData: sql.fragment`(SELECT
-    jsonb_path_query("txData", '$.data.content.data[*]') as "txData"
-    FROM  "transactions"
-    WHERE "txData"->'data'->'content'->'type' = '"tx_transfer.wasm"')`,
-  owners: sql.fragment`(SELECT
-    jsonb_path_query("txData", '$.sources[*].owner') AS source,
-    jsonb_path_query("txData", '$.targets[*].owner') AS target
-    FROM ${transfer.txData}`,
-  full: sql.fragment`(SELECT
-    "blockHeight",
-    "txHash",
-    "txTime",
-    jsonb_path_query("txData", '$.sources[*].owner') AS source,
-    jsonb_path_query("txData", '$.sources[*].token') AS sourceToken,
-    jsonb_path_query("txData", '$.sources[*][1]')    AS sourceAmount,
-    jsonb_path_query("txData", '$.targets[*].owner') AS target,
-    jsonb_path_query("txData", '$.targets[*].token') AS targetToken,
-    jsonb_path_query("txData", '$.targets[*][1]')    AS targetAmount
-    FROM ${transfer.txData})`,
-  listTokens: () => slonikQuery(sql.unsafe`SELECT
-    jsonb_path_query("txData", '$.source[*].token') AS source_token,
-    jsonb_path_query("txData", '$.target[*].token') AS target_token
-    FROM ${transfer.txData}`),
+  filter: (source, target) =>
+    sql.fragment`WHERE "source" = ${source} OR "target" = ${target}`,
+  pagination: (limit, offset) =>
+    sql.fragment`ORDER BY "blockHeight" DESC LIMIT ${limit} OFFSET ${offset}`,
   count: ({ address = "", source = address, target = address, }) =>
-    slonikCount(sql.unsafe`SELECT COUNT(*) FROM ${transfer.owners}
-      WHERE "source" = ${source} OR "target" = ${target}`),
+    slonikCount(sql.unsafe`
+      WITH owners as (${transfer.owners})
+      SELECT COUNT(*) FROM owners
+      ${transfer.filter(source, target)}`),
   list: ({ address = "", source = address, target = address, limit = 100, offset = 0 }) =>
-    slonikSelect(sql.unsafe`SELECT * FROM ${transfer.full}
-      WHERE "source" = ${source} OR "target" = ${target}
-      ORDER BY "blockHeight" DESC LIMIT ${limit} OFFSET ${offset})`)
+    slonikSelect(sql.unsafe`
+      WITH transfers as (${transfer.full})
+      SELECT * FROM transfers
+      ${transfer.filter(source, target)}
+      ${transfer.pagination(limit, offset)}`),
+  listTokens: () =>
+    slonikQuery(sql.unsafe`SELECT
+      jsonb_path_query("txData", '$.source[*].token') AS source_token,
+      jsonb_path_query("txData", '$.target[*].token') AS target_token
+      FROM (${transfer.txData})`),
 }
+transfer.txData = sql.fragment`SELECT
+  "blockHeight, "blockHash", "txHash", 
+  jsonb_path_query("txData", '$.data.content.data[*]') as "txData"
+  FROM "transactions" WHERE ${matchContentType("tx_bond.wasm")}`
+transfer.owners = sql.fragment`WITH txs AS (${transfer.txData}) SELECT
+  jsonb_path_query("txData", '$.sources[*].owner') AS source,
+  jsonb_path_query("txData", '$.targets[*].owner') AS target
+  FROM txs`
+transfer.full = sql.fragment`WITH txs AS (${transfer.txData}) SELECT
+  "blockHeight", "blockTime, "blockHash", "blockTime", "txHash", "txTime",
+  jsonb_path_query("txData", '$.sources[*].owner') AS source,
+  jsonb_path_query("txData", '$.sources[*].token') AS sourceToken,
+  jsonb_path_query("txData", '$.sources[*][1]')    AS sourceAmount,
+  jsonb_path_query("txData", '$.targets[*].owner') AS target,
+  jsonb_path_query("txData", '$.targets[*].token') AS targetToken,
+  jsonb_path_query("txData", '$.targets[*][1]')    AS targetAmount
+  FROM txs`
 
-// COUNT/LIST TXS: BY ADDRESS /////////////////////////////////////////////////////////////////////
+// COUNT/LIST ALL TXS BY ADDRESS /////////////////////////////////////////////////////////////////////
 
 export const txWithAddress = new TxQuerier(null,
   ({ address = '' }) => sql.fragment`(

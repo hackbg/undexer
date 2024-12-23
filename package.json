@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@hackbg/port": "workspace:./fadroma/toolbox/port",
+    "@hackbg/hide": "workspace:./fadroma/toolbox/hide",
     "@types/node": "^22.7.0",
     "c8": "^10.1.2",
     "pgmock": "^1.0.3",

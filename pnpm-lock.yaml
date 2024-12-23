@@ -57,6 +57,9 @@ importers:
         specifier: ^6.19.2
         version: 6.21.0
     devDependencies:
+      '@hackbg/hide':
+        specifier: workspace:./fadroma/toolbox/hide
+        version: link:fadroma/toolbox/hide
       '@hackbg/port':
         specifier: workspace:./fadroma/toolbox/port
         version: link:fadroma/toolbox/port
