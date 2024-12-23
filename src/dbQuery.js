@@ -296,86 +296,79 @@ export const transactionsLatest = ({ limit = 15 } = {}) =>
 export const transactionsAtHeight = (blockHeight = 0) =>
   DB.Transaction.findAndCountAll({ where: { blockHeight } })
 
-export const becomeValidatorCount = ({ address = "" }) =>
-  countTxs(sql.fragment`
+export const becomeValidator = {
+  count: ({ address = "" }) => countTxs(sql.fragment`
+    WHERE ${matchContentType('tx_become_validator.wasm')}
+    AND   ${matchContentData(sql.literalValue('address'), address)}`),
+  list:  ({ address = "", limit = 100, offset = 0 }) => selectTxs(sql.fragment`
     WHERE ${matchContentType('tx_become_validator.wasm')}
     AND   ${matchContentData(sql.literalValue('address'), address)}
-  `)
+    ${paginate("blockHeight", DESC, limit, offset)}`)
+}
 
-export const becomeValidatorList = ({ address = "", limit = 100, offset = 0 }) =>
-  selectTxs(sql.fragment`
-    WHERE ${matchContentType('tx_become_validator.wasm')}
-    AND   ${matchContentData(sql.literalValue('address'), address)}
-    ORDER BY "blockHeight" DESC LIMIT ${limit} OFFSET ${offset}
-  `)
-
-export const changeValidatorMetadataCount = ({ validator = "" }) =>
-  countTxs(sql.fragment`
+export const changeValidatorMetadata = {
+  count: ({ validator = "" }) => countTxs(sql.fragment`
+    WHERE ${matchContentType('tx_change_validator_metadata.wasm')}
+    AND   ${matchContentData(sql.literalValue('validator'), validator)}`),
+  list:  ({ validator = "", limit = 100, offset = 0 }) => selectTxs(sql.fragment`
     WHERE ${matchContentType('tx_change_validator_metadata.wasm')}
     AND   ${matchContentData(sql.literalValue('validator'), validator)}
-  `)
+    ${paginate("blockHeight", DESC, limit, offset)}`)
+}
 
-export const changeValidatorMetadataList = ({ validator = "" }) =>
-  selectTxs(sql.fragment`
-    WHERE ${matchContentType('tx_change_validator_metadata.wasm')}
-    AND   ${matchContentData(sql.literalValue('validator'), validator)}
-    ORDER BY "blockHeight" DESC LIMIT ${limit} OFFSET ${offset}
-  `)
+export const deactivateValidator = {
+  count: ({ address = "" }) => countTxs(sql.fragment`
+      WHERE ${matchContentType('tx_deactivate_validator.wasm')}
+      AND   ${matchContentData(sql.literalValue('address'), address)}`),
+  list:  ({ address = "", limit = 100, offset = 0 }) => selectTxs(sql.fragment`
+      WHERE ${matchContentType('tx_deactivate_validator.wasm')}
+      AND   ${matchContentData(sql.literalValue('address'), address)}
+      ${paginate("blockHeight", DESC, limit, offset)}`)
+}
 
-export const deactivateValidatorCount = ({ address = "" }) =>
-  countTxs(sql.fragment`
-    WHERE ${matchContentType('tx_deactivate_validator.wasm')}
-    AND   ${matchContentData(sql.literalValue('address'), address)}
-  `)
+export const bondUnbond = {
+  pagination: ({ limit, offset }) => paginateByContent(
+    "content", sql.fragment`'data'->>'amount'`, sql.fragment`bigint`, DESC, limit, offset),
+  filter: ({ source, validator }) => sql.fragment`
+    WHERE ${OR(matchContentType("tx_bond.wasm"), matchContentType("tx_unbond.wasm"))}
+      AND ${matchSourceOrValidator({ source, validator })}`,
+  count: ({ source = "", validator = "" }) =>
+    slonikCount(sql.unsafe`SELECT COUNT(*)
+      ${fromTxsByContent} ${bondUnbond.filter({ source, validator })}`),
+  list:  ({ source, validator, limit = 100, offset = 0 }) =>
+    slonikSelect(sql.unsafe`SELECT *
+      ${fromTxsByContent} ${bondUnbond.filter({ source, validator })}
+      ${bondUnbond.pagination({ limit, offset })}`),
+}
 
-export const deactivateValidatorList = ({ address = "", limit = 100, offset = 0 }) =>
-  selectTxs(sql.fragment`
-    WHERE ${matchContentType('tx_deactivate_validator.wasm')}
-    AND   ${matchContentData(sql.literalValue('address'), address)}
-    ORDER BY "blockHeight" DESC LIMIT ${limit} OFFSET ${offset}
-  `)
+export const bond = {
+  filter: ({ source, validator }) => sql.fragment`
+    WHERE ${matchContentType("tx_bond.wasm")}
+      AND ${matchSourceOrValidator({ source, validator })}`,
+  count: ({ source = "", validator = "" }) =>
+    slonikCount(sql.unsafe`SELECT COUNT(*)
+      ${fromTxsByContent} ${bondFilter({ source, validator })}`),
+  list:  ({ source, validator, limit = 100, offset = 0 }) =>
+    slonikSelect(sql.unsafe`SELECT *
+      ${fromTxsByContent} ${bondFilter({ source, validator })}
+      ${bondUnbondPagination({ limit, offset })}`),
+}
 
-const bondUnbondPagination = ({ limit, offset }) => paginateByContent(
-  "content", sql.fragment`'data'->>'amount'`, sql.fragment`bigint`, DESC, limit, offset)
+export const unbond = {
+  filter: ({ source, validator }) => sql.fragment`
+    WHERE ${matchContentType("tx_unbond.wasm")}
+      AND ${matchSourceOrValidator({ source, validator })}`,
+  count: ({ source = "", validator = "" }) =>
+    slonikCount(sql.unsafe`SELECT COUNT(*)
+      ${fromTxsByContent} ${unbondFilter({ source, validator })}`),
+  list:  ({ source, validator, limit = 100, offset = 0 }) =>
+    slonikSelect(sql.unsafe`SELECT *
+      ${fromTxsByContent} ${unbondFilter({ source, validator })}
+      ${bondUnbondPagination({ limit, offset })}`)
+}
 
-const bondOrUnbondFilter = ({ source, validator }) => sql.fragment`
-  WHERE ${OR(matchContentType("tx_bond.wasm"), matchContentType("tx_unbond.wasm"))}
-    AND ${matchSourceOrValidator({ source, validator })}`
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const bondAndUnboundCount = ({ source = "", validator = "" }) =>
-  slonikCount(sql.unsafe`SELECT COUNT(*)
-    ${fromTxsByContent} ${bondOrUnbondFilter({ source, validator })}`)
-
-export const bondAndUnboundList = ({ source, validator, limit = 100, offset = 0 }) =>
-  slonikSelect(sql.unsafe`SELECT *
-    ${fromTxsByContent} ${bondOrUnbondFilter({ source, validator })}
-    ${bondUnbondPagination({ limit, offset })}`)
-
-const bondFilter = ({ source, validator }) => sql.fragment`
-  WHERE ${matchContentType("tx_bond.wasm")}
-    AND ${matchSourceOrValidator({ source, validator })}`
-
-export const bondCount = ({ source = "", validator = "" }) =>
-  slonikCount(sql.unsafe`SELECT COUNT(*)
-    ${fromTxsByContent} ${bondFilter({ source, validator })}`)
-
-export const bondList = ({ source, validator, limit = 100, offset = 0 }) =>
-  slonikSelect(sql.unsafe`SELECT *
-    ${fromTxsByContent} ${bondFilter({ source, validator })}
-    ${bondUnbondPagination({ limit, offset })}`)
-
-const unbondFilter = ({ source, validator }) => sql.fragment`
-  WHERE ${matchContentType("tx_unbond.wasm")}
-    AND ${matchSourceOrValidator({ source, validator })}`
-
-export const unbondCount = ({ source = "", validator = "" }) =>
-  slonikCount(sql.unsafe`SELECT COUNT(*)
-    ${fromTxsByContent} ${unbondFilter({ source, validator })}`)
-
-export const unbondList = ({ source, validator, limit = 100, offset = 0 }) =>
-  slonikSelect(sql.unsafe`SELECT *
-    ${fromTxsByContent} ${unbondFilter({ source, validator })}
-    ${bondUnbondPagination({ limit, offset })}`)
 
 export const proposalsWithoutResults = () =>
   slonikSelect(sql.unsafe`SELECT id FROM proposals WHERE result is null`)

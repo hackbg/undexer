@@ -216,8 +216,8 @@ dbRoutes['/bonds-and-unbonds'] = async function dbBonds (req, res) {
     return send400(res, "Use source OR delegator (they are equivalent)")
   }
   const [count, bonds] = await Promise.all([
-    Query.bondAndUnboundCount({ source, validator }),
-    Query.bondAndUnboundList({ source, validator, limit, offset })
+    Query.bondUnbond.count({ source, validator }),
+    Query.bondUnbond.list({ source, validator, limit, offset })
   ])
   return send200(res, { count, bonds })
 }
@@ -229,8 +229,8 @@ dbRoutes['/bonds'] = async function dbBonds (req, res) {
     return send400(res, "Use source OR delegator (they are equivalent)")
   }
   const [count, bonds] = await Promise.all([
-    Query.bondCount({ source, validator }),
-    Query.bondList({ source, validator, limit, offset })
+    Query.bond.count({ source, validator }),
+    Query.bond.list({ source, validator, limit, offset })
   ])
   return send200(res, { count, bonds })
 }
@@ -242,8 +242,8 @@ dbRoutes['/unbonds'] = async function dbBonds (req, res) {
     return send400(res, "Use source OR delegator (they are equivalent)")
   }
   const [count, unbonds] = await Promise.all([
-    Query.unbondCount({ source, validator }),
-    Query.unbondList({ source, validator, limit, offset })
+    Query.unbond.count({ source, validator }),
+    Query.unbond.list({ source, validator, limit, offset })
   ])
   return send200(res, { count, unbonds })
 }
