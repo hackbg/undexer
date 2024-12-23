@@ -97,3 +97,9 @@ export const matchSourceOrValidator = ({ source, validator }) =>
   (validator)
     ? sql.fragment`content->'data'->>'validator' = ${validator}`
     : sql.fragment`true`
+
+export const jsonbFields = (field, subfields = {}) => sql.join(
+  Object.entries(subfields).map(([name, path])=>
+    sql.fragment`jsonb_path_query(${field}, ${path}) AS ${name}`),
+  sql.fragment`, `
+)

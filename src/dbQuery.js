@@ -7,6 +7,7 @@ import {
   slonikCount, slonikSelect, selectTxs, countTxs,
   matchContentType, matchContentData, matchSourceOrValidator, OR,
   paginateByContent, DESC,
+  jsonbFields,
 } from './dbUtil.js'
 
 export const totalTransactions = () =>
@@ -404,23 +405,25 @@ export const transfer = {
       jsonb_path_query("txData", '$.target[*].token') AS target_token
       FROM (${transfer.txData})`),
 }
-transfer.txData = sql.fragment`SELECT
-  "blockHeight, "blockHash", "txHash", 
-  jsonb_path_query("txData", '$.data.content.data[*]') as "txData"
+transfer.txData =
+  sql.fragment`SELECT "blockHeight, "blockHash", "txHash",
+  ${jsonbFields("txData", { txData: '$.data.content.data[*]' })}
   FROM "transactions" WHERE ${matchContentType("tx_bond.wasm")}`
-transfer.owners = sql.fragment`WITH txs AS (${transfer.txData}) SELECT
-  jsonb_path_query("txData", '$.sources[*].owner') AS source,
-  jsonb_path_query("txData", '$.targets[*].owner') AS target
-  FROM txs`
-transfer.full = sql.fragment`WITH txs AS (${transfer.txData}) SELECT
-  "blockHeight", "blockTime, "blockHash", "blockTime", "txHash", "txTime",
-  jsonb_path_query("txData", '$.sources[*].owner') AS source,
-  jsonb_path_query("txData", '$.sources[*].token') AS sourceToken,
-  jsonb_path_query("txData", '$.sources[*][1]')    AS sourceAmount,
-  jsonb_path_query("txData", '$.targets[*].owner') AS target,
-  jsonb_path_query("txData", '$.targets[*].token') AS targetToken,
-  jsonb_path_query("txData", '$.targets[*][1]')    AS targetAmount
-  FROM txs`
+transfer.owners =
+  sql.fragment`WITH txs AS (${transfer.txData}) SELECT ${jsonbFields("txData", {
+    source: '$.sources[*].owner',
+    target: '$.targets[*].owner',
+  })} FROM txs`
+transfer.full = sql.fragment`
+  WITH txs AS (${transfer.txData}) SELECT
+  "blockHeight", "blockTime, "blockHash", "blockTime", "txHash", "txTime", ${jsonbFields("txData", {
+    source:       '$.sources[*].owner',
+    sourceToken:  '$.sources[*].token',
+    sourceAmount: '$.sources[*][1]',
+    target:       '$.targets[*].owner',
+    targetToken:  '$.targets[*].token',
+    targetAmount: '$.targets[*][1]',
+  })} FROM txs`
 
 // COUNT/LIST ALL TXS BY ADDRESS /////////////////////////////////////////////////////////////////////
 
