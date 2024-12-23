@@ -40,6 +40,12 @@ export const slonikQuery = (query, options = {}) => {
   return db.query(sql, { ...options, bind })
 }
 
+export const AND = (a, b) =>
+  sql.fragment`(${a} AND ${b})`
+
+export const OR = (a, b) =>
+  sql.fragment`(${a} OR ${b})`
+
 export const ASC =
   sql.fragment`ASC`
 
@@ -91,6 +97,3 @@ export const matchSourceOrValidator = ({ source, validator }) =>
   (validator)
     ? sql.fragment`content->'data'->>'validator' = ${validator}`
     : sql.fragment`true`
-
-export const OR = (a, b) =>
-  sql.fragment`(${a} OR ${b})`

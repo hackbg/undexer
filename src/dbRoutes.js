@@ -380,8 +380,8 @@ dbRoutes['/transfers'] = async function dbTransfers (req, res) {
   const { limit, offset } = pagination(req)
   const { address, source, target } = req.query
   const [count, transfers] = await Promise.all([
-    Query.transferCount({ address, source, target }),
-    Query.transferList({ address, source, target, limit, offset }),
+    Query.transfer.count({ address, source, target }),
+    Query.transfer.list({ address, source, target, limit, offset }),
   ])
   return send200(res, { count, transfers })
 }
@@ -394,8 +394,8 @@ dbRoutes['/transactions/:address'] = async function dbTransactionsForAddress (re
   const { limit, offset } = pagination(req)
   try {
     const [count, transactions] = await Promise.all([
-      Query.txWithAddressCount({ address }),
-      Query.txWithAddressList({ address, limit, offset }),
+      Query.txWithAddress.count({ address }),
+      Query.txWithAddress.list({ address, limit, offset }),
     ])
     return send200(res, { count, transactions });
   } catch (error) {
