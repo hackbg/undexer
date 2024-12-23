@@ -1,19 +1,32 @@
 #!/usr/bin/env -S node --import @ganesha/esbuild
-await import('./testDb.js')
+import process from 'node:process'
 import { Console } from "@hackbg/logs"
+import { hideProperties } from "@hackbg/hide"
 const console = new Console("Test: API (DB routes)")
 
+if (process.env.UNDEXER_TEST_WITH_REAL_DB) {
+  console.info('Testing with real DB from environment')
+} else {
+  console.info('Testing with PGMock (setup may be slow)')
+  await import('./testDb.js')
+}
+
 const { dbRoutes } = await import('../src/dbRoutes.js')
-const testRoute = (route, query = {}) =>
-  new Promise(resolve=>route({ query }, {
-    code: null,
-    data: null,
-    status (code) { this.code = code; return this },
-    send (data) { this.data = data; resolve(this) },
-  }))
+
 const testDbRoute = async (path, query) => {
-  console.log('Testing', path, query)
-  console.log(await testRoute(dbRoutes[path], query))
+  console.br().log('Testing', path, query||'')
+  const { code, ...rest } = await testRoute(dbRoutes[path], query)
+  console.log(code, rest)
+}
+const testRoute = (route, query = {}) =>
+  new Promise(resolve=>route({ query }, new MockResponse(resolve)))
+class MockResponse {
+  status (code) { this.code = code; return this }
+  send (data) { this.data = data; this.resolve(this) }
+  constructor (resolve) {
+    this.resolve = resolve
+    hideProperties(this, ['resolve'])
+  }
 }
 
 const t1 = performance.now()
