@@ -4,8 +4,8 @@ import { RPC_URL } from './config.js';
 
 let rpc
 
-export default function getRPC () {
-  return rpc ??= rpcVariant(RPC_URL)
+export default function getRPC (url = RPC_URL) {
+  return rpc ??= rpcVariant(url)
 }
 
 export async function rpcVariant (url) {
