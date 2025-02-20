@@ -4,6 +4,7 @@ await Promise.all([
   import('./testApiRpc.js'),
   import('./testIndexing.js'),
 ]).catch(e=>{
+  console.error(e)
   console.error('Tests failed.')
   process.exit(1)
 }).then(()=>{
