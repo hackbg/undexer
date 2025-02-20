@@ -9,6 +9,9 @@ import util from 'node:util'
 
 await import('./testDb.js')
 
+await import('../src/dbEnum.js')
+await import('../src/dbError.js')
+
 const { dbRoutes } = await import('../src/dbRoutes.js')
 const testRoute = (route, params = {}, query = {}) =>
   new Promise(resolve=>route({ params, query }, {
@@ -46,19 +49,22 @@ try {
   await testDbRoute('/validators')
   await testDbRoute('/validators/states')
   await testDbRoute('/validator')
-  await testDbRoute('/validator/votes/:address')
+  await testDbRoute('/validator', {}, { address:   'tnam1qx64zytr93rjj23ztf32y2rnrxwlm9j6svyznxez' })
+  await testDbRoute('/validator', {}, { publicKey: '515306713B9CA441E4A9D66A217DAC2CB4B387D8F822D58C467802E80AF72A1A' })
+  await testDbRoute('/validator/votes/:address', { address: 'tnam1qx64zytr93rjj23ztf32y2rnrxwlm9j6svyznxez' })
   await testDbRoute('/proposals')
   await testDbRoute('/proposals/stats')
   await testDbRoute('/proposal/:id', { id: "0" })
   await testDbRoute('/proposal/votes/:id', { id: "0" })
   await testDbRoute('/transfers')
   //await testDbRoute('/balances/:address')
-  console.log('Tests done in', performance.now() - t1)
-  process.exit(0)
+  console.log('DB API tests done in', performance.now() - t1)
+  //process.exit(0)
 } catch (e) {
   console.error(e)
-  console.log('Tests failed in', performance.now() - t1)
-  process.exit(1)
+  console.log('DB API tests failed in', performance.now() - t1)
+  throw e
+  //process.exit(1)
 }
 
 //mock.destroy()

@@ -43,12 +43,13 @@ try {
   await testRpcRoute('/staking-rewards-rate')
   await testRpcRoute('/balances/:address', { address: 'invalid' })
   //await testDbRoute('/balances/:address')
-  console.log('Tests done in', performance.now() - t1)
-  process.exit(0)
+  console.log('RPC API tests done in', performance.now() - t1)
+  //process.exit(0)
 } catch (e) {
   console.error(e)
-  console.log('Tests failed in', performance.now() - t1)
-  process.exit(1)
+  console.log('RPC API tests failed in', performance.now() - t1)
+  throw e
+  //process.exit(1)
 }
 
 //mock.destroy()
