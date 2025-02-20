@@ -7,6 +7,8 @@ const console = new Console("Test: API (RPC routes)")
 util.inspect.defaultOptions.depth = 4
 import util from 'node:util'
 
+await import('../src/rpc.js')
+
 const { rpcRoutes } = await import('../src/rpcRoutes.js')
 const testRoute = (route, params = {}, query = {}) =>
   new Promise(resolve=>route({ params, query }, {
