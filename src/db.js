@@ -1,9 +1,11 @@
 import process from 'node:process'
 import { Console } from "@hackbg/logs"
-import { base64 } from "@hackbg/fadroma";
 import { Sequelize, DataTypes, Op } from "sequelize"
 import PG from "pg"
 import { CHAIN_ID, DATABASE_URL } from "./config.js"
+import { IntegerPrimaryKey, StringPrimaryKey, CompoundPrimaryKey } from './dbKeys.js'
+import { JSONField, NullableJSONField } from './dbJson.js'
+
 export { Sequelize, DataTypes, Op }
 
 const console = new Console("DB");
@@ -63,59 +65,6 @@ export async function initDb () {
   }
 }
 
-export const IntegerPrimaryKey = (autoIncrement = false) => ({
-  type:       INTEGER,
-  allowNull:  false,
-  unique:     true,
-  primaryKey: true,
-  autoIncrement
-})
-
-export const StringPrimaryKey = () => ({
-  type:       TEXT,
-  allowNull:  false,
-  unique:     true,
-  primaryKey: true,
-})
-
-const compoundPrimaryKey = (fields) => Object.fromEntries(
-  Object.entries(fields).map(([key, value])=>[key, {
-    ...value,
-    unique:     false,
-    primaryKey: true,
-    allowNull:  false,
-  }])
-)
-
-export const JSONField = name => ({
-  type: JSONB,
-  allowNull: false,
-  set (value) {
-    return this.setDataValue(name, JSON.parse(serialize(value)));
-  },
-})
-
-export const NullableJSONField = name => ({
-  type: JSONB,
-  allowNull: true,
-  set (value) {
-    if (value === undefined) {
-      this.setDataValue(name, null);
-    }
-    else {
-      this.setDataValue(name, JSON.parse(serialize(value)));
-    }
-  },
-})
-
-export const VALIDATOR_STATES = [
-  "BelowThreshold",
-  "BelowCapacity",
-  "Jailed",
-  "Consensus",
-  "Inactive"
-]
-
 const blockMeta = () => ({
   chainId:     { type: TEXT,    allowNull: false },
   blockHash:   { type: TEXT,    allowNull: false },
@@ -123,41 +72,26 @@ const blockMeta = () => ({
   blockTime:   { type: DATE },
 })
 
-export const PROPOSAL_STATUS = [
-  "ongoing",
-  "finished",
-  "upcoming",
-]
-
-export const PROPOSAL_RESULT = [
-  "passed",
-  "rejected",
-]
-
-export const PROPOSAL_TALLY_TYPE = [
-  "OneHalfOverOneThird",
-  "TwoThirds",
-  "LessOneHalfOverOneThirdNay"
-]
-
 export const
 
-  ErrorLog = db.define('error_log', {
-    id:        IntegerPrimaryKey(true),
-    timestamp: { type: DATE },
-    message:   { type: TEXT },
-    stack:     JSONField('stack'),
-    info:      NullableJSONField('info'),
+  /** Stored raw responses. */
+  RPCResponse = db.define('rpc_response', {
+    id:          IntegerPrimaryKey(true),
+    timestamp:   { type: DATE,    allowNull: false, },
+    url:         { type: TEXT,    allowNull: false, },
+    data:        { type: TEXT,    allowNull: false, },
   }),
 
+  /** Epochs with global per-epoch state. */
   Epoch = db.define('epoch', {
     id:         IntegerPrimaryKey(true),
     totalStake: { type: BIGINT },
     parameters: JSONField('parameters')
   }),
 
+  /** Validators with per-epoch state. */
   Validator = db.define('validator', {
-    ...compoundPrimaryKey({
+    ...CompoundPrimaryKey({
       epoch:          { type: INTEGER, },
       namadaAddress:  { type: TEXT, },
     }),
@@ -171,16 +105,17 @@ export const
     state:            NullableJSONField('state')
   }),
 
+  /** Blocks by hash, with decoded per-block data from RPC. */
   Block = db.define('block', {
     ...blockMeta(),
     epoch:        { type: INTEGER },
-    blockHash:    StringPrimaryKey(),
+    blockHash:    StringPrimaryKey(), // primary key; overrides blockMeta().blockHash
     blockHeader:  JSONField('blockHeader'),
-    rpcResponses: JSONField('rpcResponses'),
     blockData:    NullableJSONField('blockData'),
     blockResults: NullableJSONField('blockResults'),
   }),
 
+  /** Transactions by hash, decoded from block data. */
   Transaction = db.define('transaction', {
     ...blockMeta(),
     txHash: StringPrimaryKey(),
@@ -188,6 +123,7 @@ export const
     txData: JSONField('txData'),
   }),
 
+  /** Governance proposals by ID with per-proposal data. */
   Proposal = db.define('proposal', {
     id:       IntegerPrimaryKey(),
     content:  NullableJSONField('content'),
@@ -196,14 +132,16 @@ export const
     initTx:   { type: TEXT, allowNull: true }
   }),
 
+  /** WASM blobs attached to governance proposals of certain types. */
   ProposalWASM = db.define('proposal_wasm', {
     id:       IntegerPrimaryKey(),
     codeKey:  { type: TEXT },
     wasm:     { type: BLOB },
   }),
 
+  /** Governance votes per proposal/validator/delegator, with vote data. */
   Vote = db.define("vote", {
-    ...compoundPrimaryKey({
+    ...CompoundPrimaryKey({
       proposal:    { type: INTEGER, },
       validator:   { type: TEXT,    allowNull: true },
       delegator:   { type: TEXT,    allowNull: true },
@@ -215,39 +153,6 @@ export const
     height: { type: INTEGER, allowNull: true },
     epoch:  { type: INTEGER, allowNull: true },
   });
-
-export function logErrorToDB (error, info) {
-  return ErrorLog.create({
-    timestamp: new Date(),
-    message:   error?.message,
-    stack:     error?.stack,
-    info
-  })
-}
-
-export async function withErrorLog (callback, info) {
-  try {
-    return Promise.resolve(callback())
-  } catch (error) {
-    console.error('Logging error to database:', error)
-    await logErrorToDB(error, info)
-    throw error
-  }
-}
-
-export function serialize (data) {
-  return JSON.stringify(data, stringifier);
-}
-
-export function stringifier (_, value) {
-  if (typeof value === "bigint") {
-    return value.toString();
-  }
-  if (value instanceof Uint8Array) {
-    return base64.encode(value);
-  }
-  return value;
-}
 
 export function atomic (transaction, operation) {
   if (transaction) {

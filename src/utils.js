@@ -1,5 +1,4 @@
 import { Console, bold, colors } from '@hackbg/logs';
-import { DEFAULT_PAGE_SIZE } from './config.js';
 
 export const send200 = (res, data)  => res.status(200).send(data)
 export const send400 = (res, error) => res.status(400).send({ error })
@@ -89,23 +88,6 @@ export function withConsole (handler) {
       )
       res.status(500).send('Error')
     }
-  }
-}
-
-// Read limit/offset from query parameters and apply defaults
-export function pagination (req) {
-  return {
-    offset: Math.max(0,   req.query.offset ? Number(req.query.offset) : 0),
-    limit:  Math.min(100, req.query.limit  ? Number(req.query.limit)  : DEFAULT_PAGE_SIZE),
-  }
-}
-
-// Read limit/before/after from query parameters and apply defaults
-export function relativePagination (req) {
-  return {
-    before: Math.max(0,   req.query.before || 0),
-    after:  Math.max(0,   req.query.after  || 0),
-    limit:  Math.min(100, req.query.limit ? Number(req.query.limit) : DEFAULT_PAGE_SIZE),
   }
 }
 
