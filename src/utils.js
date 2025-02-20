@@ -76,13 +76,14 @@ export function withConsole (handler) {
     const t0 = performance.now();
     const console = new Console(`${(t0/1000).toFixed(3)}: ${req.path}`)
     try {
-      console.info(bold('GET'), req.query)
+      console.info(bold(req.method), req.query)
       await handler(req, res)
       const t1 = performance.now();
       console.log(colors.green(bold(`Done in ${((t1-t0)/1000).toFixed(3)}s`)))
     } catch (e) {
       const t1 = performance.now();
       console.error(
+        bold(req.method), req.query,
         colors.red(bold(`Failed in ${((t1-t0)/1000).toFixed(3)}s:`)),
         e.message, '\n'+e.stack.split('\n').slice(1).join('\n')
       )
