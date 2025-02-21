@@ -1,11 +1,11 @@
-import express from 'express'
-import { literal, fn, cast, col } from 'sequelize';
-import { Block, Validator, Proposal, Vote } from './db.js';
+import { CHAIN_ID } from './config.js';
+import { Block, Validator, Proposal, Vote } from './dbModel.js';
 import * as Query from './dbQuery.js';
 import { defaultAttributes } from './dbUtil.js';
-import { CHAIN_ID } from './config.js';
 import { pagination, relativePagination } from './dbPage.js';
 import { withConsole, send200, send400, send404, send500 } from './utils.js';
+import express from 'express'
+import { literal, fn, cast, col } from 'sequelize';
 
 const chainId = CHAIN_ID
 
@@ -56,21 +56,19 @@ dbRoutes['/blocks'] = async function dbBlocks (req, res) {
 
 dbRoutes['/block'] = async function dbBlock (req, res) {
   const timestamp = new Date().toISOString()
-  const _attrs = /*FIXME*/ defaultAttributes(['blockHeight', 'blockHash', 'blockHeader', 'blockData'])
   const { height, hash } = req.query
-  const block = await Query.block({ height, hash })
+  const [block, blockData] = await Promise.all([
+    Query.block({ height, hash }),
+    //TODO:Query.blockData({ height, hash })
+  ])
   if (!block) {
     return send404(res, 'Block not found')
   }
-  const transactions = await Query.transactionsAtHeight(block.blockHeight)
   const signers = block.blockData.result.block.last_commit.signatures.map(s=>s.validator_address)
-  const [proposerInfo, signersInfo] = await Promise.all([
-    Query.validatorByConsensusAddress(
-      block.blockHeader.proposerAddress
-    ),
-    Promise.all(signers.filter(Boolean).map(
-      signer=>Query.validatorByConsensusAddress(signer)
-    ))
+  const [transactions, proposerInfo, signersInfo] = await Promise.all([
+    Query.transactionsAtHeight(block.blockHeight),
+    Query.validatorByConsensusAddress(block.blockHeader.proposerAddress),
+    Promise.all(signers.filter(Boolean).map(signer=>Query.validatorByConsensusAddress(signer)))
   ])
   return send200(res, {
     timestamp,

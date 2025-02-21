@@ -15,7 +15,7 @@
     "build:wasm:dev": "cd fadroma/packages/namada && pnpm build:wasm:dev",
     "build:wasm:prod": "cd fadroma/packages/namada && pnpm build:wasm:prod",
     "test": "time ./tests/test.js",
-    "cov": "time c8 --all -x tests -x fadroma -x .todo -x main.ts -x bin ./tests/test.js"
+    "cov": "time c8 --all -x tests -x fadroma -x .todo -x main.ts -x bin -x migrations ./tests/test.js"
   },
   "dependencies": {
     "@fadroma/namada": "workspace:./fadroma/packages/namada",

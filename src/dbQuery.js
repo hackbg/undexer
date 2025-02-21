@@ -1,8 +1,5 @@
 import db from './db.js'
-import * as DB from './db.js'
-import { Sequelize, Op, QueryTypes } from "sequelize"
-import { intoRecord } from '@hackbg/into'
-
+import { Proposal, Vote, Validator, Epoch, Block, Transaction } from './dbModel.js'
 import {
   sql, count,
   slonikCount, slonikSelect,
@@ -11,7 +8,8 @@ import {
   ASC, DESC, OR, AND,
   defaultAttributes,
 } from './dbUtil.js'
-
+import { intoRecord } from '@hackbg/into'
+import { Sequelize, Op, QueryTypes } from "sequelize"
 const { SELECT, COUNT } = QueryTypes
 const BLOCK_LIST_ATTRIBUTES = [ 'blockHeight', 'blockHash', 'blockTime', 'epoch' ]
 
@@ -54,7 +52,7 @@ export const search = async (q = '') => {
 
 /** Count proposals. */
 export const totalProposals = () =>
-  DB.Proposal.count()
+  Proposal.count()
 
 /** Retrieve ids of all proposals without stored results. */
 export const proposalsWithoutResults = () =>
@@ -64,13 +62,13 @@ export const proposalsWithoutResults = () =>
 /** Find proposal by id. */
 export const searchProposals = async id => {
   id = Number(id)
-  return isNaN(id) ? [] : [await DB.Proposal.findOne({
+  return isNaN(id) ? [] : [await Proposal.findOne({
     where:      { id },
     attributes: { exclude: [ 'createdAt', 'updatedAt' ] }, })]}
 
 /** Count votes. */
 export const totalVotes = () =>
-  DB.Vote.count()
+  Vote.count()
 
 /// VALIDATORS ////////////////////////////////////////////////////////////////////////////////////
 
@@ -79,17 +77,17 @@ export const totalValidators = async (epoch) => {
   epoch = await latestEpochFromValidators(epoch)
   const where = {}
   if (!isNaN(epoch)) where.epoch = epoch
-  return DB.Validator.count({ where })
+  return Validator.count({ where })
 }
 
 /** Find a validator by consensus hash. */
-export const validatorByConsensusAddress = consensusAddress => DB.Validator.findOne({
+export const validatorByConsensusAddress = consensusAddress => Validator.findOne({
   attributes: [ 'namadaAddress', 'publicKey', 'consensusAddress', 'metadata' ],
   where: { consensusAddress }
 })
 
 /** Return top N validators. */
-export const validatorsTop = ({ limit = 15 } = {}) => DB.Validator.findAll({
+export const validatorsTop = ({ limit = 15 } = {}) => Validator.findAll({
   attributes: defaultAttributes(), order: [['stake', 'DESC']], limit, offset: 0,
 })
 
@@ -99,7 +97,7 @@ export const validatorPublicKeyToConsensusAddresses = async (publicKey) => {
   if (publicKey) {
     const attributes = { include: [ 'consensusAddress' ] }
     const where = { publicKey }
-    const records = await DB.Validator.findAll({ attributes, where })
+    const records = await Validator.findAll({ attributes, where })
     for (const record of records) {
       if ((record.consensusAddress||"").trim().length > 0) {
         addresses.add(record.consensusAddress)
@@ -115,7 +113,7 @@ export const validatorNamadaAddressToConsensusAddresses = async (namadaAddress) 
   if (namadaAddress) {
     const attributes = { include: [ 'consensusAddress' ] }
     const where = { namadaAddress }
-    const records = await DB.Validator.findAll({ attributes, where })
+    const records = await Validator.findAll({ attributes, where })
     for (const record of records) {
       if ((record.consensusAddress||"").trim().length > 0) {
         addresses.add(record.consensusAddress)
@@ -128,15 +126,15 @@ export const validatorNamadaAddressToConsensusAddresses = async (namadaAddress) 
 /// EPOCHS ////////////////////////////////////////////////////////////////////////////////////////
 
 export const latestEpoch = () =>
-  DB.Epoch.max('id')
+  Epoch.max('id')
 export const latestEpochFromBlock = () =>
-  DB.Block.max('epoch')
+  Block.max('epoch')
 export const latestEpochFromValidators = async (epoch) => {
   epoch = Number(epoch)
   if (isNaN(epoch)) {
     const attributes = { include: [ 'epoch' ] }
     const order      = [['epoch','DESC']]
-    const epochRow   = await DB.Validator.findOne({ attributes, order })
+    const epochRow   = await Validator.findOne({ attributes, order })
     epoch = epochRow?.get().epoch
   }
   return epoch
@@ -145,7 +143,7 @@ export const epochs = ({ limit = 10, before, after }) =>
   before ? epochsBefore({ before, limit }) :
    after ? epochsAfter({ after, limit })   :
            epochsLatest({ limit })
-export const epochsLatest = ({ limit = 10 }) => DB.Block.findAll({
+export const epochsLatest = ({ limit = 10 }) => Block.findAll({
   where: { "epoch": { [Op.not]: null } },
   attributes: [
     "epoch",
@@ -156,7 +154,7 @@ export const epochsLatest = ({ limit = 10 }) => DB.Block.findAll({
   group: "epoch",
   limit,
 })
-export const epochsBefore = ({ limit = 10, before }) => DB.Block.findAll({
+export const epochsBefore = ({ limit = 10, before }) => Block.findAll({
   where: { "epoch": { [Op.not]: null, [Op.lte]: before } },
   attributes: [
     "epoch",
@@ -167,7 +165,7 @@ export const epochsBefore = ({ limit = 10, before }) => DB.Block.findAll({
   group: "epoch",
   limit,
 })
-export const epochsAfter = ({ limit = 10, after }) => DB.Block.findAll({
+export const epochsAfter = ({ limit = 10, after }) => Block.findAll({
   where: { "epoch": { [Op.not]: null, [Op.gte]: after } },
   attributes: [
     "epoch",
@@ -182,15 +180,15 @@ export const epochsAfter = ({ limit = 10, after }) => DB.Block.findAll({
 /// BLOCKS ////////////////////////////////////////////////////////////////////////////////////////
 
 export const totalBlocks = () =>
-  DB.Block.count()
+  Block.count()
 export const latestBlock = () =>
-  DB.Block.max('blockHeight')
+  Block.max('blockHeight')
 export const oldestBlock = () =>
-  DB.Block.min('blockHeight')
+  Block.min('blockHeight')
 export const searchBlocks = async blockHeight => {
   blockHeight = Number(blockHeight)
   return (isNaN(blockHeight)) ? [] : [
-    await DB.Block.findOne({
+    await Block.findOne({
       where:      { blockHeight },
       attributes: { exclude: [ 'createdAt', 'updatedAt', 'rpcResponses' ] }, })]}
 export const blocks = async ({
@@ -223,7 +221,7 @@ export const blocks = async ({
     addresses,
     ...await intoRecord({ totalBlocks, latestBlock, oldestBlock }),
     count,
-    blocks: await Promise.all(rows.map(block=>DB.Transaction
+    blocks: await Promise.all(rows.map(block=>Transaction
       .count({ where: { blockHeight: block.blockHeight } })
       .then(transactionCount=>({ ...block.get(), transactionCount }))
     ))
@@ -234,7 +232,7 @@ export const blocksLatest = ({ limit, addresses = [] }) => {
   if (addresses && addresses.length > 0) {
     where['blockHeader.proposerAddress'] = { [Op.in]: addresses }
   }
-  return DB.Block.findAndCountAll({
+  return Block.findAndCountAll({
     attributes: BLOCK_LIST_ATTRIBUTES,
     order: [['blockHeight', 'DESC']],
     limit,
@@ -246,7 +244,7 @@ export const blocksBefore = ({ before, limit = 15, addresses = [] }) => {
   if (addresses && addresses.length > 0) {
     where['blockHeader.proposerAddress'] = { [Op.in]: addresses }
   }
-  return DB.Block.findAndCountAll({
+  return Block.findAndCountAll({
     attributes: BLOCK_LIST_ATTRIBUTES,
     order: [['blockHeight', 'DESC']],
     limit,
@@ -258,7 +256,7 @@ export const blocksAfter = ({ after, limit = 15, addresses = [] }) => {
   if (addresses && addresses.length > 0) {
     where['blockHeader.proposerAddress'] = { [Op.in]: addresses }
   }
-  return DB.Block.findAndCountAll({
+  return Block.findAndCountAll({
     attributes: BLOCK_LIST_ATTRIBUTES,
     order: [['blockHeight', 'ASC']],
     limit,
@@ -272,42 +270,42 @@ export const block = async ({ height, hash } = {}) => {
     const where = {}
     if (height) where['blockHeight'] = height
     if (hash) where['blockHash'] = hash
-    block = await DB.Block.findOne({attributes: attrs, where})
+    block = await Block.findOne({attributes: attrs, where})
   } else {
     const order = [['blockHeight', 'DESC']]
-    block = await DB.Block.findOne({attributes: attrs, order})
+    block = await Block.findOne({attributes: attrs, order})
   }
   return block
 }
 export const blockByHeightWithTransactions = (blockHeight = 0) => {
   const where = { blockHeight }
   return Promise.all([
-    DB.Block.findOne({ where, attributes: defaultAttributes() }),
-    DB.Transaction.findAndCountAll({ where, attributes: defaultAttributes() }),
+    Block.findOne({ where, attributes: defaultAttributes() }),
+    Transaction.findAndCountAll({ where, attributes: defaultAttributes() }),
   ])
 }
 
 /// TRANSACTIONS //////////////////////////////////////////////////////////////////////////////////
 
 export const totalTransactions = () =>
-  DB.Transaction.count()
+  Transaction.count()
 export const searchTransactions = async txHash => txHash ? [
-  await DB.Transaction.findOne({
+  await Transaction.findOne({
     where:      { txHash },
     attributes: { exclude: [ 'createdAt', 'updatedAt' ] },
   })
 ] : []
-export const transactionByHash = txHash => DB.Transaction.findOne({
+export const transactionByHash = txHash => Transaction.findOne({
   where: { txHash }, attrs: defaultAttributes({ exclude: ['id'] })
 });
-export const transactionList = ({ limit, offset } = {}) => DB.Transaction.findAndCountAll({
+export const transactionList = ({ limit, offset } = {}) => Transaction.findAndCountAll({
   attributes: defaultAttributes({ exclude: ['id'] }),
   order: [['blockTime', 'DESC']],
   limit,
   offset,
 })
 export const transactionsLatest = ({ limit = 15 } = {}) =>
-  DB.Transaction.findAll({
+  Transaction.findAll({
     order: [['blockHeight', 'DESC']],
     limit,
     offset: 0,
@@ -321,7 +319,7 @@ export const transactionsLatest = ({ limit = 15 } = {}) =>
     ],
   })
 export const transactionsAtHeight = (blockHeight = 0) =>
-  DB.Transaction.findAndCountAll({ where: { blockHeight } })
+  Transaction.findAndCountAll({ where: { blockHeight } })
 export const txByAddressCount = ({ address = "" }) =>
   slonikCount(sql.unsafe`SELECT COUNT(*) ${fromTxsByContent}
     WHERE ${txByAddressFilter(address)}`)

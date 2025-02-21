@@ -1,5 +1,16 @@
 import { Logged } from './utils.js'
-import * as DB from './db.js'
+import db from './db.js'
+import {
+  Epoch,
+  Validator,
+  Proposal,
+  Vote,
+  Block,
+  BlockDataResponse,
+  BlockResultsResponse,
+  RPCResponse,
+  Transaction,
+} from './dbModel.js'
 
 /** Fetches data using the `Fetcher` and writes it into the `DB`. */
 export class Updater extends Logged {
@@ -22,23 +33,24 @@ export class Updater extends Logged {
     this.logE(epoch, 'Updating all active proposals')
     const proposals = await this.fetcher.fetchAllActiveProposalsWithVotes(epoch)
     // Store epoched data
-    await DB.default.transaction(async transaction => {
+    await db.transaction(async transaction => {
+      const context = { transaction }
       // Store epoch with total stake and parameters
-      await DB.Epoch.upsert({ id: epoch, totalStake, parameters }, { transaction })
+      await Epoch.upsert({ id: epoch, totalStake, parameters }, context)
       // Store validator states
       for (const validator of validators) {
         validator.epoch = epoch
         validator.consensusAddress = validator.address
         const { namadaAddress, state, stake } = validator
         this.logE(epoch, `Updating validator ${namadaAddress} (${state.state}) ${stake}`)
-        await DB.Validator.upsert(validator, { transaction })
+        await Validator.upsert(validator, context)
       }
       // Store proposals and votes
       for (const { votes, ...proposal } of proposals) {
-        await DB.Proposal.upsert(proposal, { transaction })
+        await Proposal.upsert(proposal, context)
         // Store updated votes for each proposal
         for (const vote of votes) {
-          await DB.Vote.upsert(Object.assign(vote, { epoch }), transaction)
+          await Vote.upsert(Object.assign(vote, { epoch }), transaction)
         }
       }
     })
@@ -47,7 +59,15 @@ export class Updater extends Logged {
   /** Update a single block in the database.
     * Called on block increment. */
   async updateBlock ({ height, block }) {
-    const t0 = performance.now()
+
+    // Timed logging helper
+    let t0 = performance.now()
+    const stopwatch = info => {
+      const t = (performance.now() - t0)
+      this.logEH(epoch, height, info, `in`, (performance.now() - t0).toFixed(0), 'msec')
+      t0 = performance.now()
+    }
+
     // If no block was passed, fetch it.
     block ??= await this.fetcher.fetchBlock(height)
     // Make sure there isn't a mismatch between required and actual height.
@@ -67,36 +87,74 @@ export class Updater extends Logged {
       this.fetcher.fetchValidators([...validatorsToUpdate], epoch),
       this.fetcher.fetchProposalsWithVotes([...proposalsToUpdate], epoch),
     ])
-    // TODO: check for governance proposals that were not caught by the above logic
-    // Update the block and the contained transaction.
-    await DB.default.transaction(async transaction => {
-      // Update block record
-      const data = {
-        chainId:      block.header.chainId,
-        blockTime:    block.time,
-        blockHeight:  block.height,
-        blockHash:    block.hash,
-        blockHeader:  block.header,
-        blockData:    JSON.parse(block.responses?.block.response||"null"),
-        blockResults: JSON.parse(block.responses?.results?.response||"null"),
-        rpcResponses: block.responses,
-        epoch,
+
+    // TODO: check for governance proposals that were not caught by the above logiesponse.upsert({ ...block.responses?.results, blockHeight: block.height }, context)
+
+    stopwatch('Fetched block update')
+
+    // Store raw RPC responses:
+    await db.transaction(async transaction => { // store raw responses
+      const context = { transaction }
+      if (block.responses?.block) {
+        await RPCResponse.upsert({ ...block.responses.block, blockHeight: block.height }, context)
+      } else {
+        this.warnEH(epoch, height, 'No raw block response')
       }
-      // Update block data
-      await DB.Block.upsert(data, { transaction })
-      await DB.RPCResponse.upsert({
-        ...block.responses?.block
-        blockHeight: block.height,
-      }, { transaction })
-      await DB.RPCResponse.upsert({
-        ...block.responses?.results,
-        blockHeight: block.height,
-      }, { transaction })
+      if (block.responses?.results) {
+        await RPCResponse.upsert({ ...block.responses?.results, blockHeight: block.height }, context)
+      } else {
+        this.warnEH(epoch, height, 'No raw results response')
+      }
+    })
+
+    stopwatch('Stored raw block responses')
+
+    // Store parsed RPC responses:
+    await db.transaction(async transaction => {
+      const context = { transaction }
+      if (block.responses?.block.response) {
+        await BlockDataResponse.upsert({
+          chainId:      block.header.chainId,
+          blockHash:    block.hash,
+          blockHeight:  block.height,
+          blockTime:    block.time,
+          blockData:    JSON.parse(block.responses.block.response),
+        }, context)
+      } else {
+        this.warnEH(epoch, height, 'No parsed block response')
+      }
+      if (block.responses?.results?.response||"null") {
+        await BlockResultsResponse.upsert({
+          chainId:      block.header.chainId,
+          blockHash:    block.hash,
+          blockHeight:  block.height,
+          blockTime:    block.time,
+          blockResults: JSON.parse(block.responses?.results?.response),
+        }, context)
+      } else {
+        this.warnEH(epoch, height, 'No parsed results response')
+      }
+    })
+
+    stopwatch('Stored parsed block responses')
+
+    // Store fully decoded block data
+    await db.transaction(async transaction => {
+      const context = { transaction }
+      // Update block header
+      await Block.upsert({
+        chainId:      block.header.chainId,
+        blockHash:    block.hash,
+        blockHeight:  block.height,
+        blockTime:    block.time,
+        blockHeader:  block.header,
+        epoch,
+      }, context)
       // Update each transaction in block
       for (const tx of block.transactions) {
         // Update transaction data
         this.logEH(epoch, height, `TX ${tx.id}: ${tx.data?.content[0]?.type}`)
-        await DB.Transaction.upsert({
+        await Transaction.upsert({
           chainId:     tx.data.chainId,
           blockHash:   tx.block.hash,
           blockTime:   tx.block.time,
@@ -104,24 +162,39 @@ export class Updater extends Logged {
           txHash:      tx.id,
           txTime:      tx.data.timestamp,
           txData:      tx
-        }, { transaction })
+        }, context)
       }
-      // Store updated validators
+
       for (const validator of updatedValidators) {
-        await DB.Validator.upsert(validator, { transaction })
+        await Validator.upsert(validator, context)
       }
-      // Store updated proposals
+
       for (const { votes, ...proposal } of updatedProposals) {
-        await DB.Proposal.upsert(proposal, { transaction })
+        await Proposal.upsert(proposal, context)
         // Store updated votes for each proposal
         for (const vote of votes) {
-          await DB.Vote.upsert(Object.assign(vote, { epoch }), transaction)
+          await Vote.upsert(Object.assign(vote, { epoch }), transaction)
         }
       }
+
     })
-    // Log performed updates.
-    const t = performance.now() - t0
-    this.logEH(epoch, height, `Added in`, t.toFixed(0), 'msec')
+
+    stopwatch('Stored block header, transactions, updated validators, updated proposals')
+
+    //// Store updated validators
+    //await db.transaction(async transaction => {
+      //const context = { transaction }
+    //})
+
+    //stopwatch('Stored updated validators')
+
+    //// Store updated proposals
+    //await db.transaction(async transaction => {
+      //const context = { transaction }
+    //})
+
+    //stopwatch('Stored updated proposals and votes')
+
   }
 
   /** Find validators and proposals in the a block that need to be updated.
@@ -203,3 +276,42 @@ export class Updater extends Logged {
   }
 
 }
+
+  /** Update a single governance proposal.
+    * Called from updateGovernance. */
+  //async updateProposal (id, epoch, height) {
+    //const proposal = await Proposal.findOne({ where: { id } })
+    //if (proposal?.get().result) {
+      //this.log.debug('Epoch', epoch, 'block', height, 'proposal', id, 'has result, skipping')
+      //return
+    //}
+    //if (proposal === null) {
+      //const proposalInfo = await this.fetcher.chain.fetchProposalInfo(id)
+      //this.logEH(epoch, height, 'Adding proposal', id)
+      //const { id: _, content, ...metadata } = proposalInfo
+      //const fields = { id, content, metadata }
+      //await Proposal.upsert(fields)
+    //}
+    //this.logEH('Proposal', id, 'fetching result')
+    //const result = await this.fetcher.chain.fetchProposalResult(id)
+    //if (result) {
+      //await Proposal.upsert({ id, result })
+      //this.logEH('Proposal', id, 'stored result')
+    //}
+    //const votes = await this.fetcher.chain.fetchProposalVotes(id)
+    //this.logEH('Proposal', id, 'fetching power for', votes.length, 'votes')
+    //await runParallel({ max: 30, inputs: votes, process: async vote => Object.assign(vote, {
+      //power: vote.isValidator
+        //? await this.fetcher.chain.fetchValidatorStake(vote.validator, epoch)
+        //: await this.fetcher.chain.fetchBondWithSlashing(vote.delegator, vote.validator, epoch)
+    //}) })
+    //this.logEH('Proposal', id, 'storing', votes.length, 'votes')
+    //const transaction = undefined
+    ////await db.transaction(async transaction=>{
+      //await Vote.destroy({ where: { proposal: id } }, {transaction})
+      //for (const vote of votes) {
+        //await Vote.upsert({ ...vote, proposal: id }, {transaction})
+      //}
+    ////})
+    //this.logEH('Proposal', id, 'updated with', votes.length, 'votes')
+  //}

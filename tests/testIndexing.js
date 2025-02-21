@@ -11,4 +11,4 @@ const indexer = new Indexer({
     //connections: [ { log: console } ]
   //}
 })
-await indexer.update()
+//await indexer.update()

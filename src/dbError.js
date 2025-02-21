@@ -3,7 +3,6 @@ import { IntegerPrimaryKey } from './dbKeys.js'
 import { JSONField, NullableJSONField } from './dbJson.js'
 import { DataTypes } from "sequelize"
 const { DATE, TEXT } = DataTypes
-
 /** Errors logged to the database. */
 export const ErrorLog = db.define('error_log', {
   id:        IntegerPrimaryKey(true),
@@ -12,7 +11,6 @@ export const ErrorLog = db.define('error_log', {
   stack:     JSONField('stack'),
   info:      NullableJSONField('info'),
 })
-
 /** Log an error to the database. */
 export function logErrorToDB (error, info) {
   console.error('Logging error to database:',
@@ -26,7 +24,6 @@ export function logErrorToDB (error, info) {
     info
   })
 }
-
 /** Log an error to the database if a code block fails. */
 export async function withErrorLog (callback, info) {
   try {

@@ -1,7 +1,5 @@
 import db from './db.js'
 import { QueryTypes } from 'sequelize'
-const { SELECT, COUNT } = QueryTypes
-
 import { sql } from 'slonik'
 
 export { sql }
@@ -29,7 +27,7 @@ export const slonikCount = query =>
   toCount(slonikQuery(query))
 
 export const slonikSelect = (query, options = {}) =>
-  slonikQuery(query, { ...options, type: SELECT })
+  slonikQuery(query, { ...options, type: DataTypes.SELECT })
 
 export const slonikQuery = (query, options = {}) => {
   const { sql, values } = query
