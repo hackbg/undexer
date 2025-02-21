@@ -2,10 +2,7 @@
 import db from '../src/db.js'
 import { sql } from '../src/dbUtil.js'
 
-const query = sql.unsafe`begin;
-commit;`
-
-await db.query(query.sql)
+await migrate()
   .catch(e=>{
     console.error(e.message)
     console.error(e.parent.hint)
@@ -16,3 +13,14 @@ await db.query(query.sql)
     console.log('Migration complete.')
     process.exit(0)
   })
+
+async function migrate () {
+
+  await db.query(sql.unsafe`begin;
+    alter table blocks drop column "rpcResponses";
+    alter table blocks drop column "blockData";
+    alter table blocks drop column "blockResults";
+  commit;`)
+
+  console.log('Removed old columns.')
+}
