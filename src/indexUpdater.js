@@ -85,9 +85,12 @@ export class Updater extends Logged {
       // Update block data
       await DB.Block.upsert(data, { transaction })
       await DB.RPCResponse.upsert({
-        blockHeight: block.height
+        ...block.responses?.block
+        blockHeight: block.height,
       }, { transaction })
       await DB.RPCResponse.upsert({
+        ...block.responses?.results,
+        blockHeight: block.height,
       }, { transaction })
       // Update each transaction in block
       for (const tx of block.transactions) {

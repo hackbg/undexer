@@ -19,7 +19,7 @@ const db = new Sequelize(DATABASE_URL, {
   dialectOptions: {
     application_name: 'undexer',
     keepAlive: true,
-    statement_timeout: 60000,
+    statement_timeout: 60 * 60000,
     idle_in_transaction_session_timeout: 120000,
   }
 })
@@ -76,10 +76,10 @@ export const
 
   /** Stored raw responses. */
   RPCResponse = db.define('rpc_response', {
-    id:          IntegerPrimaryKey(true),
-    timestamp:   { type: DATE,    allowNull: false, },
-    url:         { type: TEXT,    allowNull: false, },
-    data:        { type: TEXT,    allowNull: false, },
+    id:        IntegerPrimaryKey(true),
+    timestamp: { type: DATE, allowNull: false, },
+    url:       { type: TEXT, allowNull: false, },
+    response:  { type: TEXT, allowNull: false, },
   }),
 
   /** Epochs with global per-epoch state. */
