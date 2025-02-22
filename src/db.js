@@ -14,7 +14,7 @@ const db = new Sequelize(DATABASE_URL, {
   dialectOptions: {
     application_name: 'undexer',
     keepAlive: true,
-    statement_timeout: 60 * 60000,
+    statement_timeout: 24 * 60 * 60000,
     idle_in_transaction_session_timeout: 120000,
   }
 })

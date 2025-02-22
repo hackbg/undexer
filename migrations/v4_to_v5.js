@@ -77,6 +77,7 @@ async function migrate () {
       "createdAt" as "createdAt",
       "updatedAt" as "updatedAt"
     from blocks) order by "timestamp");
+    alter table blocks drop column "rpcResponses";
   commit;`.sql)
 
   console.log('Migrated raw RPC responses')
@@ -89,6 +90,7 @@ async function migrate () {
       "blockTime",
       "blockData"
     from public.blocks);
+    //alter table blocks drop column "blockData";
   commit;`.sql)
 
   console.log('Migrated parsed block data responses')
@@ -101,13 +103,8 @@ async function migrate () {
       "blockTime",
       "blockResults"
     from public.blocks);
-  commit;`.sql)
-
-  //await db.query(sql.unsafe`begin;
-    //alter table blocks drop column "rpcResponses";
-    //alter table blocks drop column "blockData";
     //alter table blocks drop column "blockResults";
-  //commit;`)
+  commit;`.sql)
 
   console.log('Migrated parsed block results responses')
 }
