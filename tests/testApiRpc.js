@@ -4,6 +4,9 @@ import process from 'node:process'
 import { Console } from "@hackbg/logs"
 const console = new Console("Test: API (RPC routes)")
 
+import getRPC from '../src/rpc.js'
+const chain = await getRPC('https://rpc.namada.tududes.com/')
+
 util.inspect.defaultOptions.depth = 4
 import util from 'node:util'
 
@@ -21,7 +24,7 @@ const testRpcRoute = async (path, params = {}, query = {}) => {
   const console = new Console(path)
   console.br()
   console.log('/', params, '?', query)
-  const route = rpcRoutes[path]
+  const route = rpcRoutes[path](chain)
   const { code, data } = await testRoute(route, params, query)
   if (code == 200) {
     console.log(code, data)
