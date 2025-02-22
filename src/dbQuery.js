@@ -190,7 +190,7 @@ export const searchBlocks = async blockHeight => {
   return (isNaN(blockHeight)) ? [] : [
     await Block.findOne({
       where:      { blockHeight },
-      attributes: { exclude: [ 'createdAt', 'updatedAt', 'rpcResponses' ] }, })]}
+      attributes: { exclude: [ 'createdAt', 'updatedAt' ] }, })]}
 export const blocks = async ({
   before,
   after,

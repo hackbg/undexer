@@ -5,7 +5,7 @@ import { sql } from 'slonik'
 export { sql }
 
 export const defaultAttributes = (args = {}) => {
-  const attrs = { exclude: ['createdAt', 'updatedAt', 'rpcResponses'] }
+  const attrs = { exclude: ['createdAt', 'updatedAt'] }
   if (args instanceof Array) {
     attrs.include = args
   } else if (args instanceof Object) {
