@@ -2,7 +2,7 @@
 Promise.all([
   import('./testApiDb.js'),
   import('./testApiRpc.js'),
-  import('./testIndexing.js'),
+  import('./testIndexFetch.js'),
 ]).catch(e=>{
   console.error(e)
   console.error('Tests failed.')

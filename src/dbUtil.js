@@ -1,5 +1,5 @@
 import db from './db.js'
-import { QueryTypes } from 'sequelize'
+import { QueryTypes, DataTypes } from 'sequelize'
 import { sql } from 'slonik'
 
 export { sql }
