@@ -112,7 +112,7 @@ export class Updater extends Logged {
     // Store parsed RPC responses:
     await db.transaction(async transaction => {
       const context = { transaction }
-      if (block.responses?.block.response) {
+      if (block.responses?.block?.response) {
         await BlockDataResponse.upsert({
           chainId:      block.header.chainId,
           blockHash:    block.hash,
@@ -123,13 +123,13 @@ export class Updater extends Logged {
       } else {
         this.warnEH(epoch, height, 'No parsed block response')
       }
-      if (block.responses?.results?.response||"null") {
+      if (block.responses?.results?.response) {
         await BlockResultsResponse.upsert({
           chainId:      block.header.chainId,
           blockHash:    block.hash,
           blockHeight:  block.height,
           blockTime:    block.time,
-          blockResults: JSON.parse(block.responses?.results?.response),
+          blockResults: JSON.parse(block.responses.results.response),
         }, context)
       } else {
         this.warnEH(epoch, height, 'No parsed results response')
