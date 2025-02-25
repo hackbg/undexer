@@ -21,8 +21,8 @@ async function migrate () {
       "timestamp" date,
       "url"       text,
       "response"  text,
-      "createdAt" timestamp with time zone not null,
-      "updatedAt" timestamp with time zone not null,
+      "createdAt" timestamp with time zone,
+      "updatedAt" timestamp with time zone,
       constraint rpc_responses_pkey primary key ("id")
     );
     alter table public.rpc_responses owner to postgres;

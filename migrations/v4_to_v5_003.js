@@ -22,6 +22,8 @@ async function migrate () {
       "blockHeight"  integer not null,
       "blockTime"    date,
       "blockResults" jsonb,
+      "createdAt"    timestamp with time zone,
+      "updatedAt"    timestamp with time zone,
       constraint block_results_responses_pkey primary key ("blockHash")
     );
     alter table public.block_results_responses owner to postgres;
