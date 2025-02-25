@@ -45,11 +45,9 @@ export const Validator = db.define('validator', {
 /** Blocks by hash, with decoded per-block data from RPC. */
 export const Block = db.define('block', {
   ...blockMeta(),
-  epoch:        { type: INTEGER },
-  blockHash:    StringPrimaryKey(), // primary key; overrides blockMeta().blockHash
-  blockHeader:  JSONField('blockHeader'),
-  blockData:    NullableJSONField('blockData'),
-  blockResults: NullableJSONField('blockResults'),
+  epoch:       { type: INTEGER },
+  blockHash:   StringPrimaryKey(), // primary key; overrides blockMeta().blockHash
+  blockHeader: JSONField('blockHeader'),
 })
 
 /** Block data from RPC by hash. */
