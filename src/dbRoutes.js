@@ -59,7 +59,7 @@ dbRoutes['/block'] = async function dbBlock (req, res) {
   const { height, hash } = req.query
   const [block, blockData] = await Promise.all([
     Query.block({ height, hash }),
-    Query.blockData({ height, hash })
+    Query.blockData({ height })
   ])
   if (!block) {
     return send404(res, 'Block not found')
