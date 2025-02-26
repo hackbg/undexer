@@ -64,7 +64,7 @@ dbRoutes['/block'] = async function dbBlock (req, res) {
   if (!block) {
     return send404(res, 'Block not found')
   }
-  if (!blockData) {
+  if (!blockData || !blockData.result) {
     return send404(res, 'Block data not found')
   }
   const signers = blockData.result.block.last_commit.signatures.map(s=>s.validator_address)
