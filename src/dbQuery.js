@@ -1,5 +1,7 @@
 import db from './db.js'
-import { Proposal, Vote, Validator, Epoch, Block, Transaction } from './dbModel.js'
+import {
+  Proposal, Vote, Validator, Epoch, Block, Transaction, BlockDataResponse
+} from './dbModel.js'
 import {
   sql, count,
   slonikCount, slonikSelect,
