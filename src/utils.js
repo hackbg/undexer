@@ -66,9 +66,9 @@ export function pad (x) {
   return String(x).padEnd(10)
 }
 
-export const filterBigInts = obj => JSON.parse(
+export const filterBigInts = obj => obj ? JSON.parse(
   JSON.stringify(obj, (k, v) => (typeof v === 'bigint') ? String(v) : v)
-)
+) : obj
 
 export function withConsole (handler) {
   return async function withConsoleHandler (req, res) {
