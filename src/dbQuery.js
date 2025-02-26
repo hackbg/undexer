@@ -125,6 +125,44 @@ export const validatorNamadaAddressToConsensusAddresses = async (namadaAddress) 
   return addresses
 }
 
+/** Return blocks signed by given validator.
+  *
+  * Powers the uptime blocks visualization in the validator detail page. */
+export const validatorUptime = async (range, consensusAddresses) => {
+  if (range === null || isNaN(range)) {
+    return {}
+  }
+
+  const lastSignedBlocks = []
+  let uptime
+
+  // Count number of times the validator's consensus address is encountered
+  // in the set of all signatures belonging to the past N blocks.
+  const latestBlocksData = await BlockDataResponse.findAll({
+    order: [['blockHeight', 'DESC']],
+    limit: Math.min(1000, Number(range)||100),
+    attributes: [ 'blockHeight', 'blockData' ]
+  })
+  const currentHeight = latestBlocksData[0].height;
+  const countedBlocks = latestBlocksData.length;
+  for (const {
+    blockHeight, blockData = { result: { block: { last_commit: { signatures: [] } } } }
+  } of latestBlocksData) {
+    let present = false
+    for (const { validator_address } of blockData.result.block.last_commit.signatures) {
+      if (consensusAddresses.has(validator_address)) {
+        present = true
+        break
+      }
+    }
+    if (present) {
+      lastSignedBlocks.push(blockHeight)
+      uptime++
+    }
+  }
+  return { lastSignedBlocks, uptime, countedBlocks }
+}
+
 /// EPOCHS ////////////////////////////////////////////////////////////////////////////////////////
 
 export const latestEpoch = () =>

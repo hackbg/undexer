@@ -174,39 +174,15 @@ dbRoutes['/validator'] = async function dbValidatorByHash (req, res) {
   }
   validator = { ...validator.get() }
   validator.metadata ??= {}
-  const consensusAddresses = namadaAddress
-    ? await Query.validatorNamadaAddressToConsensusAddresses(namadaAddress)
-    : await Query.validatorPublicKeyToConsensusAddresses(publicKey)
-  const lastSignedBlocks = []
-  let uptime, currentHeight, countedBlocks
-  if ('uptime' in req.query) {
-    // Count number of times the validator's consensus address is encountered
-    // in the set of all signatures belonging to the past 100 blocks.
-    // This powers the uptime blocks visualization in the validator detail page.
-    const order = [['blockHeight', 'DESC']]
-    const limit = Math.min(1000, Number(req.query.uptime)||100);
-    const attributes = ['blockHeight', 'blockData']
-    const latestBlocks = await Block.findAll({ order, limit, attributes })
-    currentHeight = latestBlocks[0].height;
-    countedBlocks = latestBlocks.length;
-    for (const {
-      blockHeight,
-      blockData = { result: { block: { last_commit: { signatures: [] } } } }
-    } of latestBlocks) {
-      let present = false
-      for (const { validator_address } of blockData.result.block.last_commit.signatures) {
-        if (consensusAddresses.has(validator_address)) {
-          present = true
-          break
-        }
-      }
-      if (present) {
-        lastSignedBlocks.push(blockHeight)
-        uptime++
-      }
-    }
-  }
-  return send200(res, { currentHeight, ...validator, uptime, lastSignedBlocks, countedBlocks });
+  return send200(res, {
+    ...validator,
+    ...await Query.validatorUptime(
+      req.query['uptime'],
+      namadaAddress
+        ? await Query.validatorNamadaAddressToConsensusAddresses(namadaAddress)
+        : await Query.validatorPublicKeyToConsensusAddresses(publicKey)
+    )
+  })
 }
 
 dbRoutes['/validator/votes/:address'] = async function dbValidatorVotes(req, res) {
