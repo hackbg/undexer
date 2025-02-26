@@ -277,6 +277,20 @@ export const block = async ({ height, hash } = {}) => {
   }
   return block
 }
+export const blockData = async ({ height, hash } = {}) => {
+  const attrs = defaultAttributes(['blockHeight', 'blockHash', 'blockData'])
+  let block
+  if (height || hash) {
+    const where = {}
+    if (height) where['blockHeight'] = height
+    if (hash) where['blockHash'] = hash
+    block = await BlockDataResponse.findOne({attributes: attrs, where})
+  } else {
+    const order = [['blockHeight', 'DESC']]
+    block = await BlockDataResponse.findOne({attributes: attrs, order})
+  }
+  return block
+}
 export const blockByHeightWithTransactions = (blockHeight = 0) => {
   const where = { blockHeight }
   return Promise.all([

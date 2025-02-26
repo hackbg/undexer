@@ -59,12 +59,15 @@ dbRoutes['/block'] = async function dbBlock (req, res) {
   const { height, hash } = req.query
   const [block, blockData] = await Promise.all([
     Query.block({ height, hash }),
-    //TODO:Query.blockData({ height, hash })
+    Query.blockData({ height, hash })
   ])
   if (!block) {
     return send404(res, 'Block not found')
   }
-  const signers = block.blockData.result.block.last_commit.signatures.map(s=>s.validator_address)
+  if (!blockData) {
+    return send404(res, 'Block data not found')
+  }
+  const signers = blockData.result.block.last_commit.signatures.map(s=>s.validator_address)
   const [transactions, proposerInfo, signersInfo] = await Promise.all([
     Query.transactionsAtHeight(block.blockHeight),
     Query.validatorByConsensusAddress(block.blockHeader.proposerAddress),
