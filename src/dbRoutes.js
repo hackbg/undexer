@@ -1,7 +1,7 @@
 import { CHAIN_ID } from './config.js';
 import { Block, Validator, Proposal, Vote } from './dbModel.js';
 import * as Query from './dbQuery.js';
-import { defaultAttributes } from './dbUtil.js';
+import { sql, slonikSelect, defaultAttributes } from './dbUtil.js';
 import { pagination, relativePagination } from './dbPage.js';
 import { withConsole, send200, send400, send404, send500 } from './utils.js';
 import express from 'express'
@@ -57,17 +57,25 @@ dbRoutes['/blocks'] = async function dbBlocks (req, res) {
 dbRoutes['/block'] = async function dbBlock (req, res) {
   const timestamp = new Date().toISOString()
   const { height, hash } = req.query
-  const [block, blockData] = await Promise.all([
-    Query.block({ height, hash }),
-    Query.blockData({ height })
-  ])
-  if (!block) {
-    return send404(res, 'Block not found')
-  }
-  if (!blockData || !blockData.result) {
-    return send404(res, 'Block data not found')
-  }
-  const signers = blockData.result.block.last_commit.signatures.map(s=>s.validator_address)
+  const selection = sql.fragment`SELECT
+    "blocks"."chainId",
+    "blocks"."blockHeight",
+    "blocks"."blockHash",
+    "blocks"."blockHeader",
+    "blocks"."blockTime",
+    "block_data_responses"."blockData"`
+  const joinedTables = sql.fragment`
+    "blocks" JOIN "block_data_responses"
+    ON "blocks"."blockHeight" = "block_data_responses"."blockHeight"`
+  const block = (await slonikSelect(
+    hash ? sql.unsafe`${selection} FROM ${joinedTables}
+      WHERE "blocks"."blockHash" = ${hash} LIMIT 1;`
+    : height ? sql.unsafe`${selection} FROM ${joinedTables}
+      WHERE "blocks"."blockHeight" = ${height} LIMIT 1;`
+    : sql.unsafe`${selection} FROM ${joinedTables}
+      ORDER BY "blocks"."blockHeight" DESC LIMIT 1;`))[0][0]
+  if (!block) return send404(res, 'Block not found')
+  const signers = block.blockData.result.block.last_commit.signatures.map(s=>s.validator_address)
   const [transactions, proposerInfo, signersInfo] = await Promise.all([
     Query.transactionsAtHeight(block.blockHeight),
     Query.validatorByConsensusAddress(block.blockHeader.proposerAddress),
