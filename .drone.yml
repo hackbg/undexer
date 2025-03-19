@@ -6,10 +6,15 @@ trigger: { event: [ push ] }
 volumes: [ { name: docker, host: { path: "/data/ci-cache-docker" } } ]
 image_pull_secrets: [ oci_hack_bg ] # https://docs.drone.io/pipeline/docker/syntax/images/#pulling-private-images
 steps:
-
-- name: prepare
-  image: oci.hack.bg/platform-alpine:latest
+- name: build
+  image: oci.hack.bg/platform-root-alpine:latest
   pull: always
+  privileged: true
+  environment:
+    OCI_HOST: "oci.hack.bg"
+    OCI_NAME: "undexer"
+    OCI_USER: { from_secret: "oci-user" }
+    OCI_PASS: { from_secret: "oci-pass" }
   commands:
   - echo $HOME
   - ls -al $HOME
@@ -17,16 +22,4 @@ steps:
   - printf $(git rev-parse --abbrev-ref HEAD) > "$HOME/BRANCH"
   - cat "$HOME/BRANCH"
   - git submodule update --init --recursive --depth 1
-
-- name: docker
-  image: oci.hack.bg/drone-docker:master
-  pull: always
-  volumes: [ { name: docker, path: "/var/lib/docker" } ]
-  privileged: true
-  settings:
-    #debug:    true
-    username: { from_secret: oci-user }
-    password: { from_secret: oci-pass }
-    registry: oci.hack.bg
-    repo:     oci.hack.bg/undexer
-    tags:     v5
+  - ./build.sh debian
