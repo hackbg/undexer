@@ -1,0 +1,10 @@
+packages:
+  - '.'
+  - './lib'
+  - './fadroma'
+  - './fadroma/packages/*'
+  - './fadroma/vendored/*'
+  - './fadroma/toolbox'
+  - './fadroma/toolbox/*'
+  - './fadroma/toolbox/ganesha'
+  - './fadroma/toolbox/ganesha/*'

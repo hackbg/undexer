@@ -26,9 +26,9 @@ from oci.hack.bg/runtime-debian:latest as prod
   run ls -al && pnpm --version && corepack install && pnpm --version #&& corepack up && pnpm --version
   run pnpm fetch -P --stream
   add . ./
+  run chown -R 1000 /app
+  user 1000
   run pnpm -r i -P --frozen-lockfile
   run pwd && ls -al
   copy --from=wasm /home/hack/build/fadroma-namada/pkg/fadroma_namada_bg.wasm ./fadroma/packages/namada/pkg/fadroma_namada_bg.wasm
-  run chown -R 1000 /app
-  user 1000
   run pwd && ls -al
