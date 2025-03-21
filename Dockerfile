@@ -28,7 +28,7 @@ from oci.hack.bg/runtime-debian:latest as prod
   add . ./
   run chown -R 1000 /app
   user 1000
-  run pnpm -r i -P --frozen-lockfile --reporter=ndjson
+  run pnpm -r i -f -P --frozen-lockfile --reporter=ndjson
   run pwd && ls -al
   copy --from=wasm /home/hack/build/fadroma-namada/pkg/fadroma_namada_bg.wasm ./fadroma/packages/namada/pkg/fadroma_namada_bg.wasm
   run pwd && ls -al
