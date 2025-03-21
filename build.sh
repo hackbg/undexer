@@ -15,3 +15,4 @@ buildah build --layers --cache-from="$IMAGE" --cache-to="$IMAGE" \
   --target=prod \
   -t "$IMAGE" \
   .
+buildah push "$IMAGE"
