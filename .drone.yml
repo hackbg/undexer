@@ -3,7 +3,6 @@ kind: pipeline
 type: docker
 name: build
 trigger: { event: [ push ] }
-volumes: [ { name: docker, host: { path: "/data/ci-cache-docker" } } ]
 image_pull_secrets: [ oci_hack_bg ] # https://docs.drone.io/pipeline/docker/syntax/images/#pulling-private-images
 steps:
 - name: build
@@ -11,10 +10,13 @@ steps:
   pull: always
   privileged: true
   environment:
-    OCI_HOST: "oci.hack.bg"
     OCI_NAME: "undexer"
+    OCI_HOST: "oci.hack.bg"
     OCI_USER: { from_secret: "oci-user" }
     OCI_PASS: { from_secret: "oci-pass" }
+    OCI_CACHE_HOST: "cache.build.hack.bg"
+    OCI_CACHE_USER: { from_secret: "oci-cache-user" }
+    OCI_CACHE_PASS: { from_secret: "oci-cache-pass" }
   commands:
   - echo $HOME
   - ls -al $HOME
