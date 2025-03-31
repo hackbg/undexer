@@ -10,6 +10,7 @@ steps:
   pull: always
   privileged: true
   environment:
+    FORCE_COLOR: 2
     OCI_NAME: "undexer"
     OCI_HOST: "oci.hack.bg"
     OCI_USER: { from_secret: "oci-user" }
