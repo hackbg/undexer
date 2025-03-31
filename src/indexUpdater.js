@@ -82,13 +82,14 @@ export class Updater extends Logged {
     const { validatorsToUpdate, proposalsToUpdate } = this.findValidatorsAndProposalsToUpdate(
       epoch, height, block, blockResults
     )
+    this.logEH(epoch, height, { validatorsToUpdate, proposalsToUpdate })
     // Fetch data for validators and proposals that were updated during the block.
     const [updatedValidators, updatedProposals] = await Promise.all([
       this.fetcher.fetchValidators([...validatorsToUpdate], epoch),
       this.fetcher.fetchProposalsWithVotes([...proposalsToUpdate], epoch),
     ])
 
-    // TODO: check for governance proposals that were not caught by the above logiesponse.upsert({ ...block.responses?.results, blockHeight: block.height }, context)
+    // TODO: check for governance proposals that were not caught by the above logic
 
     stopwatch('Fetched block update')
 
@@ -140,7 +141,9 @@ export class Updater extends Logged {
 
     // Store fully decoded block data
     await db.transaction(async transaction => {
+
       const context = { transaction }
+
       // Update block header
       await Block.upsert({
         chainId:      block.header.chainId,
@@ -150,6 +153,7 @@ export class Updater extends Logged {
         blockHeader:  block.header,
         epoch,
       }, context)
+
       // Update each transaction in block
       for (const tx of block.transactions) {
         // Update transaction data
