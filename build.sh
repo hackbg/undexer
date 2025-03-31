@@ -11,7 +11,7 @@ echo "$OCI_PASS" | \
   buildah login -u "$OCI_USER" --password-stdin "https://$OCI_HOST"
 echo "$OCI_CACHE_PASS" | \
   buildah login -u "$OCI_CACHE_USER" --password-stdin "https://$OCI_CACHE_HOST"
-buildah build --storage-driver=overlay2 --layers --cache-from="$CACHE" --cache-to="$CACHE" \
+buildah build --layers --cache-from="$CACHE" --cache-to="$CACHE" \
   --network=host \
   -f Dockerfile \
   --target=prod \
