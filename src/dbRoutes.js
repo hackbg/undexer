@@ -65,7 +65,7 @@ dbRoutes['/block'] = async function dbBlock (req, res) {
     "blocks"."blockTime",
     "block_data_responses"."blockData"`
   const joinedTables = sql.fragment`
-    "blocks" JOIN "block_data_responses"
+    "blocks" LEFT OUTER JOIN "block_data_responses"
     ON "blocks"."blockHeight" = "block_data_responses"."blockHeight"`
   const block = (await slonikSelect(
     hash ? sql.unsafe`${selection} FROM ${joinedTables}
@@ -75,7 +75,8 @@ dbRoutes['/block'] = async function dbBlock (req, res) {
     : sql.unsafe`${selection} FROM ${joinedTables}
       ORDER BY "blocks"."blockHeight" DESC LIMIT 1;`))[0][0]
   if (!block) return send404(res, 'Block not found')
-  const signers = block.blockData.result.block.last_commit.signatures.map(s=>s.validator_address)
+  const signers = block?.blockData?.result?.block/.last_commit?.signatures?
+    .map(s=>s.validator_address)
   const [transactions, proposerInfo, signersInfo] = await Promise.all([
     Query.transactionsAtHeight(block.blockHeight),
     Query.validatorByConsensusAddress(block.blockHeader.proposerAddress),
