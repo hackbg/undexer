@@ -12,7 +12,7 @@ importers:
         specifier: workspace:./fadroma/packages/namada
         version: link:fadroma/packages/namada
       '@ganesha/esbuild':
-        specifier: workspace:1.0.0-rc.4
+        specifier: workspace:^1
         version: link:fadroma/toolbox/ganesha/esbuild
       '@ganesha/esbuild-wasm':
         specifier: workspace:1.0.0-rc.2
@@ -27,7 +27,7 @@ importers:
         specifier: workspace:^
         version: link:fadroma/toolbox/into
       '@hackbg/logs':
-        specifier: workspace:^
+        specifier: workspace:^3
         version: link:fadroma/toolbox/logs
       '@opentelemetry/api':
         specifier: ^1.9.0
@@ -512,14 +512,14 @@ importers:
   fadroma/toolbox/ensuite:
     dependencies:
       '@ganesha/esbuild':
-        specifier: workspace:^
+        specifier: workspace:^1
         version: link:../ganesha/esbuild
       '@hackbg/file':
         specifier: ^2.0.2
         version: 2.0.3
       '@hackbg/logs':
-        specifier: ^2.1.0
-        version: 2.3.2
+        specifier: ^3
+        version: 3.0.0
       '@types/js-yaml':
         specifier: ^4.0.9
         version: 4.0.9
@@ -767,8 +767,8 @@ importers:
         specifier: ^7.22.10
         version: 7.25.4
       '@hackbg/logs':
-        specifier: ^2.1.0
-        version: 2.3.2
+        specifier: ^3
+        version: 3.0.0
       acorn:
         specifier: ^8.11.2
         version: 8.12.1
@@ -1866,6 +1866,9 @@ packages:
 
   '@hackbg/logs@2.3.2':
     resolution: {integrity: sha512-yAb2blXJ1Ag2UfW8fxPRj7XkVffDkw3ebzXIvg0BE/K/xwbyrkcmlBBomSzgoqfqpA3TOpBbVz5H8GH4tS5xxw==}
+
+  '@hackbg/logs@3.0.0':
+    resolution: {integrity: sha512-edDtby0kBUW3cdfLPQS8MTekJakesH0gbwEdwJhbVcHg/TBx/D8+I2KYza6pitCgg72RvMzknIHePBLWpAuQog==}
 
   '@hackbg/protobufjs-esm@6.11.4-patch.1':
     resolution: {integrity: sha512-wim0TgIUd7lMkzAm+/pNejIYmQh4FXkAB+ohl1vtB+EOqEYbJWNlFNMTCxIHG8WsIcYRO7hcskmKhiv31GL+vg==}
@@ -9059,6 +9062,12 @@ snapshots:
   '@hackbg/hide@1.0.4': {}
 
   '@hackbg/logs@2.3.2':
+    dependencies:
+      '@hackbg/allo': 1.0.3
+      '@hackbg/hide': 1.0.4
+      chalk: 4.1.2
+
+  '@hackbg/logs@3.0.0':
     dependencies:
       '@hackbg/allo': 1.0.3
       '@hackbg/hide': 1.0.4
