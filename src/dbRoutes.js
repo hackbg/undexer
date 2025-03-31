@@ -75,7 +75,7 @@ dbRoutes['/block'] = async function dbBlock (req, res) {
     : sql.unsafe`${selection} FROM ${joinedTables}
       ORDER BY "blocks"."blockHeight" DESC LIMIT 1;`))[0][0]
   if (!block) return send404(res, 'Block not found')
-  const signers = block?.blockData?.result?.block/.last_commit?.signatures?
+  const signers = block?.blockData?.result?.block?.last_commit?.signatures?
     .map(s=>s.validator_address)
   const [transactions, proposerInfo, signersInfo] = await Promise.all([
     Query.transactionsAtHeight(block.blockHeight),
