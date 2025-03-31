@@ -79,7 +79,7 @@ dbRoutes['/block'] = async function dbBlock (req, res) {
   const [transactions, proposerInfo, signersInfo] = await Promise.all([
     Query.transactionsAtHeight(block.blockHeight),
     Query.validatorByConsensusAddress(block.blockHeader.proposerAddress),
-    Promise.all(signers.filter(Boolean).map(signer=>Query.validatorByConsensusAddress(signer)))
+    Promise.all((signers||[]).filter(Boolean).map(signer=>Query.validatorByConsensusAddress(signer)))
   ])
   return send200(res, {
     timestamp,
