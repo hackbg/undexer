@@ -3,7 +3,7 @@ import { Logged, retryForever, runParallel } from './utils.js'
 import db from './db.js'
 import * as Query from './dbQuery.js'
 
-const console = new Console('')
+const console = new Console('indexFetcher.js', { json: true, color: false })
 
 export class Fetcher extends Logged {
   constructor ({ log, chain, retry = 1000 }) {

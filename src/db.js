@@ -5,7 +5,7 @@ import process from 'node:process'
 import { Console } from "@hackbg/logs"
 import { Sequelize } from "sequelize"
 import PG from "pg"
-export const console = new Console("DB");
+export const console = new Console("DB", { json: true, color: false });
 const db = new Sequelize(DATABASE_URL, {
   dialect: "postgres",
   logging: () => console.log,

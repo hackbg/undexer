@@ -73,7 +73,8 @@ export const filterBigInts = obj => obj ? JSON.parse(
 export function withConsole (handler) {
   return async function withConsoleHandler (req, res) {
     const t0 = performance.now();
-    const console = new Console(`${(t0/1000).toFixed(3)}: ${req.path} ${req.method} ${JSON.stringify(req.query)}`)
+    const label = `${(t0/1000).toFixed(3)}: ${req.path} ${req.method} ${JSON.stringify(req.query)}`
+    const console = new Console(label, { json: true, color: false } )
     try {
       console.info()
       await handler(req, res)
