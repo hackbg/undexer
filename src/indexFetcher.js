@@ -13,27 +13,27 @@ export class Fetcher extends Logged {
     this.retry = retry
   }
   fetchHeight () {
-    this.log('Fetching block height')
+    this.log({ fetching: 'block height' })
     return retryForever(this.retry, () => this.chain.fetchHeight())
   }
   fetchBlock (height) {
-    this.logH(height, 'Fetching block')
+    this.logH(height, { fetching: 'block' })
     return retryForever(this.retry, () => this.chain.fetchBlock({ height, raw: true }))
   }
   fetchBlockResults (height) {
-    this.logH(height, 'Fetching block results')
+    this.logH(height, { fetching: 'block results' })
     return retryForever(this.retry, () => this.chain.fetchBlockResults({ height }))
   }
   fetchEpoch (height) {
-    this.logH(height, 'Fetching epoch at height')
+    this.logH(height, { fetching: 'epoch at height' })
     return retryForever(this.retry, () => this.chain.fetchEpoch({ height }))
   }
   fetchTotalStake (epoch) {
-    this.logE(epoch, 'Fetching total stake')
+    this.logE(epoch, { fetching: 'total stake')}
     return retryForever(this.retry, () => this.chain.fetchTotalStaked({ epoch }))
   }
   async fetchAllParameters (epoch) {
-    this.logE(epoch, 'Fetching all chain parameters')
+    this.logE(epoch, { fetching: 'all chain parameters' })
     const [protocol, pgf, pos, gov] = await Promise.all([
       retryForever(this.retry, () => this.chain.fetchProtocolParameters()),
       retryForever(this.retry, () => this.chain.fetchPGFParameters()),
@@ -48,7 +48,7 @@ export class Fetcher extends Logged {
     }
   }
   async fetchCurrentAndPastConsensusValidatorAddresses (epoch) {
-    this.logE(epoch, 'Fetching consensus validators')
+    this.logE(epoch, { fetching: 'consensus validators' })
     const [currentConsensusValidators, previousConsensusValidators] = await Promise.all([
       this.chain.fetchValidatorsConsensus(epoch),
       (epoch > 0n) ? await this.chain.fetchValidatorsConsensus(epoch - 1n) : Promise.resolve([])
@@ -59,22 +59,22 @@ export class Fetcher extends Logged {
     ])
   }
   async fetchRemainingValidatorAddresses (consAddrs, epoch) {
-    this.logE(epoch, 'Fetching non-consensus validators')
+    this.logE(epoch, { fetching: 'non-consensus validators' })
     const allAddrs = await this.chain.fetchValidatorAddresses(epoch)
     return allAddrs.filter(x=>!consAddrs.has(x))
   }
   async fetchValidatorAddresses (epoch) {
-    this.logE(epoch, 'Fetching validator addresses')
+    this.logE(epoch, { fetching: 'validator addresses' })
     return await this.chain.fetchValidatorAddresses(epoch)
   }
   async fetchAllValidators (epoch) {
-    this.logE(epoch, `Fetching all validators`)
+    this.logE(epoch, { fetching: `all validators` })
     const addresses = await this.fetchValidatorAddresses(epoch)
     return await this.fetchValidators(addresses, epoch)
   }
   async fetchValidators (inputs, epoch) {
     if (inputs.length > 0) {
-      this.logE(epoch, `Fetching ${inputs.length} validator(s)`)
+      this.logE(epoch, { fetching: `validators`, validatorsCount: inputs.length })
       const iterator = this.chain.fetchValidatorsIter({ epoch: Number(epoch), addresses: inputs })
       return await runParallel({
         max: 50,
@@ -91,24 +91,24 @@ export class Fetcher extends Logged {
     }
   }
   async fetchValidator (address, epoch) {
-    this.logE(epoch, `Fetching validators`, address)
+    this.logE(epoch, { fetching: 'validator', address })
     const validator = await this.chain.fetchValidator(address, { epoch })
     return Object.assign(validator, { epoch, consensusAddress: address })
   }
   async fetchProposalCount (epoch) {
-    this.logE(epoch, `Fetching proposal count`)
+    this.logE(epoch, { fetching: `proposals count` })
     return await this.chain.fetchProposalCount(epoch)
   }
   async fetchProposals (ids, epoch) {
     if (ids.length > 0) {
-      this.logE(epoch, `Fetching ${ids.length} proposal(s)`)
+      this.logE(epoch, { fetching: `proposals`, proposalsCount: ids.length })
       return await Promise.all(ids.map(id=>this.fetchProposal(id, epoch)))
     } else {
       return []
     }
   }
   async fetchAllActiveProposalsWithVotes (epoch) {
-    this.logE(epoch, `Fetching all active proposals with votes`)
+    this.logE(epoch, { fetching: `all active proposals with votes` })
     const count = await this.fetchProposalCount(epoch)
     const idsWithoutResults = new Set(await Query.proposalsWithoutResults())
     const ids = []
@@ -129,7 +129,7 @@ export class Fetcher extends Logged {
   }
   async fetchProposalsWithVotes (ids, epoch) {
     if (ids.length > 0) {
-      this.logE(epoch, `Fetching ${ids.length} proposal(s)`)
+      this.logE(epoch, { fetching: 'proposals', count: ids.length })
       return await Promise.all(ids.map(async id=>{
         const proposal = await this.fetchProposal(id, epoch)
         proposal.votes = await this.fetchProposalVotes(id, epoch)
@@ -140,30 +140,30 @@ export class Fetcher extends Logged {
     }
   }
   async fetchProposal (id, epoch) {
-    this.logE(epoch, `Fetching proposal`, id)
+    this.logE(epoch, { fetching: 'proposal', proposal: id })
     const { id: _, content, ...metadata } = await this.chain.fetchProposalInfo(id, { epoch })
     const result = await this.chain.fetchProposalResult(id)
     return { id, epoch, content, metadata, result }
   }
   async fetchProposalInfo (id, epoch) {
-    this.logE(epoch, `Fetching proposal info`, id)
+    this.logE(epoch, { fetching: 'proposal info', proposal: id })
     const { id: _, content, ...metadata } = await this.chain.fetchProposalInfo(id, epoch)
     return { id, content, metadata }
   }
   async fetchProposalResult (id, epoch) {
-    this.logE(epoch, `Fetching proposal result`, id)
+    this.logE(epoch, { fetching: `proposal result`, proposal: id })
     return await this.chain.fetchProposalResult(id, epoch)
   }
   async fetchProposalsVotes (ids, epoch) {
     if (ids.length > 0) {
-      this.logE(epoch, `Fetching votes for ${ids.length} proposal(s)`)
+      this.logE(epoch, { fetching: `proposals votes`, proposalsCount: ids.length })
       return await Promise.all(ids.map(id=>this.fetchProposalVotes(id, epoch)))
     } else {
       return []
     }
   }
   async fetchProposalVotes (id, epoch) {
-    this.logE(epoch, `Fetching proposal votes`, id)
+    this.logE(epoch, { fetching: `proposal votes`, proposal: id })
     const votes = await this.chain.fetchProposalVotes(id)
     return await runParallel({
       max:     30,
