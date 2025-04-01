@@ -36,9 +36,9 @@ export class RemoteControl extends Logged {
 
   async isPaused () {
     const response = await fetch(this.proxyApi)
-    const json = await response.json()
-    this.log('isPaused response:', json)
-    const status = json.canConnect
+    const isPaused = await response.json()
+    this.log({ isPaused })
+    const status = isPaused.canConnect
     return !status
   }
 
