@@ -15,6 +15,7 @@ buildah build --layers --cache-from="$CACHE" --cache-to="$CACHE" \
   --network=host \
   -f Dockerfile \
   --target=prod \
-  -t "$IMAGE" \
+  -t "$IMAGE" -t "$TAGGED" \
   .
+buildah push "$TAGGED"
 buildah push "$IMAGE"
