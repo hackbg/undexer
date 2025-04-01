@@ -25,4 +25,5 @@ steps:
   - printf $(git rev-parse --abbrev-ref HEAD) > "$HOME/BRANCH"
   - cat "$HOME/BRANCH"
   - git submodule update --init --recursive --depth 1
-  - ./build.sh debian
+  - apk add --no-cache buildah fuse-overlayfs netavark iptables
+  - ./build/build.sh debian
