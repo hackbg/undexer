@@ -6,7 +6,7 @@ import { Fetcher } from './indexFetcher.js'
 import { RemoteControl } from './indexRemote.js'
 import { Logged, retryForever } from './utils.js'
 
-const console = new Console('', { color: false, json: true })
+const console = new Console('', Config.LOG_CONFIG)
 console.debug = () => {}
 
 /** Main indexer controller. */

@@ -27,7 +27,7 @@ importers:
         specifier: workspace:^
         version: link:fadroma/toolbox/into
       '@hackbg/logs':
-        specifier: workspace:^3
+        specifier: workspace:^3.1
         version: link:fadroma/toolbox/logs
       '@opentelemetry/api':
         specifier: ^1.9.0

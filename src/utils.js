@@ -1,4 +1,5 @@
 import { Console, bold, colors } from '@hackbg/logs';
+import { LOG_CONFIG } from './config.js';
 
 export const send200 = (res, data)  => res.status(200).send(data)
 export const send400 = (res, error) => res.status(400).send({ error })
@@ -74,7 +75,7 @@ export function withConsole (handler) {
   return async function withConsoleHandler (req, res) {
     const t0 = performance.now();
     const label = `${(t0/1000).toFixed(3)}: ${req.path} ${req.method} ${JSON.stringify(req.query)}`
-    const console = new Console(label, { json: true, color: false } )
+    const console = new Console(label, LOG_CONFIG)
     try {
       console.info()
       await handler(req, res)

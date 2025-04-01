@@ -2,8 +2,9 @@ import { Console } from '@fadroma/namada'
 import { Logged, retryForever, runParallel } from './utils.js'
 import db from './db.js'
 import * as Query from './dbQuery.js'
+import { LOG_CONFIG } from './config.js'
 
-const console = new Console('indexFetcher.js', { json: true, color: false })
+const console = new Console('indexFetcher.js', LOG_CONFIG)
 
 export class Fetcher extends Logged {
   constructor ({ log, chain, retry = 1000 }) {

@@ -2,7 +2,7 @@
 import { Console } from '@fadroma/namada'
 import * as Config from './config.js'
 import { Logged } from './utils.js'
-const console = new Console('', { color: false, json: true })
+const console = new Console('', Config.LOG_CONFIG)
 
 /** Remote control for node and node-out proxy. */
 export class RemoteControl extends Logged {

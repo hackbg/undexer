@@ -1,11 +1,11 @@
-import { CHAIN_ID, DATABASE_URL } from "./config.js"
+import { CHAIN_ID, DATABASE_URL, LOG_CONFIG } from "./config.js"
 import { IntegerPrimaryKey, StringPrimaryKey, CompoundPrimaryKey } from './dbKeys.js'
 import { JSONField, NullableJSONField } from './dbJson.js'
 import process from 'node:process'
 import { Console } from "@hackbg/logs"
 import { Sequelize } from "sequelize"
 import PG from "pg"
-export const console = new Console("DB", { json: true, color: false });
+export const console = new Console("DB", LOG_CONFIG);
 const db = new Sequelize(DATABASE_URL, {
   dialect: "postgres",
   logging: () => console.log,
