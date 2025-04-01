@@ -50,10 +50,11 @@ export class Indexer extends Logged {
     this.log.br()
     this.blockOnChain    = BigInt(await this.fetcher.fetchHeight())
     this.blockInDatabase = BigInt(await Query.latestBlock()||0)
-    this.log(
-      `Block`, String(this.blockInDatabase), `/`, String(this.blockOnChain),
-      `(${String(this.blockOnChain - this.blockInDatabase)} behind)`
-    )
+    this.log({
+      blockInDatabase: this.blockInDatabase,
+      blockOnChain:    this.blockOnChain,
+      blockDifference: this.blockOnChain - this.blockInDatabase,
+    })
     // Update block data, transactions, validators, proposals, votes.
     if (this.blockInDatabase < this.blockOnChain) {
       const height = this.blockInDatabase + 1n
@@ -62,10 +63,11 @@ export class Indexer extends Logged {
       this.log.br()
       this.epochOnChain    = BigInt(await this.fetcher.fetchEpoch(this.blockOnChain))
       this.epochInDatabase = BigInt(await Query.latestEpoch()??-1)
-      this.log(
-        `Epoch`, String(this.epochInDatabase), `/`, String(this.epochOnChain),
-        `(${String(this.epochOnChain - this.epochInDatabase)} behind)`
-      )
+      this.log({
+        epochInDatabase: this.epochInDatabase,
+        epochOnChain:    this.epochOnChain,
+        epochDifference: this.epochOnChain - this.epochInDatabase,
+      })
       // Update epoch data, resume, or resync:
       if (this.epochInDatabase < this.epochOnChain - 2n) {
         // If we are more than 2 epochs behind the chain, it becomes
