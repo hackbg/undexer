@@ -113,21 +113,21 @@ export class Logged {
 
   /** Log with epoch prefix. */
   logE (epoch, ...args) {
-    this.log.log(`Epoch ${String(epoch)}:`, ...args)
+    this.log.log({ epoch, text: args.join(' ') })
   }
 
   /** Log with height prefix. */
   logH (height, ...args) {
-    this.log.log(`Block ${String(height)}:`, ...args)
+    this.log.log({ height, text: args.join(' ') })
   }
 
   /** Log with epoch and height prefix. */
   logEH (epoch, height, ...args) {
-    this.log.log(`Block ${String(height)}:`, `Epoch ${String(epoch)}:`, ...args)
+    this.log.log({ height, epoch, text: args.join(' ') })
   }
 
   /** Warn with epoch and height prefix. */
   warnEH (epoch, height, ...args) {
-    this.log.warn(`Block ${String(height)}:`, `Epoch ${String(epoch)}:`, ...args)
+    this.log.warn({ height, epoch, text: args.join(' ') })
   }
 }
