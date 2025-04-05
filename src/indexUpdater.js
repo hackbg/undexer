@@ -47,7 +47,7 @@ export class Updater extends Logged {
       }
       // Store proposals and votes
       for (const { votes, ...proposal } of proposals) {
-        await Proposal.upsert(proposal, context)
+        //await Proposal.upsert(proposal, context)
         // Store updated votes for each proposal
         for (const vote of votes) {
           await Vote.upsert(Object.assign(vote, { epoch }), transaction)
@@ -174,7 +174,7 @@ export class Updater extends Logged {
       }
 
       for (const { votes, ...proposal } of updatedProposals) {
-        await Proposal.upsert(proposal, context)
+        //await Proposal.upsert(proposal, context)
         // Store updated votes for each proposal
         for (const vote of votes) {
           await Vote.upsert(Object.assign(vote, { epoch }), transaction)
@@ -184,21 +184,6 @@ export class Updater extends Logged {
     })
 
     stopwatch('Stored block header, transactions, updated validators, updated proposals')
-
-    //// Store updated validators
-    //await db.transaction(async transaction => {
-      //const context = { transaction }
-    //})
-
-    //stopwatch('Stored updated validators')
-
-    //// Store updated proposals
-    //await db.transaction(async transaction => {
-      //const context = { transaction }
-    //})
-
-    //stopwatch('Stored updated proposals and votes')
-
   }
 
   /** Find validators and proposals in the a block that need to be updated.
